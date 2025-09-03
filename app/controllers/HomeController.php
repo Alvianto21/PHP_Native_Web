@@ -14,9 +14,10 @@ class HomeController extends Controller{
 	// detail article page
 	public function detail($id) {
 		$data['judul'] = 'Detail article';
+		$data['article'] = $this->model('Article')->find($id);
 
 		$this->view('templates/header', $data);
-		$this->view('homes/detail');
+		$this->view('homes/detail', $data);
 		$this->view('templates/footer');
 	}
 }

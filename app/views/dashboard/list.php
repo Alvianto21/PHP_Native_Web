@@ -1,3 +1,4 @@
+<a href="/public/admin/create" type="button">Tamabah data</a>
 <table>
 	<thead>
 		<tr>
@@ -17,7 +18,7 @@
 				<td><?= $article['title']; ?></td>
 				<td><?= $article['author']; ?></td>
 				<td>
-					<a href="edit/<?= $article['id']; ?>">Edit</a>
+					<a href="/public/admin/edit/<?= $article['id']; ?>">Edit</a>
 					<a href="#">Hapus</a>
 				</td>
 			</tr>

@@ -6,3 +6,10 @@
 	<title>PHP MVC | <?= $data['judul']; ?></title>
 </head>
 <body>
+	<!-- Navbar -->
+	 <nav>
+		<a href="/">Home</a>
+		<a href="/public/admin">Admin</a>
+	 </nav>
+
+	 <!-- Main content -->
