@@ -57,15 +57,20 @@ class Database {
 		$this->stmt->execute();
 	}
 
-	// banyak data
+	// keluar banyak data
 	public function resultSet() {
 		$this->execute();
 		return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
 	}
 
-	// satu data
+	// keluar satu data
 	public function single() {
 		$this->execute();
 		return $this->stmt->fetch(PDO::FETCH_ASSOC);
+	}
+
+	// perubahan data
+	public function rowCount() {
+		return $this->stmt->rowCount();
 	}
 }

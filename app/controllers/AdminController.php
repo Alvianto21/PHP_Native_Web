@@ -20,6 +20,17 @@ class AdminController extends Controller {
 		$this->view('templates/footer');
 	}
 
+	// validasi tambah data
+	public function store() {
+		if ($this->model('Article')->create($_POST) > 0) {
+			header('Location: /public/admin');
+			exit;
+		} else {
+			header('Location: /public/admin');
+			exit;
+		}
+	}
+
 	// edit article
 	public function edit($id) {
 		$data['judul'] = 'Edit Artikel';

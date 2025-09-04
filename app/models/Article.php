@@ -24,8 +24,39 @@ class Article {
 	}
 
 	// tambah data
-	public function create() {
+	public function create($data) {
+		// cek data ada
+		if (empty($data['title'])) {
+			return 0;
+		}
 
+		if (empty($data['slug'])) {
+			return 0;
+		}
+
+		if (empty($data['author'])) {
+			return 0;
+		}
+		if (empty($data['body'])) {
+			return 0;
+		}
+
+		// validasi data
+		
+		
+		// insert data
+		$query = "INSERT INTO " . $this->table . " (title, slug, author, body) VALUES (:title, :slug, :author, :body)";
+		$this->db->query($query);
+		$this->db->bind("title", $data['title']);
+		$this->db->bind("slug", $data['slug']);
+		$this->db->bind("author", $data['author']);
+		$this->db->bind("body", $data['body']);
+
+		// eksekusi
+		$this->db->execute();
+
+		// cek apakah ada data yang berubah
+		return $this->db->rowCount();
 	}
 
 	// update data
