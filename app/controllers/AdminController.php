@@ -53,18 +53,51 @@ class AdminController extends Controller {
 	// edit article
 	public function edit($id) {
 		$data['judul'] = 'Edit Artikel';
+		$data['article'] = $this->model('Article')->find($id);
 
 		$this->view('templates/header', $data);
-		$this->view('dashboard/edit');
+		$this->view('dashboard/edit', $data);
 		$this->view('templates/footer');
+	}
+
+	// update data
+	public function update() {
+		if (isset($_POST['submit'])) {
+			header('LOCATION: /public/admin');
+			exit;
+		}
+
+		// cek data
+		$data = [
+			'title' => $_POST['title'] ?? '',
+			'slug' => $_POST['slug'] ?? '',
+			'author' => $_POST['author'] ?? '',
+			'body' => $_POST['body'] ?? '',
+			'id' => $_POST['id'] ?? ''
+		];
+		
+		if ($this->checkData($data)) {
+			header('Location: /public/admin/edit/' . $data['id']);
+			exit;
+		}
+
+		if ($this->model('Article')->update($data) > 0) {
+			header('Location: /public/admin');
+			exit;
+		} else {
+			header('Location: /public/admin');
+			exit;
+		}
 	}
 
 	// cek data
 	public function checkData($data) {
-		if (empty($data)) {
-			return false;
-		} else {
-			return true;
+		foreach ($data as $value) {
+			if (empty($value)) {
+				return true;
+			} else {
+				return false;
+			}
 		}
 	}
 }

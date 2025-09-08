@@ -28,9 +28,13 @@ class Article {
 		// validasi data
 		
 		
-		// insert data
+		// set query
 		$query = "INSERT INTO " . $this->table . " (title, slug, author, body) VALUES (:title, :slug, :author, :body)";
+
+		// insert data
 		$this->db->query($query);
+
+		// bind data
 		$this->db->bind("title", $data['title']);
 		$this->db->bind("slug", $data['slug']);
 		$this->db->bind("author", $data['author']);
@@ -44,7 +48,26 @@ class Article {
 	}
 
 	// update data
-	public function update() {
+	public function update($data) {
+		// validasi data
 
+		// set query
+		$query = "UPDATE " . $this->table . " SET title=:title, slug=:slug, author=:author, body=:body WHERE id=:id";
+
+		// update data
+		$this->db->query($query);
+
+		// bind data
+		$this->db->bind("title", $data['title']);
+		$this->db->bind("slug", $data['slug']);
+		$this->db->bind("author", $data['author']);
+		$this->db->bind("body", $data['body']);
+		$this->db->bind("id", $data['id']);
+
+		// eksekusi
+		$this->db->execute();
+
+		// cek apakah ada data yang berubah
+		return $this->db->rowCount();
 	}
 }
