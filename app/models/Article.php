@@ -24,23 +24,7 @@ class Article {
 	}
 
 	// tambah data
-	public function create($data) {
-		// cek data ada
-		if (empty($data['title'])) {
-			return 0;
-		}
-
-		if (empty($data['slug'])) {
-			return 0;
-		}
-
-		if (empty($data['author'])) {
-			return 0;
-		}
-		if (empty($data['body'])) {
-			return 0;
-		}
-
+	public function create($data) {	
 		// validasi data
 		
 		

@@ -1,7 +1,7 @@
 <form action="/public/admin/store" method="post">
 	<div>
 		<label for="title">Title</label>
-		<input type="text" name="title" id="title" placeholder="Masukan judul artikel" >
+		<input type="text" name="title" id="title" placeholder="Masukan judul artikel" required>
 	</div>
 	<div>
 		<label for="slug">Slug</label>

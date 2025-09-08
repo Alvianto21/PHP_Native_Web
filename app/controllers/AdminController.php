@@ -22,7 +22,26 @@ class AdminController extends Controller {
 
 	// validasi tambah data
 	public function store() {
-		if ($this->model('Article')->create($_POST) > 0) {
+		// cek method
+		if (isset($_POST['submit'])) {
+			header('LOCATION: /public/admin');
+			exit;
+		}
+
+		// cek data
+		$data = [
+			'title' => $_POST['title'] ?? '',
+			'slug' => $_POST['slug'] ?? '',
+			'author' => $_POST['author'] ?? '',
+			'body' => $_POST['body'] ?? ''
+		];
+		
+		if ($this->checkData($data)) {
+			header('Location: /public/admin/create');
+			exit;
+		}
+		
+		if ($this->model('Article')->create($data) > 0) {
 			header('Location: /public/admin');
 			exit;
 		} else {
@@ -38,5 +57,14 @@ class AdminController extends Controller {
 		$this->view('templates/header', $data);
 		$this->view('dashboard/edit');
 		$this->view('templates/footer');
+	}
+
+	// cek data
+	public function checkData($data) {
+		if (empty($data)) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 }
