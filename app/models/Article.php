@@ -70,4 +70,22 @@ class Article {
 		// cek apakah ada data yang berubah
 		return $this->db->rowCount();
 	}
+
+	// delete data
+	public function delete($id) {
+		// set query
+		$query = "DELETE FROM " . $this->table . " WHERE id=:id";
+
+		// delete data
+		$this->db->query($query);
+
+		// bind data
+		$this->db->bind("id", $id);
+
+		// eksekusi
+		$this->db->execute();
+
+		// cek apakah ada data yang berubah
+		return $this->db->rowCount();
+	}
 }

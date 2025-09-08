@@ -90,6 +90,17 @@ class AdminController extends Controller {
 		}
 	}
 
+	// hapus artikel
+	public function delete($id) {
+		if ($this->model('Article')->delete($id)) {
+			header('Location: /public/admin');
+			exit;
+		} else {
+			header('Location: /public/admin');
+			exit;
+		}
+	}
+
 	// cek data
 	public function checkData($data) {
 		foreach ($data as $value) {

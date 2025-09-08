@@ -19,7 +19,7 @@
 				<td><?= $article['author']; ?></td>
 				<td>
 					<a href="/public/admin/edit/<?= $article['id']; ?>">Edit</a>
-					<a href="#">Hapus</a>
+					<a href="/public/admin/delete/<?= $article['id']; ?>" onclick="return confirm('Yakin?');">Hapus</a>
 				</td>
 			</tr>
 			<?php
