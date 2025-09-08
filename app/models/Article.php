@@ -24,10 +24,7 @@ class Article {
 	}
 
 	// tambah data
-	public function create($data) {	
-		// validasi data
-		
-		
+	public function create($data) {		
 		// set query
 		$query = "INSERT INTO " . $this->table . " (title, slug, author, body) VALUES (:title, :slug, :author, :body)";
 
@@ -49,8 +46,6 @@ class Article {
 
 	// update data
 	public function update($data) {
-		// validasi data
-
 		// set query
 		$query = "UPDATE " . $this->table . " SET title=:title, slug=:slug, author=:author, body=:body WHERE id=:id";
 

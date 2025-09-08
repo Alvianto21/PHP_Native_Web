@@ -40,6 +40,9 @@ class AdminController extends Controller {
 			header('Location: /public/admin/create');
 			exit;
 		}
+
+		// clear data
+		$this->model('Validator')->clearData($data);
 		
 		if ($this->model('Article')->create($data) > 0) {
 			header('Location: /public/admin');
