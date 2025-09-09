@@ -1,4 +1,4 @@
-<a href="/public/admin/create" type="button">Tamabah data</a>
+<a href="<?= ABSOLUTURL; ?>admin/create" type="button">Tamabah data</a>
 <table>
 	<thead>
 		<tr>
@@ -18,8 +18,8 @@
 				<td><?= $article['title']; ?></td>
 				<td><?= $article['author']; ?></td>
 				<td>
-					<a href="/public/admin/edit/<?= $article['id']; ?>">Edit</a>
-					<a href="/public/admin/delete/<?= $article['id']; ?>" onclick="return confirm('Yakin?');">Hapus</a>
+					<a href="<?= ABSOLUTURL; ?>admin/edit/<?= $article['id']; ?>">Edit</a>
+					<a href="<?= ABSOLUTURL; ?>admin/delete/<?= $article['id']; ?>" onclick="return confirm('Yakin?');">Hapus</a>
 				</td>
 			</tr>
 			<?php

@@ -6,7 +6,7 @@
 	<title>PHP MVC | <?= $data['judul']; ?></title>
 
 	<!-- Bootstrap CSS -->
-	 <link href="http://php_native_web.test:8080/css/bootstrap.css" rel="stylesheet">
+	 <link href="<?= BASEURL; ?>css/bootstrap.css" rel="stylesheet">
 
 	 <!-- Favicon -->
 	  
@@ -15,7 +15,7 @@
 	<!-- Navbar -->
 	 <nav>
 		<a href="/">Home</a>
-		<a href="/public/admin">Admin</a>
+		<a href="<?= ABSOLUTURL; ?>admin">Admin</a>
 	 </nav>
 
 	 <!-- Main content -->
