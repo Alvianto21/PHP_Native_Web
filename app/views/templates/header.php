@@ -6,16 +6,28 @@
 	<title>PHP MVC | <?= $data['judul']; ?></title>
 
 	<!-- Bootstrap CSS -->
-	 <link href="<?= BASEURL; ?>css/bootstrap.css" rel="stylesheet">
-
-	 <!-- Favicon -->
-	  
+	<link href="<?= BASEURL; ?>css/bootstrap.css" rel="stylesheet">	  
 </head>
 <body>
 	<!-- Navbar -->
-	 <nav>
-		<a href="/">Home</a>
-		<a href="<?= ABSOLUTURL; ?>admin">Admin</a>
-	 </nav>
+	 <div class="container-sm">
+		 <nav class="navbar navbar-expand-lg bg-body-tertiary px-5">
+			   <div class="container-fluid">
+				 <a class="navbar-brand" href="/">PHP MVC</a>
+				 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+					   <span class="navbar-toggler-icon"></span>
+				 </button>
+				 <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+					   <div class="navbar-nav">
+						 <a class="nav-link active" aria-current="page" href="/">Home</a>
+						 <a class="nav-link" href="<?= ABSOLUTURL; ?>login">Login</a>
+						 <a class="nav-link" href="<?= ABSOLUTURL; ?>admin">Admin</a>
+					   </div>
+				 </div>
+			   </div>
+		 </nav>
+	 </div>
 
 	 <!-- Main content -->
+	
+	<div class="container-sm">

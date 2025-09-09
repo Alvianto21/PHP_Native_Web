@@ -24,7 +24,7 @@ class AdminController extends Controller {
 	public function store() {
 		// cek method
 		if (isset($_POST['submit'])) {
-			header('LOCATION: /public/admin');
+			header('LOCATION: ' . ABSOLUTURL . 'admin');
 			exit;
 		}
 
@@ -37,18 +37,20 @@ class AdminController extends Controller {
 		];
 		
 		if ($this->checkData($data)) {
-			header('Location: /public/admin/create');
+			header('Location:  . ABSOLUTURL . admin/create');
 			exit;
 		}
 
 		// clear data
-		$this->model('Validator')->clearData($data);
+		// $this->model('Validator')->clearData($data);
 		
 		if ($this->model('Article')->create($data) > 0) {
-			header('Location: /public/admin');
+			Flasher::setFlash('artikel berhasil', 'ditambahkan', 'success');
+			header('Location:  . ABSOLUTURL . admin');
 			exit;
 		} else {
-			header('Location: /public/admin');
+			Flasher::setFlash('artikel gagal', 'ditambahkan', 'danger');
+			header('Location:  . ABSOLUTURL . admin');
 			exit;
 		}
 	}
@@ -66,7 +68,7 @@ class AdminController extends Controller {
 	// update data
 	public function update() {
 		if (isset($_POST['submit'])) {
-			header('LOCATION: /public/admin');
+			header('LOCATION:  . ABSOLUTURL . admin');
 			exit;
 		}
 
@@ -80,15 +82,17 @@ class AdminController extends Controller {
 		];
 		
 		if ($this->checkData($data)) {
-			header('Location: /public/admin/edit/' . $data['id']);
+			header('Location:  . ABSOLUTURL . admin/edit/' . $data['id']);
 			exit;
 		}
 
 		if ($this->model('Article')->update($data) > 0) {
-			header('Location: /public/admin');
+			Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');
+			header('Location:  . ABSOLUTURL . admin');
 			exit;
 		} else {
-			header('Location: /public/admin');
+			Flasher::setFlash('arikel gagal', 'diperbarui', 'danger');
+			header('Location:  . ABSOLUTURL . admin');
 			exit;
 		}
 	}
@@ -96,10 +100,12 @@ class AdminController extends Controller {
 	// hapus artikel
 	public function delete($id) {
 		if ($this->model('Article')->delete($id)) {
-			header('Location: /public/admin');
+			Flasher::setFlash('artikel berhasil', 'dihapus', 'success');
+			header('Location:  . ABSOLUTURL . admin');
 			exit;
 		} else {
-			header('Location: /public/admin');
+			Flasher::setFlash('artikel gagal', 'dihapus', 'danger');
+			header('Location:  . ABSOLUTURL . admin');
 			exit;
 		}
 	}
