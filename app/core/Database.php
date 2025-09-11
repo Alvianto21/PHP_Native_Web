@@ -1,26 +1,25 @@
 <?php
 
 class Database {
-	private $host;
-	private $user;
-	private $pass;
-	private $db_name;
+	private $host = DB_HOST;
+	private $user = DB_USER;
+	private $pass = DB_PASS;
+	private $db_name = DB_NAME;
 
 	private $dbh; // database handles
 	private $stmt; // statement
 
 	// koneksi ke database
 	public function __construct() {
-		$config = require_once __DIR__ . '/../config/config.php';
-		$this->host = $config['server_name'];
-		$this->user = $config['username'];
-		$this->pass = $config['password'];
-		$this->db_name = $config['database'];
+		$dsn = 'mysql:host=' . $this->host . ';dbname=' . $this->db_name;
+		$options = [
+			PDO::ATTR_PERSISTENT => true,
+			PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+		];
 		try {
-			$this->dbh = new PDO("mysql:host=$this->host;dbname=$this->db_name", $this->user, $this->pass);
-			$this->dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-			$this->dbh->setAttribute(PDO::ATTR_PERSISTENT, true);
+			$this->dbh = new PDO($dsn, $this->user, $this->pass, $options);
 		} catch(PDOException $e) {
+			error_log($e->getTraceAsString());
 			die($e->getMessage());
 		}
 	}
@@ -72,5 +71,11 @@ class Database {
 	// perubahan data
 	public function rowCount() {
 		return $this->stmt->rowCount();
+	}
+
+	// fetch colomn
+	public function coloms() {
+		$this->execute();
+		return (int) $this->stmt->fetchColumn();
 	}
 }
