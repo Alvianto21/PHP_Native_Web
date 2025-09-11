@@ -48,7 +48,7 @@
 
 				<?php for ($i = 1; $i <= $data['total']; $i++) { ?>
 					<li class="page-item">
-						<a href="<?= ABSOLUTURL; ?>home/index?page=<?= $i; ?>" class="page-link"><?= $i; ?></a>
+						<a href="<?= ABSOLUTURL; ?>home/index?page=<?= $i; ?>" class="page-link <?= $data['pages'] == $i ? 'active' : '' ?>"><?= $i; ?></a>
 					</li>
 				<?php } ?>
 
