@@ -3,7 +3,20 @@
 class HomeController extends Controller{
 	// home page
 	public function index() {
-		$data['articles'] = $this->model('Article')->all();
+		// // set pagination
+		$perPage = 5;
+		$totalPage = $this->model('Article')->count();
+		$maxPage = ceil($totalPage / $perPage);
+		$data['total'] = $maxPage;
+
+		// // cari hakaman saat ini
+		$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+		$page = max(1, min($page, $maxPage));
+		$startPage = ($page - 1) * $perPage;
+		$data['pages'] = $page;
+
+		// ambil data berserta offset
+		$data['articles'] = $this->model('Article')->paginator($perPage, $startPage);
 		$data['judul'] = 'Halaman Home';
 
 		$this->view('templates/header', $data);

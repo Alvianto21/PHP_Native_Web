@@ -16,6 +16,29 @@ class Article {
 		return $this->db->resultSet();
 	}
 
+	// semua data dengan paginator
+	public function paginator($limit, $offset) {
+		// set query
+		$query = "SELECT * FROM " . $this->table . " ORDER BY id DESC LIMIT :offset, :limit";
+
+		// get data
+		$this->db->query($query);
+
+		// bind data
+		$limit = (int)$limit;
+		$offset = (int)$offset;
+		$this->db->bind('limit', $limit, PDO::PARAM_INT);
+		$this->db->bind('offset', $offset, PDO::PARAM_INT);
+
+		return $this->db->resultSet();
+	}
+
+	// hitung data
+	public function count() {
+		$this->db->query('SELECT COUNT(*) AS total FROM articles');
+		return $this->db->coloms();
+	}
+
 	// cari data berdasarkan id
 	public function find($id) {
 		$this->db->query('SELECT * FROM ' . $this->table . ' WHERE id=:id');
