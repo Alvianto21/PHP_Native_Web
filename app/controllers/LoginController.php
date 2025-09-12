@@ -29,11 +29,25 @@ class LoginController extends Controller {
 			exit;
 		}
 
-		if($this->model('Users')->find($data) > 0) {
-			
+		// clear data
+		foreach ($data as $key) {
+			$this->clearData($key);
+		}
+
+		// cari user
+		$user = $this->model('Users')->find($data['email']);
+
+		// validasi
+		if($user && password_verify($data['password'], $user['password'])) {
+			$_SESSION['user_info'] = [
+				'user_id' => $user['id'],
+				'user_email' => $user['email']
+			];
+			Flasher::setFlash('users berhasil', 'ditemukan. Selamat datang', 'info');
 			header('LOCATION: ' . ABSOLUTURL . 'admin');
 			exit;
 		} else {
+			Flasher::setFlash('users gagal', 'ditemukan. Coba lagi', 'danger');
 			header('LOCATION: ' . ABSOLUTURL . 'login');
 			exit;
 		}
@@ -67,6 +81,11 @@ class LoginController extends Controller {
 			exit;
 		}
 
+		// clear data
+		foreach ($data as $key) {
+			$this->clearData($key);
+		}
+
 		// hash password
 		$data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
 
@@ -81,6 +100,22 @@ class LoginController extends Controller {
 		}
 	}
 
+	// logout
+	public function logout() {
+		// cel login
+		if (!isset($_SESSION['user_info'])) {
+			header('LOCATION: ' . ABSOLUTURL . 'login');
+			exit;
+		}
+
+		// hapus semua session
+		$_SESSION = [];
+
+		// hapus session
+		session_destroy();
+		header('LOCATION: ' . BASEURL);
+	}
+
 	// cek data
 	public function checkData($data) {
 		foreach ($data as $value) {
@@ -90,5 +125,13 @@ class LoginController extends Controller {
 				return false;
 			}
 		}
+	}
+
+	// bersihkan data
+	public function clearData($data) {
+		$data = trim($data);
+		$data = stripslashes($data);
+		$data = htmlspecialchars($data);
+		return $data;
 	}
 }

@@ -3,6 +3,12 @@
 class AdminController extends Controller {
 	// articles table
 	public function index() {
+		// cel login
+		if (!isset($_SESSION['user_info'])) {
+			header('LOCATION: ' . ABSOLUTURL . 'login');
+			exit;
+		}
+
 		$data['judul'] = 'Halaman Dashboard';
 		$data['articles'] = $this->model('Article')->all();
 
@@ -13,6 +19,12 @@ class AdminController extends Controller {
 
 	// create article
 	public function create() {
+		// cel login
+		if (!isset($_SESSION['user_info'])) {
+			header('LOCATION: ' . ABSOLUTURL . 'login');
+			exit;
+		}
+
 		$data['judul'] = 'Buat Artikel Baru';
 
 		$this->view('templates/header', $data);
@@ -31,7 +43,6 @@ class AdminController extends Controller {
 		// cek data
 		$data = [
 			'title' => $_POST['title'] ?? '',
-			'slug' => $_POST['slug'] ?? '',
 			'author' => $_POST['author'] ?? '',
 			'body' => $_POST['body'] ?? ''
 		];
@@ -42,7 +53,13 @@ class AdminController extends Controller {
 		}
 
 		// clear data
-		// $this->model('Validator')->clearData($data);
+		foreach ($data as $key) {
+			$this->clearData($key);
+		}
+
+		// add slug
+		$data['slug'] = preg_replace('/\s+/', '-', $data['title']);
+		$data['slug'] = preg_replace('/[^a-zA-Z0-9\-]/', '', $data['slug']);
 		
 		if ($this->model('Article')->create($data) > 0) {
 			Flasher::setFlash('artikel berhasil', 'ditambahkan', 'success');
@@ -57,6 +74,12 @@ class AdminController extends Controller {
 
 	// edit article
 	public function edit($id) {
+		// cel login
+		if (!isset($_SESSION['user_info'])) {
+			header('LOCATION: ' . ABSOLUTURL . 'login');
+			exit;
+		}
+		
 		$data['judul'] = 'Edit Artikel';
 		$data['article'] = $this->model('Article')->find($id);
 
@@ -75,7 +98,6 @@ class AdminController extends Controller {
 		// cek data
 		$data = [
 			'title' => $_POST['title'] ?? '',
-			'slug' => $_POST['slug'] ?? '',
 			'author' => $_POST['author'] ?? '',
 			'body' => $_POST['body'] ?? '',
 			'id' => $_POST['id'] ?? ''
@@ -85,6 +107,15 @@ class AdminController extends Controller {
 			header('Location:  . ABSOLUTURL . admin/edit/' . $data['id']);
 			exit;
 		}
+
+		// clear data
+		foreach ($data as $key) {
+			$this->clearData($key);
+		}
+
+		// add slug
+		$data['slug'] = preg_replace('/\s+/', '-', $data['title']);
+		$data['slug'] = preg_replace('/[^a-zA-Z0-9\-]/', '', $data['slug']);		
 
 		if ($this->model('Article')->update($data) > 0) {
 			Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');
@@ -119,5 +150,13 @@ class AdminController extends Controller {
 				return false;
 			}
 		}
+	}
+	
+	// bersihkan data
+	public function clearData($data) {
+		$data = trim($data);
+		$data = stripslashes($data);
+		$data = htmlspecialchars($data);
+		return $data;
 	}
 }

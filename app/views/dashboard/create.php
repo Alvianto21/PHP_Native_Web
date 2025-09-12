@@ -5,10 +5,6 @@
 			<input class="form-control" type="text" name="title" id="title" placeholder="Masukan judul artikel" required>
 		</div>
 		<div class="form-group mb-3">
-			<label for="slug" class="form-label">Slug</label>
-			<input class="form-control" type="text" name="slug" id="slug" placeholder="Masukkan-slug-artikel-sesuai-judul" required>
-		</div>
-		<div class="form-group mb-3">
 			<label for="author" class="form-label">Author</label>
 			<input class="form-control" type="text" name="author" id="author" placeholder="Nama penulis artikel" required>
 		</div>

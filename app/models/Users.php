@@ -17,6 +17,11 @@ class Users {
 		// insert user
 		$this->db->query($query);
 
+		// clear email
+		$data['email'] = filter_var($data['email'], FILTER_SANITIZE_EMAIL);
+
+		if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) return 0;
+
 		// bind data
 		$this->db->bind('email', $data['email']);
 		$this->db->bind('password', $data['password']);
@@ -29,19 +34,17 @@ class Users {
 	}	
 	
 	// cari user
-	public function find(array $data) {
-		$email = $data['email'];
-		$password = $data['password'];
-
+	public function find($data) {
 		// set query
-		$query = 'SELECT * FROM ' . $this->table . 'WHERE email = :email AND password = :password';
+		$query = 'SELECT * FROM ' . $this->table . ' WHERE email = :email';
 
 		// find user
 		$this->db->query($query);
 
+		$data = filter_var($data, FILTER_SANITIZE_EMAIL);
+
 		// bind data
-		$this->db->bind('email', $email, PDO::PARAM_STR);
-		$this->db->bind('password', $password, PDO::PARAM_STR);
+		$this->db->bind('email', $data);
 
 		// eksekusi
 		$this->db->execute();

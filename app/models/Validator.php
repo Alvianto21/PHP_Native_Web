@@ -1,9 +1,10 @@
 <?php
 
 class Validator {
+	private $errors = [];
 	// validasi data
-	public function validate(array $data, array $rules) {
-		
+	public function validate($data, $form) {
+		// 
 	}
 
 	// bersihkan data
