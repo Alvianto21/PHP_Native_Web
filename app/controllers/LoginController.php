@@ -113,7 +113,9 @@ class LoginController extends Controller {
 
 		// hapus session
 		session_destroy();
+
 		header('LOCATION: ' . BASEURL);
+		exit;
 	}
 
 	// cek data

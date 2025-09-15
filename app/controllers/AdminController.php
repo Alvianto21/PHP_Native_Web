@@ -81,7 +81,14 @@ class AdminController extends Controller {
 		}
 		
 		$data['judul'] = 'Edit Artikel';
-		$data['article'] = $this->model('Article')->find($id);
+		$article = $this->model('Article')->find($id);
+
+		if ($article) {
+			$data['article'] = $article;
+		} else {
+			header('LOCATION: ' . ABSOLUTURL . 'admin');
+			exit;
+		}
 
 		$this->view('templates/header', $data);
 		$this->view('dashboard/edit', $data);
