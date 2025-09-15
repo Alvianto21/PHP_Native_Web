@@ -3,7 +3,7 @@
 class AdminController extends Controller {
 	// articles table
 	public function index() {
-		// cel login
+		// cek login
 		if (!isset($_SESSION['user_info'])) {
 			header('LOCATION: ' . ABSOLUTURL . 'login');
 			exit;
@@ -19,7 +19,7 @@ class AdminController extends Controller {
 
 	// create article
 	public function create() {
-		// cel login
+		// cek login
 		if (!isset($_SESSION['user_info'])) {
 			header('LOCATION: ' . ABSOLUTURL . 'login');
 			exit;
@@ -74,7 +74,7 @@ class AdminController extends Controller {
 
 	// edit article
 	public function edit($id) {
-		// cel login
+		// cek login
 		if (!isset($_SESSION['user_info'])) {
 			header('LOCATION: ' . ABSOLUTURL . 'login');
 			exit;
@@ -137,7 +137,15 @@ class AdminController extends Controller {
 
 	// hapus artikel
 	public function delete($id) {
-		if ($this->model('Article')->delete($id)) {
+		// cek login
+		if (!isset($_SESSION['user_info'])) {
+			header('LOCATION: ' . ABSOLUTURL . 'login');
+			exit;
+		}
+
+		$article = $this->model('Article')->delete($id);
+
+		if ($article) {
 			Flasher::setFlash('artikel berhasil', 'dihapus', 'success');
 			header('Location:  . ABSOLUTURL . admin');
 			exit;
