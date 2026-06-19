@@ -1,19 +1,39 @@
 <?php
 
+/**
+ * Simple PDO-based database helper.
+ *
+ * Provides basic query preparation, binding and fetch utilities used by the
+ * application's models.
+ */
 class Database {
+	/** @var string */
 	private $host = DB_HOST;
+
+	/** @var string */
 	private $user = DB_USER;
+
+	/** @var string */
 	private $pass = DB_PASS;
+
+	/** @var string */
 	private $db_name = DB_NAME;
 
+	/** @var \PDO Database handle instance */
 	private $dbh; // database handles
+
+	/** @var \PDOStatement Current prepared statement */
 	private $stmt; // statement
 
-	// koneksi ke database
+	/**
+	 * Create a new PDO connection using constants defined in config.
+	 *
+	 * @throws \PDOException On connection failure
+	 */
 	public function __construct() {
 		$dsn = 'mysql:host=' . $this->host . ';dbname=' . $this->db_name;
 		$options = [
-			PDO::ATTR_PERSISTENT => true,
+			PDO::ATTR_PERSISTENT => false,
 			PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
 		];
 		try {
@@ -24,12 +44,24 @@ class Database {
 		}
 	}
 
-	// menyiapkan query
+	/**
+	 * Prepare an SQL query for execution.
+	 *
+	 * @param string $query SQL query with placeholders
+	 * @return void
+	 */
 	public function query($query) {
 		$this->stmt = $this->dbh->prepare($query);
 	}
 
-	// bind values
+	/**
+	 * Bind a value to a parameter in the current statement.
+	 *
+	 * @param string|int $param Parameter identifier
+	 * @param mixed $value Value to bind
+	 * @param int|null $type PDO::PARAM_* type constant or null to infer
+	 * @return void
+	 */
 	public function bind($param, $value, $type = null) {
 		if (is_null($type)) {
 			switch (true) {
@@ -51,29 +83,49 @@ class Database {
 		$this->stmt->bindValue($param, $value, $type);
 	}
 
-	// eksekusi statement
+	/**
+	 * Execute the prepared statement.
+	 *
+	 * @return void
+	 */
 	public function execute() {
 		$this->stmt->execute();
 	}
 
-	// keluar banyak data
+	/**
+	 * Fetch all rows as an associative array.
+	 *
+	 * @return array<int, array<string,mixed>>
+	 */
 	public function resultSet() {
 		$this->execute();
 		return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
 	}
 
-	// keluar satu data
+	/**
+	 * Fetch a single row as an associative array.
+	 *
+	 * @return array<string,mixed>|false
+	 */
 	public function single() {
 		$this->execute();
 		return $this->stmt->fetch(PDO::FETCH_ASSOC);
 	}
 
-	// perubahan data
+	/**
+	 * Get the number of affected rows from the last statement.
+	 *
+	 * @return int
+	 */
 	public function rowCount() {
 		return $this->stmt->rowCount();
 	}
 
-	// fetch colomn
+	/**
+	 * Fetch a single column from the next row of the result set and cast to int.
+	 *
+	 * @return int
+	 */
 	public function coloms() {
 		$this->execute();
 		return (int) $this->stmt->fetchColumn();

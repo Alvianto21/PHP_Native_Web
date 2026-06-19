@@ -1,11 +1,29 @@
 <?php
 
+/**
+ * Application front controller and router.
+ *
+ * Parses the request URL, loads the appropriate controller, and executes
+ * the resolved method with any parameters.
+ */
 class App {
-	// Mendefinisikan kontroller default
+	/** @var string Default controller class name */
 	protected $controller = "HomeController";
+
+	/** @var string Default method name */
 	protected $method = "index";
+
+	/** @var array Route parameters extracted from the URL */
 	protected $params = [];
 
+	/**
+	 * App constructor.
+	 *
+	 * Resolves the incoming request into a controller, method and parameters,
+	 * then invokes the resolved controller action.
+	 *
+	 * @return void
+	 */
 	public function __construct() {
 		$url = $this->paseURL();
 
@@ -18,7 +36,7 @@ class App {
 			$this->controller = $controlName;
 			unset($url[0]);
 		}
-		
+        
 		// Load controller
 		require_once __DIR__ . '/../../app/controllers/' . $this->controller . '.php';
 		$this->controller = new $this->controller;
@@ -39,8 +57,12 @@ class App {
 		// Jalankan controller & method serta kirim params jika ada
 		call_user_func_array([$this->controller, $this->method], $this->params);
 	}
-	
-	// Routing
+    
+	/**
+	 * Parse the current request URI into an array of segments.
+	 *
+	 * @return string[] Array of URL segments
+	 */
 	public function paseURL() {
 		$request = $_SERVER['REQUEST_URI'];
 		$request = str_replace('/public/', '', $request);
