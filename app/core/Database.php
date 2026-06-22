@@ -8,16 +8,16 @@
  */
 class Database {
 	/** @var string */
-	private $host = DB_HOST;
+	private $host;
 
 	/** @var string */
-	private $user = DB_USER;
+	private $user;
 
 	/** @var string */
-	private $pass = DB_PASS;
+	private $pass;
 
 	/** @var string */
-	private $db_name = DB_NAME;
+	private $db_name;
 
 	/** @var \PDO Database handle instance */
 	private $dbh; // database handles
@@ -31,6 +31,14 @@ class Database {
 	 * @throws \PDOException On connection failure
 	 */
 	public function __construct() {
+		// Load database config
+		$config = require __DIR__ . '/../config/database.php';
+
+		$this->host = $config['DB_HOST'];
+		$this->user = $config['DB_USER'];
+		$this->pass = $config['DB_PASSWORD'];
+		$this->db_name = $config['DB_DATABASE'];
+		
 		$dsn = 'mysql:host=' . $this->host . ';dbname=' . $this->db_name;
 		$options = [
 			PDO::ATTR_PERSISTENT => false,

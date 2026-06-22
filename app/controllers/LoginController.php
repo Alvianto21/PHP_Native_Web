@@ -1,8 +1,10 @@
 <?php
 
-class LoginController extends Controller {
+class LoginController extends Controller
+{
 	// halaman login
-	public function index() {
+	public function index()
+	{
 		$data['judul'] = 'Halaman Login';
 
 		$this->view('templates/header', $data);
@@ -11,7 +13,8 @@ class LoginController extends Controller {
 	}
 
 	// proses login
-	public function authen() {
+	public function authen()
+	{
 		// cek method
 		if (isset($_POST['submit'])) {
 			header('LOCATION: ' . ABSOLUTURL . 'login');
@@ -24,7 +27,7 @@ class LoginController extends Controller {
 		];
 
 		// cek data
-		if($this->checkData($data)) {
+		if ($this->checkData($data)) {
 			header('LOCATION: ' . ABSOLUTURL . 'login');
 			exit;
 		}
@@ -38,7 +41,8 @@ class LoginController extends Controller {
 		$user = $this->model('Users')->find($data['email']);
 
 		// validasi
-		if($user && password_verify($data['password'], $user['password'])) {
+		if ($user && password_verify($data['password'], $user['password'])) {
+			session_regenerate_id(true);
 			$_SESSION['user_info'] = [
 				'user_id' => $user['id'],
 				'user_email' => $user['email']
@@ -54,7 +58,8 @@ class LoginController extends Controller {
 	}
 
 	// halaman register
-	public function register() {
+	public function register()
+	{
 		$data['judul'] = 'Halaman Register';
 
 		$this->view('templates/header', $data);
@@ -63,7 +68,8 @@ class LoginController extends Controller {
 	}
 
 	// create user
-	public function store() {
+	public function store()
+	{
 		// cek method
 		if (isset($_POST['submit'])) {
 			header('LOCATION: ' . ABSOLUTURL . 'login/register');
@@ -101,7 +107,8 @@ class LoginController extends Controller {
 	}
 
 	// logout
-	public function logout() {
+	public function logout()
+	{
 		// cel login
 		if (!isset($_SESSION['user_info'])) {
 			header('LOCATION: ' . ABSOLUTURL . 'login');
@@ -119,7 +126,8 @@ class LoginController extends Controller {
 	}
 
 	// cek data
-	public function checkData($data) {
+	public function checkData($data)
+	{
 		foreach ($data as $value) {
 			if (empty($value)) {
 				return true;
@@ -130,7 +138,8 @@ class LoginController extends Controller {
 	}
 
 	// bersihkan data
-	public function clearData($data) {
+	public function clearData($data)
+	{
 		$data = trim($data);
 		$data = stripslashes($data);
 		$data = htmlspecialchars($data);
