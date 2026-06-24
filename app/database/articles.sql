@@ -4,6 +4,7 @@ CREATE TABLE `articles` (
     slug VARCHAR(250) UNIQUE NOT NULL,
     user_id BIGINT,
     body TEXT NOT NULL,
+    photo_cover VARCHAR(255) NULL,
     is_deleted BOOLEAN DEFAULT FALSE,
     Foreign Key (user_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE RESTRICT,
     INDEX idx_title (title),
