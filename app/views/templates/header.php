@@ -38,5 +38,5 @@
 	 </div>
 
 	 <!-- Main content -->
-	
-	<div class="container-sm">
+	<main>
+		<div class="container-sm">

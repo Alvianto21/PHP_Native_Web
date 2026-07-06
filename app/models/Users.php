@@ -9,10 +9,14 @@ class Users {
 		$this->db = new Database();
 	}
 
-	// user baru
+	/**
+	 * Create user data
+	 * @param array $data - input data
+	 * @return int
+	 */
 	public function create($data) {
 		// set query
-		$query = "INSERT INTO " . $this->table . " (email, password) VALUES (:email, :password)";
+		$query = "INSERT INTO " . $this->table . " (email, username, photo_profile, role,  password) VALUES (:email, :username, :photo_profile, :role, :password)";
 
 		// insert user
 		$this->db->query($query);
@@ -24,13 +28,15 @@ class Users {
 
 		// bind data
 		$this->db->bind('email', $data['email']);
+		$this->db->bind('username', $data['username']);
+		$this->db->bind('photo_profile', $data['photo_profile']);
+		$this->db->bind('role', "user");
 		$this->db->bind('password', $data['password']);
 
 		// eksekusi
 		$this->db->execute();
 
-		return $this->db->rowCount();
-		
+		return $this->db->rowCount();	
 	}	
 	
 	// cari user

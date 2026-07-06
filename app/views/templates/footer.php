@@ -1,4 +1,5 @@
 		</div>
+	</main>
 
 		<!-- Bootstrap JS -->
 		<script src="<?= BASEURL; ?>js/bootstrap.js"></script>
