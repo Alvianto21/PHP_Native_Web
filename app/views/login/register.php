@@ -65,7 +65,7 @@
 
 <?php unset($_SESSION['errors'], $_SESSION['old_input'], $errors, $old); ?>
 
-<!-- create users -->
+<!-- create users script -->
 <script>
 	document.getElementById('create_users').addEventListener('submit', async function (event) {
 		event.preventDefault();

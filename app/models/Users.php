@@ -14,7 +14,7 @@ class Users {
 	 * @param array $data - input data
 	 * @return int
 	 */
-	public function create($data) {
+	public function create(array $data) {
 		// set query
 		$query = "INSERT INTO " . $this->table . " (email, username, photo_profile, role,  password) VALUES (:email, :username, :photo_profile, :role, :password)";
 
@@ -33,14 +33,18 @@ class Users {
 		$this->db->bind('role', "user");
 		$this->db->bind('password', $data['password']);
 
-		// eksekusi
+		// execute
 		$this->db->execute();
 
 		return $this->db->rowCount();	
 	}	
 	
-	// cari user
-	public function find($data) {
+	/**
+	 * Find user by email
+	 * @param string $data - user email
+	 * @return array|bool - user data
+	 */
+	public function findEmail(string $data) {
 		// set query
 		$query = 'SELECT * FROM ' . $this->table . ' WHERE email = :email';
 
@@ -52,7 +56,7 @@ class Users {
 		// bind data
 		$this->db->bind('email', $data);
 
-		// eksekusi
+		// execute
 		$this->db->execute();
 
 		return $this->db->single();

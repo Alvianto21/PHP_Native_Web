@@ -22,7 +22,7 @@
 						<a class="nav-link" aria-current="page" href="/">Home</a>
 
 						<?php if (isset($_SESSION['user_info'])) { ?>
-							<a class="nav-link" href="<?= ABSOLUTURL; ?>admin">Admin</a>
+							<a class="nav-link" href="<?= ABSOLUTURL; ?>dashboard">Dashboard</a>
 						<?php } ?>
 						</div>
 					</div>

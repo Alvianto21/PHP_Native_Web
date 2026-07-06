@@ -5,6 +5,11 @@ class LoginController extends Controller
 	// halaman login
 	public function index()
 	{
+		if (isset($_SESSION['user_info'])) {
+			header('LOCATION: ' . ABSOLUTURL . 'dashboard');
+			exit;
+		}
+
 		$data['judul'] = 'Halaman Login';
 
 		$this->view('templates/header', $data);
@@ -15,43 +20,64 @@ class LoginController extends Controller
 	// proses login
 	public function authen()
 	{
-		// cek method
-		if (isset($_POST['submit'])) {
+		require_once __DIR__ . '/../request/Validator.php';
+
+		// Cek method
+		if ($_SERVER['REQUEST_METHOD'] !== "POST") {
 			header('LOCATION: ' . ABSOLUTURL . 'login');
 			exit;
 		}
 
+		$validator = new Validator();
+		$_SESSION['errors'] = [];
+		$_SESSION['old_input'] = [];
 		$data = [
-			'email' => $_POST['email'],
-			'password' => $_POST['password']
+			'email' => $validator->clearData($_POST['email'] ?? ''),
+			'password' => $validator->clearData($_POST['password'] ?? '')
 		];
 
-		// cek data
-		if ($this->checkData($data)) {
+		$rules = [
+			"email" => [
+				"required" => true,
+				"email" => true,
+				"regex" => "/^[A-Za-z0-9._]+@[A-Za-z0-9._]+$/"
+			],
+			"password" => [
+				"required" => true,
+				"min" => 10,
+				"max" => 45
+			]
+		];
+
+		// Cek data
+		if ($validator->checkData($data)) {
 			header('LOCATION: ' . ABSOLUTURL . 'login');
 			exit;
 		}
 
-		// clear data
-		foreach ($data as $key) {
-			$this->clearData($key);
-		}
+		// Validate data
+		if ($validator->validate($data, $rules)) {
+			// Find user
+			$user = $this->model('Users')->findEmail($data['email']);
 
-		// cari user
-		$user = $this->model('Users')->find($data['email']);
-
-		// validasi
-		if ($user && password_verify($data['password'], $user['password'])) {
-			session_regenerate_id(true);
-			$_SESSION['user_info'] = [
-				'user_id' => $user['id'],
-				'user_email' => $user['email']
-			];
-			Flasher::setFlash('users berhasil', 'ditemukan. Selamat datang', 'info');
-			header('LOCATION: ' . ABSOLUTURL . 'admin');
-			exit;
+			// Check users if exist
+			if ($user && password_verify($data['password'], $user['password'])) {
+				session_regenerate_id(true);
+				$_SESSION['user_info'] = [
+					'user_id' => $user['id'],
+					'user_role' => $user['role']
+				];
+				Flasher::setFlash('users berhasil', 'ditemukan. Selamat datang, ' . $user['username'], 'info');
+				header('LOCATION: ' . ABSOLUTURL . 'dashboard');
+				exit;
+			} else {
+				Flasher::setFlash('users gagal', 'ditemukan. Coba lagi', 'danger');
+				header('LOCATION: ' . ABSOLUTURL . 'login');
+				exit;
+			}
 		} else {
-			Flasher::setFlash('users gagal', 'ditemukan. Coba lagi', 'danger');
+			$_SESSION['errors'] = $validator->errors();
+			$_SESSION['old_input'] = $data['email'];
 			header('LOCATION: ' . ABSOLUTURL . 'login');
 			exit;
 		}
@@ -88,11 +114,11 @@ class LoginController extends Controller
 
 		// cek data
 		$data = [
-			'email' => $postData['email'] ?? '',
-			'username' => $postData['username'] ?? '',
+			'email' => $validator->clearData($postData['email'] ?? ''),
+			'username' => $validator->clearData($postData['username'] ?? ''),
 			'photo_profile' => $fileData['photo_profile']['name'] ?? '',
 			'photo_path' => $postData['photo_path'] ?? '',
-			'password' => $postData['password'] ?? '',
+			'password' => $validator->clearData($postData['password'] ?? ''),
 			'password_confirm' => $postData['password_confirm'] ?? ''
 		];
 
@@ -130,13 +156,6 @@ class LoginController extends Controller
 			]
 		];
 
-		// clear data
-		foreach ($data as $key => $value) {
-			if (is_string($key) && $key !== 'photo_path') {
-				$data[$key] = $validator->clearData($value);
-			}
-		}
-
 		// Validate input
 		if ($validator->validate($data, $rules)) {
 			if (!empty($data['photo_path'])) {
@@ -161,12 +180,12 @@ class LoginController extends Controller
 				$imgName = basename($photoFile["name"]);
 				$imgTemp = $photoFile["tmp_name"];
 				$imgExt = strtolower(pathinfo($imgName, PATHINFO_EXTENSION));
-	
+
 				// consider $newImgName = bin2hex(random_bytes(16)) . '.' . $imgExt;
 				$newImgName = bin2hex(random_bytes(16)) . '.' . $imgExt;
 				$uploadDir = __DIR__ . '/../../storage/profiles/';
 				$savePath = $uploadDir . $newImgName;
-	
+
 				// Re-encode and move the file
 				switch ($imgExt) {
 					case 'jpg':
@@ -235,26 +254,5 @@ class LoginController extends Controller
 
 		header('LOCATION: ' . BASEURL);
 		exit;
-	}
-
-	// cek data
-	public function checkData($data)
-	{
-		foreach ($data as $value) {
-			if (empty($value)) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-	}
-
-	// bersihkan data
-	public function clearData($data)
-	{
-		$data = trim($data);
-		$data = stripslashes($data);
-		$data = htmlspecialchars($data);
-		return $data;
 	}
 }
