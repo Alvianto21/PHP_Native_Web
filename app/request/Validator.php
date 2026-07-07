@@ -25,32 +25,32 @@ class Validator
 				switch ($rule) {
 					case 'required':
 						if (empty($value) && $value !== '0') {
-							$this->addError($field, "The $field is required.");
+							$this->addError($field, "The '{$field}' is required.");
 						}
 						break;
 					case 'min':
 						if (strlen($value) < $ruleValue) {
-							$this->addError($field, "The $field must at least $ruleValue characters.");
+							$this->addError($field, "The '{$field}' must at least $ruleValue characters.");
 						}
 						break;
 					case 'max':
 						if (strlen($value) > $ruleValue) {
-							$this->addError($field, "The $field may not exceed $ruleValue characters.");
+							$this->addError($field, "The '{$field}' may not exceed $ruleValue characters.");
 						}
 						break;
 					case 'email':
 						if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
-							$this->addError($field, "The $field must be a valid email.");
+							$this->addError($field, "The '{$field}' must be a valid email.");
 						}
 						break;
 					case 'regex':
 						if (!preg_match($ruleValue, $value)) {
-							$this->addError($field, "The $field format is invalid.");
+							$this->addError($field, "The '{$field}' format is invalid.");
 						}
 						break;
 					case 'match':
 						if ($value !== $data[$ruleValue]) {
-							$this->addError($field, "The $field must match $ruleValue.");
+							$this->addError($field, "The '{$field}' must match $ruleValue.");
 							break;
 						}
 					case "required_if":
@@ -58,7 +58,7 @@ class Validator
 						$otherValue = $data[$other] ?? null;
 
 						if (!empty($otherValue) && (empty($value) && $value !== '0')) {
-							$this->addError($field, "The $field is required when $other is present.");
+							$this->addError($field, "The '{$field}' is required when $other is present.");
 						}
 						break;
 					case "signature":
@@ -70,14 +70,14 @@ class Validator
 								$isValidUrl = $parsedUrl !== false && !empty($parsedUrl['scheme']) && !empty($parsedUrl['host']);
 							}
 							if (!$isValidUrl) {
-								$this->addError($field, "The $field must be a valid URL.");
+								$this->addError($field, "The '{$field}' must be a valid URL.");
 							}
 						}
 						break;
 					case "size":
 						$file = $_FILES[$field] ?? null;
 						if ($file && ($file["error"] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK && ($file["size"] ?? 0) > $ruleValue) {
-							$this->addError($field, "The $field file is too large.");
+							$this->addError($field, "The '{$field}' file is too large.");
 						}
 						break;
 					case "img":
@@ -105,11 +105,14 @@ class Validator
 						$allowExt = ["jpg", "jpeg", "png"];
 
 						if (!in_array($imgTypeFile, $allowExt, true) || !in_array($imgMime, $allowMime, true)) {
-							$this->addError($field, "The $field only JPG, PNG, or JPEG");
+							$this->addError($field, "The '{$field}' only JPG, PNG, or JPEG");
 						}
 						break;
 					default:
-						// plan if rules not found
+						// Log the rule and trow exception
+						$massage = "Unsupported validation rule '{$rule}' for field '{$field}'. ";
+						error_log($massage);
+						throw new Exception($massage);
 						break;
 				}
 			}
