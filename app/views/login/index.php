@@ -11,7 +11,7 @@
 	<form action="<?= ABSOLUTURL; ?>login/authen" method="post" id="login_user">
 		<div class="mb-3 form-group">
 			<label for="email" class="form-label">Email address</label>
-			<input type="email" class="form-control <?php echo !empty($errors['email']) ? 'is-invalid' : ''; ?>" name="email" id="email" value="<?php echo htmlspecialchars($old['email'] ?? '', ENT_QUOTES); ?>" required autofocus autocomplete="email">
+			<input type="email" class="form-control <?php echo !empty($errors['email']) ? 'is-invalid' : ''; ?>" name="email" id="email" value="<?php echo htmlspecialchars($old['email'] ?? '', ENT_QUOTES); ?>" placeholder="name@example.com" required autofocus autocomplete="email">
 			<?php if (!empty($errors["email"])): ?>
 				<div class="invalid-feedback">
 					<?php echo htmlspecialchars($errors['email']); ?>

@@ -6,7 +6,7 @@
 	<form action="<?= ABSOLUTURL; ?>login/store" method="post" enctype="multipart/form-data" id="create_users">
 		<div class="mb-3 form-group">
 			<label for="email" class="form-label">Email address</label>
-			<input type="email" class="form-control <?php echo !empty($errors['email']) ? 'is-invalid' : ''; ?>" name="email" id="email" value="<?php echo htmlspecialchars($old['email'] ?? '', ENT_QUOTES); ?>" required autofocus autocomplete="email">
+			<input type="email" class="form-control <?php echo !empty($errors['email']) ? 'is-invalid' : ''; ?>" name="email" id="email" value="<?php echo htmlspecialchars($old['email'] ?? '', ENT_QUOTES); ?>" placeholder="name@example.com" required autofocus autocomplete="email">
 			<?php if (!empty($errors["email"])): ?>
 				<div class="invalid-feedback">
         			<?php echo htmlspecialchars($errors['email']); ?>
@@ -15,7 +15,7 @@
 		</div>
 		<div class="mb-3 form-group">
 			<label for="username" class="form-label">Username</label>
-			<input type="text" name="username" id="username" class="form-control <?php echo !empty($errors['username']) ? 'is-invalid' : ''; ?>" required value="<?php echo htmlspecialchars($old['username'] ?? '', ENT_QUOTES); ?>" autocomplete="username">
+			<input type="text" name="username" id="username" class="form-control <?php echo !empty($errors['username']) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($old['username'] ?? '', ENT_QUOTES); ?>" placeholder="name6767" required  autocomplete="username">
 			<?php if (!empty($errors["username"])): ?>
 				<div class="invalid-feedback">
 					<?php echo htmlspecialchars($errors['username']); ?>
