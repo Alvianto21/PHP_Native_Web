@@ -1,14 +1,23 @@
 <article aria-label="Article List">
+	<?php 
+		$articles = (array)($data['articles'] ?? []);
+		$firstArticle = $articles[0] ?? null;
+		
+		if (!is_null($firstArticle)):
+	?>
 	<div class="container">
 		<div class="card mt-4" style="width: 25rem; height: 10rem;">
 			  <div class="card-body">
-				<h5 class="card-title"><?= $data['articles'][0]['title'] ?></h5>
-				<small class="text-muted"><?= $data['articles'][0]['author'] ?></small>
-				<p class="card-text"><?= substr($data['articles'][0]['body'], 0, 50); ?></p>
-				<a href="<?= ABSOLUTURL; ?>home/detail/<?= $data['articles'][0]['id']; ?>" class="btn btn-primary">Read More</a>
+				<h5 class="card-title"><?php echo htmlspecialchars($firstArticle['title'] ?? '', ENT_QUOTES); ?></h5>
+				<small class="text-muted"><?php echo htmlspecialchars($firstArticle['author'] ?? '', ENT_QUOTES); ?></small>
+				<p class="card-text"><?php echo htmlspecialchars(substr($firstArticle['body'] ?? '', 0, 50), ENT_QUOTES); ?></p>
+				<a href="<?php echo ABSOLUTURL; ?>home/detail/<?php echo htmlspecialchars($firstArticle['id'] ?? '', ENT_QUOTES); ?>" class="btn btn-primary">Read More</a>
 			  </div>
 		</div>
 	</div>
+	<?php else: ?>
+		<div class="alert alert-info text-center mt-4">No articles available yet. </div>
+	<?php endif; ?>
 </article>
 <article>
 	<div class="container">
@@ -22,10 +31,10 @@
 					<div class="col-md-3 mt-4">
 						<div class="card mt-3" style="width: 18rem;">
 						  	<div class="card-body">
-								<h5 class="card-title"><?= $article['title']; ?></h5>
-								<small class="text-muted"><?= $article['author']; ?></small>
-								<p class="card-text"><?= substr($article['body'], 0, 60); ?></p>
-								<a href="<?= ABSOLUTURL; ?>home/detail/<?= $article['id'] ?>" class="btn btn-primary">Read More</a>
+								<h5 class="card-title"><?php echo $article['title']; ?></h5>
+								<small class="text-muted"><?php echo $article['author']; ?></small>
+								<p class="card-text"><?php echo substr($article['body'], 0, 60); ?></p>
+								<a href="<?php echo ABSOLUTURL; ?>home/detail/<?php echo $article['id'] ?>" class="btn btn-primary">Read More</a>
 						  	</div>
 						</div>
 					</div>
