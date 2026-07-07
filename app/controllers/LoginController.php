@@ -208,9 +208,9 @@ class LoginController extends Controller
 						break;
 					default:
 						// Log the extension and throw exception
-						$massage = "Unsupported image extension '{$imgExt}' for upload file.";
-						error_log($massage);
-						throw new Exception($massage);
+						$message = "Unsupported image extension '{$imgExt}' for upload file.";
+						error_log($message);
+						throw new Exception($message);
 						break;
 				}
 			}
