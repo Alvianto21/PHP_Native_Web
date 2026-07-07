@@ -207,7 +207,10 @@ class LoginController extends Controller
 						unset($img);
 						break;
 					default:
-						// plant if file not jpg, jpeg, or png
+						// Log the extension and throw exception
+						$massage = "Unsupported image extension '{$imgExt}' for upload file.";
+						error_log($massage);
+						throw new Exception($massage);
 						break;
 				}
 			}
