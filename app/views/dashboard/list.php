@@ -4,7 +4,7 @@
 	</div>
 </div>
 <div class="d-grid d-md-block mt-4">
-	<a href="<?= ABSOLUTURL; ?>admin/create" type="button" class="btn btn-primary">Tamabah data</a>
+	<a href="<?= ABSOLUTURL; ?>dashboard/create" type="button" class="btn btn-primary">Tamabah data</a>
 </div>
 <div class="col-md-6 table-responsive mt-3">
 	<table class="table table-striped-columns table-hover">

@@ -90,7 +90,7 @@
 			if (!urlResponse.ok) throw new Error("Failed to generate URL.");
 
 			const data = await urlResponse.json();
-			console.info(data);
+			// console.info(data);
 			if (!data.url) throw new Error("No upload URL returned.");
 
 			photoPathField.value = data.url;

@@ -7,6 +7,6 @@ CREATE TABLE `articles` (
     photo_cover VARCHAR(255) NULL,
     is_deleted BOOLEAN DEFAULT FALSE,
     Foreign Key (user_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE RESTRICT,
-    INDEX idx_title (title),
+    INDEX idx_slug (slug),
     INDEX idx_is_deleted (is_deleted)
 )

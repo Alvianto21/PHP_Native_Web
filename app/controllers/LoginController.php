@@ -135,8 +135,7 @@ class LoginController extends Controller
 				"regex" => "/^[A-Za-z0-9]+$/"
 			],
 			"photo_profile" => [
-				"nullable" => true,
-				"size" => 500000,
+				"size" => 500000, // 500 Kb
 				"img" => true
 			],
 			"photo_path" => [
@@ -158,6 +157,7 @@ class LoginController extends Controller
 
 		// Validate input
 		if ($validator->validate($data, $rules)) {
+			// Verify img sign url if exist
 			if (!empty($data['photo_path'])) {
 				parse_str(parse_url($data['photo_path'], PHP_URL_QUERY) ?: '', $signUrlData);
 				$expires = (int) ($signUrlData['expires'] ?? 0);
@@ -181,7 +181,7 @@ class LoginController extends Controller
 				$imgTemp = $photoFile["tmp_name"];
 				$imgExt = strtolower(pathinfo($imgName, PATHINFO_EXTENSION));
 
-				// consider $newImgName = bin2hex(random_bytes(16)) . '.' . $imgExt;
+				// Use bin2hex to generate new file name
 				$newImgName = bin2hex(random_bytes(16)) . '.' . $imgExt;
 				$uploadDir = __DIR__ . '/../../storage/profiles/';
 				$savePath = $uploadDir . $newImgName;

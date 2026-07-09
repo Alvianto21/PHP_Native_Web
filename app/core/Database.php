@@ -101,6 +101,21 @@ class Database {
 	}
 
 	/**
+	 * Execute the prepared statement and return the result set when available.
+	 *
+	 * @return mixed
+	 */
+	public function getResult() {
+		$this->execute();
+
+		if (method_exists($this->stmt, 'get_result')) {
+			return $this->stmt->get_result();
+		}
+
+		return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
+	}
+
+	/**
 	 * Fetch all rows as an associative array.
 	 *
 	 * @return array<int, array<string,mixed>>

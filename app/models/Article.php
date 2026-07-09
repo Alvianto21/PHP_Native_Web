@@ -39,17 +39,34 @@ class Article {
 		return $this->db->coloms();
 	}
 
-	// cari data berdasarkan id
-	public function find($id) {
-		$this->db->query('SELECT * FROM ' . $this->table . ' WHERE id=:id');
-		$this->db->bind('id', $id);
-		return $this->db->single();
+	/**
+	 * Check whether an article slug already exists.
+	 *
+	 * @param string $slug Slug to search for
+	 * @return bool True when the slug exists, otherwise false
+	 */
+	public function findSlug(string $slug) {
+		$this->db->query('SELECT 1 FROM ' . $this->table . ' WHERE slug = ? LIMIT 1');
+		$this->db->bind(1, $slug);
+
+		$result = $this->db->getResult();
+
+		if (is_object($result) && method_exists($result, 'num_rows')) {
+			return $result->num_rows > 0;
+		}
+
+		return !empty($result);
 	}
 
-	// tambah data
-	public function create($data) {		
+	/**
+	 * Create new article
+	 * @param array $data - Form data
+	 * @param int  $user_id - User id from session
+	 * @return int
+	 */
+	public function create(array $data, int $user_id) {		
 		// set query
-		$query = "INSERT INTO " . $this->table . " (title, slug, author, body) VALUES (:title, :slug, :author, :body)";
+		$query = "INSERT INTO " . $this->table . " (title, slug, user_id, body) VALUES (:title, :slug, :user_id, :body)";
 
 		// insert data
 		$this->db->query($query);
@@ -57,13 +74,13 @@ class Article {
 		// bind data
 		$this->db->bind("title", $data['title']);
 		$this->db->bind("slug", $data['slug']);
-		$this->db->bind("author", $data['author']);
+		$this->db->bind("user_id", $user_id);
 		$this->db->bind("body", $data['body']);
 
-		// eksekusi
+		// execute
 		$this->db->execute();
 
-		// cek apakah ada data yang berubah
+		// check if have added data
 		return $this->db->rowCount();
 	}
 
