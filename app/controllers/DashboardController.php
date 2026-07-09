@@ -12,7 +12,7 @@ class DashboardController extends Controller
 		}
 
 		$data['judul'] = 'Halaman Dashboard';
-		$data['articles'] = $this->model('Article')->all();
+		$data['articles'] = $this->model('Article')->getByUsers($_SESSION['user_info']['user_id']);
 
 		$this->view('templates/header', $data);
 		$this->view('dashboard/list', $data);

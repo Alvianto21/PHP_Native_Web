@@ -3,6 +3,7 @@
 class Article {	
 	
 	private $table = 'articles';
+	private $tableRelations = 'users';
 	private $db; 
 
 	// koneksi ke database
@@ -10,9 +11,18 @@ class Article {
 		$this->db = new Database();
 	}
 
-	// semua data
-	public function all() {
-		$this->db->query('SELECT * FROM ' . $this->table);
+	/**
+	 * Get all articles frm a user except is deleted
+	 * @param int $user_id - User id from sessions
+	 * @return array[] - Article data
+	 */
+	public function getByUsers(int $user_id) {
+		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body FROM `{$this->table}` JOIN `{$this->tableRelations}` ON articles.user_id = users.id WHERE users.id = :user_id AND is_deleted = 0";
+
+		$this->db->query($query);
+
+		$this->db->bind('user_id', $user_id);
+		
 		return $this->db->resultSet();
 	}
 
