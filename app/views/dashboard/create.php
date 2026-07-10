@@ -63,7 +63,7 @@
 		}
 
 		try {
-			const urlResponse = await fetch('<?= ABSOLUTURL; ?>upload/generate', {
+			const urlResponse = await fetch('<?php echo ABSOLUTURL; ?>files/signUrl', {
 				method: 'POST'
 			});
 

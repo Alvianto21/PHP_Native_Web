@@ -76,7 +76,7 @@ class Article {
 	 */
 	public function create(array $data, int $user_id) {		
 		// set query
-		$query = "INSERT INTO " . $this->table . " (title, slug, user_id, body) VALUES (:title, :slug, :user_id, :body)";
+		$query = "INSERT INTO " . $this->table . " (title, slug, photo_cover, user_id, body) VALUES (:title, :slug, :photo_cover, :user_id, :body)";
 
 		// insert data
 		$this->db->query($query);
@@ -84,6 +84,7 @@ class Article {
 		// bind data
 		$this->db->bind("title", $data['title']);
 		$this->db->bind("slug", $data['slug']);
+		$this->db->bind('photo_cover', $data['photo_cover']);
 		$this->db->bind("user_id", $user_id);
 		$this->db->bind("body", $data['body']);
 

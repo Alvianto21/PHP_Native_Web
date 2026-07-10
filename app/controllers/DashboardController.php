@@ -39,6 +39,7 @@ class DashboardController extends Controller
 	public function store()
 	{
 		require_once __DIR__ . '/../request/Validator.php';
+		require_once __DIR__ . '/../request/UploadImage.php';
 
 		// cek login
 		if (!isset($_SESSION['user_info'])) {
@@ -56,16 +57,17 @@ class DashboardController extends Controller
 		$_SESSION['old_input'] = [];
 
 		$validator = new Validator();
+		$uploader = new UploadImage();
+
 		$postData = $_POST;
 		$fileData = $_FILES;
 		$user = $_SESSION['user_info']['user_id'];
-		$secret = getenv("APP_KEY");
 
 		// cek data
 		$data = [
 			'title' => $validator->clearData($postData['title'] ?? ''),
 			'slug' => '',
-			'photo_cover' => $fileData['photo_cover']['name'] ?? '',
+			'photo_cover' => $fileData['photo_cover'] ?? '',
 			'photo_path' => $postData['photo_path'] ?? '',
 			'body' => $validator->clearData($postData['body'] ?? '')
 		];
@@ -82,7 +84,7 @@ class DashboardController extends Controller
 			],
 			'photo_path' => [
 				'required_if' => 'photo_cover',
-				'signature' => true
+				'signature' => true,
 			],
 			'body' => [
 				'required' => true,
@@ -94,17 +96,12 @@ class DashboardController extends Controller
 		if ($validator->validate($data, $rules)) {
 			// Verify img sign url if exist
 			if (!empty($data['photo_path'])) {
-				parse_str(parse_url($data['photo_path'], PHP_URL_QUERY), $signUrlData);
-				$expired = (int)($signUrlData['expires'] ?? 0);
-				$signature = $signUrlData['sig'] ?? '';
-				$expected = hash_hmac('sha256', (string) $expired, $secret);
+				$checkUrl = $validator->validateSignUrl($data['photo_path']);
 
-				if ($expired < time()) {
+				if ($checkUrl !== true) {
 					http_response_code(403);
-					exit("Link expired");
-				} elseif (!hash_equals($expected, $signature)) {
-					http_response_code(403);
-					exit("Invalid signature");
+					echo $checkUrl;
+					exit($checkUrl);
 				}
 			}
 
@@ -127,45 +124,7 @@ class DashboardController extends Controller
 			$data['slug'] = $slug;
 
 			// File handling
-			$photoFile =  $_FILES['photo_cover'] ?? null;
-
-			if ($photoFile && ($photoFile['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
-				$imgName = basename($photoFile['name']);
-				$imgTemp = $photoFile['tmp_name'];
-				$imgExt = strtolower(pathinfo($imgName, PATHINFO_EXTENSION));
-
-				// Use bin2hex to generate new file name
-				$newImgName = bin2hex(random_bytes(16)) . '.' . $imgExt;
-				$uploadDir = __DIR__ . '/../../storage/covers/';
-				$savePath = $uploadDir . $newImgName;
-
-				switch ($imgExt) {
-					case 'jpg':
-						$img = imagecreatefromjpeg($imgTemp);
-						imagejpeg($img, $savePath, 90);
-						$data['photo_cover'] = '/covers/' . $newImgName;
-						unset($img);
-						break;
-					case 'jpeg':
-						$img = imagecreatefromjpeg($imgTemp);
-						imagejpeg($img, $savePath, 90);
-						$data['photo_cover'] = '/covers/' . $newImgName;
-						unset($img);
-						break;
-					case 'png':
-						$img = imagecreatefrompng($imgTemp);
-						imagepng($img, $savePath, 90);
-						$data['photo_cover'] = '/covers/' . $newImgName;
-						unset($img);
-						break;
-					default:
-						// Log the extension and throw exception
-						$message = "Unsupported image extension '{$imgExt}' for upload file.";
-						error_log($message);
-						throw new Exception($message);
-						break;
-				}
-			}
+			$data['photo_cover'] = $uploader->store($data['photo_cover'], "covers");
 
 			if ($this->model('Article')->create($data, $user)) {
 				Flasher::setFlash('artikel berhasil', 'ditambahkan', 'success');

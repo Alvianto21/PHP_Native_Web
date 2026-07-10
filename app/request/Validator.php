@@ -122,6 +122,29 @@ class Validator
 	}
 
 	/**
+	 * Validate temp sign URL.
+	 * Return true if success.
+	 * @param string $url - Sign URL.
+	 * @return bool|string - Return true or error massage.
+	 */
+	public function validateSignUrl(string $url)
+	{
+		$secret = getenv("APP_KEY");
+		parse_str(parse_url($url, PHP_URL_QUERY), $signUrlData);
+		$expired = (int)($signUrlData['expires'] ?? 0);
+		$signature = $signUrlData['sig'] ?? '';
+		$expected = hash_hmac('sha256', (string) $expired, $secret);
+
+		if ($expired < time()) {
+			return $message = "Link expired.";
+		} elseif (!hash_equals($expected, $signature)) {
+			return $message = "Invalid signature.";
+		} else {
+			return true;
+		}
+	}
+
+	/**
 	 * Sanitize input form
 	 * @param string $data - Form data
 	 * @return string

@@ -97,6 +97,7 @@ class LoginController extends Controller
 	public function store()
 	{
 		require_once __DIR__ . '/../request/Validator.php';
+		require_once __DIR__ . '/../request/UploadImage.php';
 
 		// cek method
 		if ($_SERVER['REQUEST_METHOD'] !== "POST") {
@@ -108,6 +109,8 @@ class LoginController extends Controller
 		$_SESSION['old_input'] = [];
 
 		$validator = new Validator();
+		$uploader = new UploadImage();
+
 		$secret = getenv("APP_KEY");
 		$postData = $_POST;
 		$fileData = $_FILES;
@@ -116,7 +119,7 @@ class LoginController extends Controller
 		$data = [
 			'email' => $validator->clearData($postData['email'] ?? ''),
 			'username' => $validator->clearData($postData['username'] ?? ''),
-			'photo_profile' => $fileData['photo_profile']['name'] ?? '',
+			'photo_profile' => $fileData['photo_profile'] ?? '',
 			'photo_path' => $postData['photo_path'] ?? '',
 			'password' => $validator->clearData($postData['password'] ?? ''),
 			'password_confirm' => $postData['password_confirm'] ?? ''
@@ -159,62 +162,17 @@ class LoginController extends Controller
 		if ($validator->validate($data, $rules)) {
 			// Verify img sign url if exist
 			if (!empty($data['photo_path'])) {
-				parse_str(parse_url($data['photo_path'], PHP_URL_QUERY) ?: '', $signUrlData);
-				$expires = (int) ($signUrlData['expires'] ?? 0);
-				$signature = $signUrlData['sig'] ?? '';
-				$expected = hash_hmac('sha256', (string) $expires, $secret);
+				$checkUrl = $validator->validateSignUrl($data['photo_path']);
 
-				if ($expires < time()) {
+				if ($checkUrl !== true) {
 					http_response_code(403);
-					exit("Link expired");
-				} elseif (!hash_equals($expected, $signature)) {
-					http_response_code(403);
-					exit("Invalid signature");
+					echo $checkUrl;
+					exit($checkUrl);
 				}
 			}
 
 			// File handling
-			$photoFile = $_FILES['photo_profile'] ?? null;
-
-			if ($photoFile && ($photoFile['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
-				$imgName = basename($photoFile["name"]);
-				$imgTemp = $photoFile["tmp_name"];
-				$imgExt = strtolower(pathinfo($imgName, PATHINFO_EXTENSION));
-
-				// Use bin2hex to generate new file name
-				$newImgName = bin2hex(random_bytes(16)) . '.' . $imgExt;
-				$uploadDir = __DIR__ . '/../../storage/profiles/';
-				$savePath = $uploadDir . $newImgName;
-
-				// Re-encode and move the file
-				switch ($imgExt) {
-					case 'jpg':
-						$img = imagecreatefromjpeg($imgTemp);
-						imagejpeg($img, $savePath, 90);
-						$data['photo_profile'] = '/profile/' . $newImgName;
-						unset($img);
-						break;
-					case 'jpeg':
-						$img = imagecreatefromjpeg($imgTemp);
-						imagejpeg($img, $savePath, 90);
-						$data['photo_profile'] = '/profile/' . $newImgName;
-						unset($img);
-						break;
-					case 'png':
-						$img = imagecreatefrompng($imgTemp);
-						imagepng($img, $savePath, 90);
-						$data['photo_profile'] = '/profile/' . $newImgName;
-						unset($img);
-						break;
-					default:
-						// Log the extension and throw exception
-						$message = "Unsupported image extension '{$imgExt}' for upload file.";
-						error_log($message);
-						throw new Exception($message);
-						break;
-				}
-			}
-
+			$data['photo_profile'] = $uploader->store($data['photo_profile'], "profiles");
 
 			// hash password
 			$data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);

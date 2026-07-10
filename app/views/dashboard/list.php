@@ -13,8 +13,8 @@
 			<thead>
 				<tr>
 					<th scope="col">#</th>
-					<th scope="col">Title</th>
 					<th scope="col">Cover</th>
+					<th scope="col">Title</th>
 					<th scope="col">Actions</th>
 				</tr>
 			</thead>
@@ -24,8 +24,8 @@
 				foreach ($articles as $article): ?>
 					<tr>
 						<th scope="row"><?php echo $index; ?></th>
-						<td><?php echo $article['title']; ?></td>
 						<!-- <td><?php //echo $article['author']; ?></td> -->
+						<td><?php echo $article['title']; ?></td>
 						<td>
 							<a href="<?php echo ABSOLUTURL; ?>dashboard/edit/<?php echo $article['slug']; ?>" class="badge bg-warning text-decoration-none">Edit</a>
 							<a href="<?php echo ABSOLUTURL; ?>dashboard/delete/<?php echo $article['slug']; ?>" class="badge bg-danger text-decoration-none" onclick="return confirm('Yakin?');">delete</a>
