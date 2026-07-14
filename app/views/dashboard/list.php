@@ -24,7 +24,7 @@
 				foreach ($articles as $article): ?>
 					<tr>
 						<th scope="row"><?php echo $index; ?></th>
-						<!-- <td><?php //echo $article['author']; ?></td> -->
+						<td><img src="<?php echo htmlspecialchars($article['photo_cover']); ?>" alt="<?php echo htmlspecialchars($article['slug']); ?>" class="object-fit-md-contain" sizes="200" height="300"></td>
 						<td><?php echo $article['title']; ?></td>
 						<td>
 							<a href="<?php echo ABSOLUTURL; ?>dashboard/edit/<?php echo $article['slug']; ?>" class="badge bg-warning text-decoration-none">Edit</a>

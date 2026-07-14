@@ -26,26 +26,34 @@ class Article {
 		return $this->db->resultSet();
 	}
 
-	// semua data dengan paginator
-	public function paginator($limit, $offset) {
+	/**
+	 * SHow all data with paginator.
+	 * @param int $limit Max data output
+	 * @param int $offset Start data position
+	 * @return array[] array data
+	 */
+	public function paginator(int $limit, int $offset) {
 		// set query
-		$query = "SELECT * FROM " . $this->table . " ORDER BY id DESC LIMIT :offset, :limit";
+		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id WHERE is_deleted = 0 ORDER BY articles.id DESC LIMIT :limit OFFSET :offset";
 
 		// get data
 		$this->db->query($query);
 
 		// bind data
-		$limit = (int)$limit;
-		$offset = (int)$offset;
 		$this->db->bind('limit', $limit, PDO::PARAM_INT);
 		$this->db->bind('offset', $offset, PDO::PARAM_INT);
 
 		return $this->db->resultSet();
 	}
 
-	// hitung data
+	/**
+	 * Count article data
+	 * @return int total articles
+	 */
 	public function count() {
-		$this->db->query('SELECT COUNT(*) AS total FROM articles');
+		$query = "SELECT COUNT(*) AS total FROM " . $this->table .  " WHERE is_deleted = 0";
+		$this->db->query($query);
+		
 		return $this->db->coloms();
 	}
 

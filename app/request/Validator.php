@@ -129,18 +129,25 @@ class Validator
 	 */
 	public function validateSignUrl(string $url)
 	{
-		$secret = getenv("APP_KEY");
-		parse_str(parse_url($url, PHP_URL_QUERY), $signUrlData);
+		$secret = getenv("APP_KEY") ?: 'no-value';
+		$query = parse_url($url, PHP_URL_QUERY) ?? '';
+		parse_str($query, $signUrlData);
+
+		$path = $signUrlData['path'] ?? '';
 		$expired = (int)($signUrlData['expires'] ?? 0);
-		$signature = $signUrlData['sig'] ?? '';
-		$expected = hash_hmac('sha256', (string) $expired, $secret);
+		$signature = $signUrlData['sig'] ?? $signUrlData['signature'] ?? '';
+
+		$expectedForm = hash_hmac('sha256', (string) $expired, $secret);
+		$expectedShow = hash_hmac('sha256', $path . $expired, $secret);
 
 		if ($expired < time()) {
-			return $message = "Link expired.";
-		} elseif (!hash_equals($expected, $signature)) {
-			return $message = "Invalid signature.";
-		} else {
+			error_log("Time: " . (string) time() . " Input: " . (string) $expired);
+			return "Link expired.";
+		} elseif (hash_equals($expectedForm, $signature) || hash_equals($expectedShow, $signature)) {
 			return true;
+		} else {
+			error_log("Signature: " . $expectedForm ?? $expectedShow . " Input: " . $signature);
+			return "Invalid signature.";
 		}
 	}
 

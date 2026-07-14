@@ -5,14 +5,26 @@ class DashboardController extends Controller
 	// articles table
 	public function index()
 	{
+		require_once __DIR__ . '/../request/UploadImage.php';
+
 		// cek login
 		if (!isset($_SESSION['user_info'])) {
 			header('LOCATION: ' . ABSOLUTURL . 'login');
 			exit;
 		}
 
+		$uploader = new UploadImage();
+
 		$data['judul'] = 'Halaman Dashboard';
 		$data['articles'] = $this->model('Article')->getByUsers($_SESSION['user_info']['user_id']);
+
+		if (!empty($data['articles'])) {
+			foreach($data['articles'] as &$article) {
+				if (!empty($article['photo_cover'])) {
+					$article['photo_cover'] = $uploader->show($article['photo_cover']);
+				}
+			}
+		}
 
 		$this->view('templates/header', $data);
 		$this->view('dashboard/list', $data);
