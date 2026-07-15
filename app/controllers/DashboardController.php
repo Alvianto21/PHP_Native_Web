@@ -154,6 +154,38 @@ class DashboardController extends Controller
 		}
 	}
 
+	// Show article
+	public function show(string $slug) {
+		require_once __DIR__ . '/../request/UploadImage.php';
+
+		// cek login
+		if (!isset($_SESSION['user_info'])) {
+			header('LOCATION: ' . ABSOLUTURL . 'login');
+			exit;
+		}
+
+		$uploader = new UploadImage();
+		$user = $_SESSION['user_info']['user_id'];
+
+		$data['judul'] = 'Detail article';
+		$article = $this->model('Article')->findArticleUser($slug, $user);
+
+		if ($article) {
+			if (!empty($article['photo_cover'])) {
+				$article['photo_cover'] = $uploader->show($article['photo_cover'], 300);
+			}
+			
+			$data['article'] = $article;
+		} else {
+			header('LOCATION: ' . ABSOLUTURL . 'dashboard');
+			exit;
+		}
+
+		$this->view('templates/header', $data);
+		$this->view('dashboard/show', $data);
+		$this->view('templates/footer');
+	}
+
 	// edit article
 	public function edit($id)
 	{

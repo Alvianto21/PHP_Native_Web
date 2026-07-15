@@ -12,9 +12,9 @@ class Article {
 	}
 
 	/**
-	 * Get all articles frm a user except is deleted
-	 * @param int $user_id - User id from sessions
-	 * @return array[] - Article data
+	 * Get all articles frm a user except is deleted.
+	 * @param int $user_id - User id from sessions.
+	 * @return array[] - Article data.
 	 */
 	public function getByUsers(int $user_id) {
 		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body FROM `{$this->table}` JOIN `{$this->tableRelations}` ON articles.user_id = users.id WHERE users.id = :user_id AND is_deleted = 0";
@@ -28,9 +28,9 @@ class Article {
 
 	/**
 	 * SHow all data with paginator.
-	 * @param int $limit Max data output
-	 * @param int $offset Start data position
-	 * @return array[] array data
+	 * @param int $limit Max data output.
+	 * @param int $offset Start data position.
+	 * @return array[] array data.
 	 */
 	public function paginator(int $limit, int $offset) {
 		// set query
@@ -47,8 +47,8 @@ class Article {
 	}
 
 	/**
-	 * Count article data
-	 * @return int total articles
+	 * Count article data.
+	 * @return int total articles.
 	 */
 	public function count() {
 		$query = "SELECT COUNT(*) AS total FROM " . $this->table .  " WHERE is_deleted = 0";
@@ -60,8 +60,8 @@ class Article {
 	/**
 	 * Check whether an article slug already exists.
 	 *
-	 * @param string $slug Slug to search for
-	 * @return bool True when the slug exists, otherwise false
+	 * @param string $slug Slug to search for.
+	 * @return bool True when the slug exists, otherwise false.
 	 */
 	public function findSlug(string $slug) {
 		$this->db->query('SELECT 1 FROM ' . $this->table . ' WHERE slug = ? LIMIT 1');
@@ -77,9 +77,9 @@ class Article {
 	}
 
 	/**
-	 * Find article by slug
-	 * @param string $slug slug Title
-	 * @return array|bool
+	 * Find article by slug.
+	 * @param string $slug slug Title.
+	 * @return array|bool article data.
 	 */
 	public function findArticle(string $slug) {
 		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id WHERE slug = :slug AND is_deleted = 0";
@@ -95,9 +95,29 @@ class Article {
 	}
 
 	/**
-	 * Create new article
-	 * @param array $data - Form data
-	 * @param int  $user_id - User id from session
+	 * Find article by user id and slug.
+	 * @param string $slug Slug title.
+	 * @param int $user_id user id from session.
+	 * @return array|bool article data.
+	 */
+	public function findArticleUser(string $slug, int $user_id) {
+		$query = "SELECT title, slug, photo_cover, body FROM " . $this->table . " WHERE slug = :slug AND user_id = :user_id AND is_deleted = 0";
+
+		// Set query
+		$this->db->query($query);
+
+		// Bind data
+		$this->db->bind('slug', $slug);
+		$this->db->bind('user_id', $user_id);
+
+		// Return data
+		return $this->db->single();
+	}
+
+	/**
+	 * Create new article.
+	 * @param array $data - Form data.
+	 * @param int  $user_id - User id from session.
 	 * @return int
 	 */
 	public function create(array $data, int $user_id) {		
