@@ -77,6 +77,24 @@ class Article {
 	}
 
 	/**
+	 * Find article by slug
+	 * @param string $slug slug Title
+	 * @return array|bool
+	 */
+	public function findArticle(string $slug) {
+		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id WHERE slug = :slug AND is_deleted = 0";
+
+		// Set query
+		$this->db->query($query);
+
+		// Bind data
+		$this->db->bind('slug', $slug);
+
+		// Return data
+		return $this->db->single();
+	}
+
+	/**
 	 * Create new article
 	 * @param array $data - Form data
 	 * @param int  $user_id - User id from session

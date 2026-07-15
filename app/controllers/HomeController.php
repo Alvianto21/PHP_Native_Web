@@ -38,12 +38,20 @@ class HomeController extends Controller{
 	}
 
 	// detail article page
-	public function detail($id) {
-		$data['judul'] = 'Detail article';
-		$artice = $this->model('Article')->find($id);
+	public function detail(string $slug) {
+		require_once __DIR__ . '/../request/UploadImage.php';
 
-		if ($artice) {
-			$data['article'] = $artice;
+		$uploader = new UploadImage();
+
+		$data['judul'] = 'Detail article';
+		$article = $this->model('Article')->findArticle($slug);
+
+		if ($article) {
+			if (!empty($article['photo_cover'])) {
+				$article['photo_cover'] = $uploader->show($article['photo_cover'], 300);
+			}
+			
+			$data['article'] = $article;
 		} else {
 			header('LOCATION: ' . BASEURL);
 			exit;
