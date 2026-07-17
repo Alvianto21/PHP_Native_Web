@@ -3,7 +3,7 @@
 	$old = (array)($_SESSION['old_input'] ?? []); 
 ?>
 <div class="col-md-6">
-	<form action="<?= ABSOLUTURL; ?>dashboard/store" method="post" enctype="multipart/form-data" id="create_article">
+	<form action="<?php echo ABSOLUTURL; ?>dashboard/store" method="post" enctype="multipart/form-data" id="create_article">
 		<div class="form-group mb-3">
 			<label for="title" class="form-label">Title</label>
 			<input class="form-control <?php echo !empty($errors['title']) ? 'is-invalid' : ''; ?>" type="text" name="title" id="title" placeholder="Need Cars Insurance" value="<?php echo htmlspecialchars($old['title'] ?? '', ENT_QUOTES); ?>" required>
@@ -14,7 +14,7 @@
 			<?php endif; ?>
 		</div>
 		<div class="form-group mb-3">
-			<label for="photo" class="form-label">Article Covers</label>
+			<label for="photo" class="form-label">Article Cover</label>
 			<input class="form-control <?php echo (!empty($errors['photo_cover']) || !empty($errors['photo_path'])) ? 'is-invalid' : ''; ?>" type="file" name="photo_cover" id="photo" accept=".jpg, .png, .jpeg">
 			<?php if (!empty($errors["photo_cover"]) || !empty($errors['photo_path'])): ?>
 				<div class="invalid-feedback">

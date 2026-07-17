@@ -1,4 +1,4 @@
-<article aria-label="Article List" class="mb-4">
+<article aria-label="Article List" class="m-4">
 	<?php
 	$articles = (array)($data['articles'] ?? []);
 	$firstArticle = $articles[0] ?? null;

@@ -1,6 +1,7 @@
-<?php 
+<?php
 
-class UploadImage {
+class UploadImage
+{
 	private string $storage;
 
 	/**
@@ -17,7 +18,8 @@ class UploadImage {
 	 * @param string $folder Location where file is store.
 	 * @return string Relative file path.
 	 */
-	public function store(array $file, string $folder) : string {
+	public function store(array $file, string $folder): string
+	{
 		$extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 		$newFilename = bin2hex(random_bytes(16)) . '.' . $extension;
 		$relativePath = $folder . '/' . $newFilename;
@@ -39,11 +41,44 @@ class UploadImage {
 	 * @param int $expire Expired time.
 	 * @return string Temp URL file path.
 	 */
-	public function show(string $path, int $expire = 600) : string {
+	public function show(string $path, int $expire = 600): string
+	{
 		$expires = time() + $expire;
 
 		$signature = hash_hmac('sha256', $path . (string) $expires, getenv('APP_KEY'));
 
 		return ABSOLUTURL .  "files/show?path=" . urldecode($path) . "&expires=$expires" . "&signature=$signature";
+	}
+
+	/**
+	 * Update file.
+	 * @param array $file File from form.
+	 * @param string $path Relative path old file.
+	 * @param string $folder Location where file store.
+	 * @return string Relative file path.
+	 */
+	public function update(array $file, string $path, string $folder): string
+	{
+		$oldFile = $this->storage . $path;
+		
+		if (file_exists($oldFile)) {
+			unlink($oldFile);
+			
+			$extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+			$newFilename = bin2hex(random_bytes(16)) . '.' . $extension;
+			$relativePath = $folder . '/' . $newFilename;
+			$destination = $this->storage . $relativePath;
+
+			// If the folder not exist, create the folder
+			if (!is_dir(dirname($destination))) {
+				mkdir(dirname($destination), 0755, true);
+			}
+
+			move_uploaded_file($file['tmp_name'], $destination);
+
+			return $relativePath;
+		} else {
+			return $path;
+		}
 	}
 }

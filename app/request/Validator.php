@@ -3,6 +3,57 @@
 class Validator
 {
 	private array $errors = [];
+
+	/**
+	 * Determine whether the given value is considered empty for validation.
+	 *
+	 * This handles strings, arrays (including uploaded file arrays), null values,
+	 * and empty values consistently so validation rules behave predictably.
+	 *
+	 * @param mixed $value The value to inspect.
+	 * @return bool True when the value is empty or represents no uploaded file.
+	 */
+	private function isEmptyValue(mixed $value): bool
+	{
+		if ($value === null) {
+			return true;
+		}
+
+		if (is_string($value)) {
+			return trim($value) === '';
+		}
+
+		if (is_array($value)) {
+			if (array_key_exists('error', $value)) {
+				return (int) ($value['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK;
+			}
+
+			foreach ($value as $item) {
+				if ($item !== null && $item !== '' && $item !== []) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		return empty($value);
+	}
+
+	/**
+	 * Determine whether the given value contains a real submitted value.
+	 *
+	 * This is the opposite of isEmptyValue() and is useful for rules such as
+	 * required_if where the presence of another field should be checked safely.
+	 *
+	 * @param mixed $value The value to inspect.
+	 * @return bool True when the value is present and not empty.
+	 */
+	private function hasRealValue(mixed $value): bool
+	{
+		return !$this->isEmptyValue($value);
+	}
+
 	/**
 	 * Form validations
 	 * @param array $data - Form data
@@ -22,19 +73,23 @@ class Validator
 					$ruleValue = null;
 				}
 
+				if (!array_key_exists($field, $data) && !in_array($rule, ['required', 'required_if'], true)) {
+                    continue;
+                }
+
 				switch ($rule) {
 					case 'required':
-						if (empty($value) && $value !== '0') {
+						if ($this->isEmptyValue($value)) {
 							$this->addError($field, "The '{$field}' is required.");
 						}
 						break;
 					case 'min':
-						if (strlen($value) < $ruleValue) {
+						if (strlen((string) $value) < $ruleValue) {
 							$this->addError($field, "The '{$field}' must at least $ruleValue characters.");
 						}
 						break;
 					case 'max':
-						if (strlen($value) > $ruleValue) {
+						if (strlen((string) $value) > $ruleValue) {
 							$this->addError($field, "The '{$field}' may not exceed $ruleValue characters.");
 						}
 						break;
@@ -44,12 +99,12 @@ class Validator
 						}
 						break;
 					case 'regex':
-						if (!preg_match($ruleValue, $value)) {
+						if (!preg_match($ruleValue, (string) $value)) {
 							$this->addError($field, "The '{$field}' format is invalid.");
 						}
 						break;
 					case 'match':
-						if ($value !== $data[$ruleValue]) {
+						if ($this->isEmptyValue($value) !== $this->hasRealValue($data[$ruleValue])) {
 							$this->addError($field, "The '{$field}' must match $ruleValue.");
 							break;
 						}
@@ -57,12 +112,12 @@ class Validator
 						$other = $ruleValue;
 						$otherValue = $data[$other] ?? null;
 
-						if (!empty($otherValue) && (empty($value) && $value !== '0')) {
+						if ($this->hasRealValue($otherValue) && $this->isEmptyValue($value)) {
 							$this->addError($field, "The '{$field}' is required when $other is present.");
 						}
 						break;
 					case "signature":
-						if (!empty($value)) {
+						if ($this->hasRealValue($value)) {
 							$isValidUrl = filter_var($value, FILTER_VALIDATE_URL);
 
 							if (!$isValidUrl) {
@@ -76,14 +131,14 @@ class Validator
 						break;
 					case "size":
 						$file = $_FILES[$field] ?? null;
-						if ($file && ($file["error"] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK && ($file["size"] ?? 0) > $ruleValue) {
+						if ($this->hasRealValue($file) && ($file["size"] ?? 0) > $ruleValue) {
 							$this->addError($field, "The '{$field}' file is too large.");
 						}
 						break;
 					case "img":
 						$file = $_FILES[$field] ?? null;
 
-						if (!$file || ($file["error"] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+						if (!$this->hasRealValue($file)) {
 							break;
 						}
 
@@ -101,7 +156,7 @@ class Validator
 							unset($img_info);
 						}
 
-						$allowMime = ["image/jpg", "image/jpeg", "image/png"];
+						$allowMime = ["image/jpeg", "image/png"];
 						$allowExt = ["jpg", "jpeg", "png"];
 
 						if (!in_array($imgTypeFile, $allowExt, true) || !in_array($imgMime, $allowMime, true)) {

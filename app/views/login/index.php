@@ -8,7 +8,7 @@
 	</div>
 </div>
 <div class="col-md-6 mt-4">
-	<form action="<?= ABSOLUTURL; ?>login/authen" method="post" id="login_user">
+	<form action="<?php echo ABSOLUTURL; ?>login/authen" method="post" id="login_user">
 		<div class="mb-3 form-group">
 			<label for="email" class="form-label">Email address</label>
 			<input type="email" class="form-control <?php echo !empty($errors['email']) ? 'is-invalid' : ''; ?>" name="email" id="email" value="<?php echo htmlspecialchars($old['email'] ?? '', ENT_QUOTES); ?>" placeholder="name@example.com" required autofocus autocomplete="email">

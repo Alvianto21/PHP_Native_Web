@@ -141,10 +141,15 @@ class Article {
 		return $this->db->rowCount();
 	}
 
-	// update data
-	public function update($data) {
+	/**
+	 * Update article.
+	 * @param array $data Form data.
+	 * @param int $user_id User id from session.
+	 * @return int
+	 */
+	public function update(array $data, int $user_id) {
 		// set query
-		$query = "UPDATE " . $this->table . " SET title=:title, slug=:slug, author=:author, body=:body WHERE id=:id";
+		$query = "UPDATE " . $this->table . " SET title=:title, slug=:slug, photo_cover=:photo_cover, body=:body WHERE user_id=:user_id";
 
 		// update data
 		$this->db->query($query);
@@ -152,14 +157,14 @@ class Article {
 		// bind data
 		$this->db->bind("title", $data['title']);
 		$this->db->bind("slug", $data['slug']);
-		$this->db->bind("author", $data['author']);
+		$this->db->bind('photo_cover', $data['photo_cover']);
 		$this->db->bind("body", $data['body']);
-		$this->db->bind("id", $data['id']);
+		$this->db->bind("user_id", $user_id);
 
-		// eksekusi
+		// Execute
 		$this->db->execute();
 
-		// cek apakah ada data yang berubah
+		// Check if any updated data
 		return $this->db->rowCount();
 	}
 

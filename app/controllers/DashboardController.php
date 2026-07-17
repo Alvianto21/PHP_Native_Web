@@ -19,7 +19,7 @@ class DashboardController extends Controller
 		$data['articles'] = $this->model('Article')->getByUsers($_SESSION['user_info']['user_id']);
 
 		if (!empty($data['articles'])) {
-			foreach($data['articles'] as &$article) {
+			foreach ($data['articles'] as &$article) {
 				if (!empty($article['photo_cover'])) {
 					$article['photo_cover'] = $uploader->show($article['photo_cover']);
 				}
@@ -151,11 +151,13 @@ class DashboardController extends Controller
 			$_SESSION['errors'] = $validator->errors();
 			$_SESSION['old_input'] = $data;
 			header('Location: ' . ABSOLUTURL . 'dashboard/create');
+			exit;
 		}
 	}
 
 	// Show article
-	public function show(string $slug) {
+	public function show(string $slug)
+	{
 		require_once __DIR__ . '/../request/UploadImage.php';
 
 		// cek login
@@ -174,7 +176,7 @@ class DashboardController extends Controller
 			if (!empty($article['photo_cover'])) {
 				$article['photo_cover'] = $uploader->show($article['photo_cover'], 300);
 			}
-			
+
 			$data['article'] = $article;
 		} else {
 			header('LOCATION: ' . ABSOLUTURL . 'dashboard');
@@ -187,7 +189,7 @@ class DashboardController extends Controller
 	}
 
 	// edit article
-	public function edit($id)
+	public function edit(string $slug)
 	{
 		// cek login
 		if (!isset($_SESSION['user_info'])) {
@@ -196,7 +198,8 @@ class DashboardController extends Controller
 		}
 
 		$data['judul'] = 'Edit Artikel';
-		$article = $this->model('Article')->find($id);
+		$user = $_SESSION['user_info']['user_id'];
+		$article = $this->model('Article')->findArticleUser($slug, $user);
 
 		if ($article) {
 			$data['article'] = $article;
@@ -211,42 +214,122 @@ class DashboardController extends Controller
 	}
 
 	// update data
-	public function update()
+	public function update(string $slug)
 	{
-		if (isset($_POST['submit'])) {
-			header('LOCATION:  . ABSOLUTURL . admin');
+		require_once __DIR__ . '/../request/Validator.php';
+		require_once __DIR__ . '/../request/UploadImage.php';
+
+		// cek login
+		if (!isset($_SESSION['user_info'])) {
+			header('LOCATION: ' . ABSOLUTURL . 'login');
 			exit;
 		}
 
-		// cek data
+		if ($_SERVER['REQUEST_METHOD'] !== "POST") {
+			header('LOCATION:  . ABSOLUTURL . dashboard');
+			exit;
+		}
+
+		$_SESSION['errors'] = [];
+		$_SESSION['old_input'] = [];
+
+		$validator = new Validator();
+		$uploader = new UploadImage();
+
+		$postData = $_POST;
+		$fileData = $_FILES;
+		$user = $_SESSION['user_info']['user_id'];
+		$article = $this->model('Article')->findArticle($slug);
+
+		// Get data
 		$data = [
-			'title' => $_POST['title'] ?? '',
-			'author' => $_POST['author'] ?? '',
-			'body' => $_POST['body'] ?? '',
-			'id' => $_POST['id'] ?? ''
+			'title' => $validator->clearData($postData['title'] ?? ''),
+			'slug' => '',
+			'photo_cover' => $fileData['photo_cover'] ?? '',
+			'photo_path' => $postData['photo_path'] ?? '',
+			'body' => $validator->clearData($_POST['body'] ?? ''),
 		];
 
-		if ($this->checkData($data)) {
-			header('Location:  . ABSOLUTURL . admin/edit/' . $data['id']);
-			exit;
-		}
+		$rules = [
+			'title' => [
+				'required' => true,
+				'min' => 10,
+				'max' => 200,
+			],
+			'photo_cover' => [
+				"size" => 500000, // 500 Kb
+				"img" => true
+			],
+			'photo_path' => [
+				'required_if' => 'photo_cover',
+				'signature' => true,
+			],
+			'body' => [
+				'required' => true,
+				'min' => 200
+			]
+		];
 
-		// clear data
-		foreach ($data as $key) {
-			$this->clearData($key);
-		}
+		// Validate form
+		if ($validator->validate($data, $rules)) {
+			// If title is new, generate new slug
+			if ($article['title'] !== $data['title']) {
+				// Lowercase and remove apostrophes 
+				$newSlug = strtolower(preg_replace("~[‘’`']+~", '', $data['title']));
 
-		// add slug
-		$data['slug'] = preg_replace('/\s+/', '-', $data['title']);
-		$data['slug'] = preg_replace('/[^a-zA-Z0-9\-]/', '', $data['slug']);
+				// Replace non-alphanumeric characters with spaces
+				$newSlug = preg_replace("~[^a-z0-9]+~", ' ', $newSlug);
 
-		if ($this->model('Article')->update($data) > 0) {
-			Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');
-			header('Location:  . ABSOLUTURL . admin');
-			exit;
+				// Replace spaces with hyphens and add it to data
+				$baseSlug = preg_replace('~[ ]+~', '-', trim($newSlug));
+				$newSlug = $baseSlug;
+				$slugCount = 1;
+
+				while ($this->model('Article')->findSlug($newSlug)) {
+					$newSlug = $baseSlug . '-' . $slugCount;
+					$slugCount++;
+				}
+
+				$data['slug'] = $newSlug;
+			} else {
+				$data['slug'] = $slug;
+			}
+
+			// Verify img sign url if exist
+			if (!empty($data['photo_path'])) {
+				$checkUrl = $validator->validateSignUrl($data['photo_path']);
+
+				if ($checkUrl !== true) {
+					http_response_code(403);
+					echo $checkUrl;
+					exit($checkUrl);
+				}
+			}
+
+			// If photo_cover updated, upload new photo cover and destroy old photo
+			if ($data['photo_cover']['error'] === UPLOAD_ERR_OK) {
+				$data['photo_cover'] = $uploader->update($data['photo_cover'], $postData['old_photo_cover'], 'covers');
+			} elseif ($data['photo_cover']['error'] === UPLOAD_ERR_NO_FILE) {
+				$data['photo_cover'] = $postData['old_photo_cover'];
+			}
+
+			if ($this->model('Article')->update($data, $user) > 0) {
+				Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');
+				header('Location: ' . ABSOLUTURL . 'dashboard');
+				exit;
+			} else {
+				Flasher::setFlash('arikel gagal', 'diperbarui', 'danger');
+				header('Location: ' . ABSOLUTURL . 'dashboard');
+				exit;
+			}
 		} else {
-			Flasher::setFlash('arikel gagal', 'diperbarui', 'danger');
-			header('Location:  . ABSOLUTURL . admin');
+			$_SESSION['errors'] = $validator->errors();
+			$_SESSION['old_input'] = [
+				'title' => $data['title'],
+				'photo_cover' =>  $data['photo_cover'],
+				'body' => $data['body']
+			];
+			header('Location: ' . ABSOLUTURL . 'dashboard/edit/' . $slug);
 			exit;
 		}
 	}
@@ -271,26 +354,5 @@ class DashboardController extends Controller
 			header('Location:  . ABSOLUTURL . admin');
 			exit;
 		}
-	}
-
-	// cek data
-	public function checkData($data)
-	{
-		foreach ($data as $value) {
-			if (empty($value)) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-	}
-
-	// bersihkan data
-	public function clearData($data)
-	{
-		$data = trim($data);
-		$data = stripslashes($data);
-		$data = htmlspecialchars($data);
-		return $data;
 	}
 }
