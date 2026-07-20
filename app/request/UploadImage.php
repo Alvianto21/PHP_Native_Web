@@ -81,4 +81,15 @@ class UploadImage
 			return $path;
 		}
 	}
+
+	
+	public function delete(string $path):void {
+		$file = $this->storage . $path;
+
+		if (file_exists($file)) {
+			unlink($file);
+		} else {
+			error_log("File with path " . $path . " not found.");
+		}
+	}
 }

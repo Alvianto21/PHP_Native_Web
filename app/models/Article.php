@@ -149,7 +149,7 @@ class Article {
 	 */
 	public function update(array $data, int $user_id) {
 		// set query
-		$query = "UPDATE " . $this->table . " SET title=:title, slug=:slug, photo_cover=:photo_cover, body=:body WHERE user_id=:user_id";
+		$query = "UPDATE " . $this->table . " SET title=:title, slug=:slug, photo_cover=:photo_cover, body=:body WHERE user_id=:user_id AND is_deleted = 0";
 
 		// update data
 		$this->db->query($query);
@@ -168,21 +168,27 @@ class Article {
 		return $this->db->rowCount();
 	}
 
-	// delete data
-	public function delete($id) {
+	/**
+	 * Soft delete article
+	 * @param string $slug Slug title.
+	 * @param int $user_id User id from session.
+	 * @return int
+	 */
+	public function delete(string $slug, int $user_id) {
 		// set query
-		$query = "DELETE FROM " . $this->table . " WHERE id=:id";
+		$query = "UPDATE " . $this->table . " SET is_deleted = 1, photo_cover = NULL WHERE user_id= :user_id AND slug = :slug";
 
 		// delete data
 		$this->db->query($query);
 
 		// bind data
-		$this->db->bind("id", $id);
+		$this->db->bind("user_id", $user_id);
+		$this->db->bind("slug", $slug);
 
-		// eksekusi
+		// Execute
 		$this->db->execute();
 
-		// cek apakah ada data yang berubah
+		// Count row table
 		return $this->db->rowCount();
 	}
 }

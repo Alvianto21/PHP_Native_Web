@@ -292,8 +292,10 @@ class DashboardController extends Controller
 
 				$data['slug'] = $newSlug;
 			} else {
-				$data['slug'] = $slug;
+				$data['slug'] = $article['slug'];
 			}
+
+			// error_log("old: {$article['slug']} new: {$newSlug} query: {$slug}");
 
 			// Verify img sign url if exist
 			if (!empty($data['photo_path'])) {
@@ -334,24 +336,38 @@ class DashboardController extends Controller
 		}
 	}
 
-	// hapus artikel
-	public function delete($id)
+	// Soft delete article
+	public function delete(string $slug)
 	{
+		require_once __DIR__ . '/../request/UploadImage.php';
+
 		// cek login
 		if (!isset($_SESSION['user_info'])) {
 			header('LOCATION: ' . ABSOLUTURL . 'login');
 			exit;
 		}
 
-		$article = $this->model('Article')->delete($id);
+		$uploader = new UploadImage();
+		$user = $_SESSION['user_info']['user_id'];
 
-		if ($article) {
-			Flasher::setFlash('artikel berhasil', 'dihapus', 'success');
-			header('Location:  . ABSOLUTURL . admin');
-			exit;
+		$articleTarget = $this->model('Article')->findArticleUser($slug, $user);
+
+		if ($articleTarget) {
+			$article = $this->model('Article')->delete($slug, $user);
+			
+			if ($article) {
+				$uploader->delete($articleTarget['photo_cover']);
+				Flasher::setFlash('artikel berhasil', 'dihapus', 'success');
+				header('Location: ' . ABSOLUTURL . 'dashboard');
+				exit;
+			} else {
+				Flasher::setFlash('artikel gagal', 'dihapus', 'danger');
+				header('Location: ' . ABSOLUTURL . 'dashboard');
+				exit;
+			}
 		} else {
 			Flasher::setFlash('artikel gagal', 'dihapus', 'danger');
-			header('Location:  . ABSOLUTURL . admin');
+			header('Location: ' . ABSOLUTURL . 'dashboard');
 			exit;
 		}
 	}
