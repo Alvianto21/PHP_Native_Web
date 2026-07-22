@@ -97,7 +97,7 @@ class Database {
 	 * @return void
 	 */
 	public function execute() {
-		$this->stmt->execute();
+		return $this->stmt->execute();
 	}
 
 	/**

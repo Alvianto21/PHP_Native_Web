@@ -61,7 +61,7 @@ class UploadImage
 	{
 		$oldFile = $this->storage . $path;
 		
-		if (file_exists($oldFile)) {
+		if (file_exists($oldFile) || !empty($path)) {
 			unlink($oldFile);
 			
 			$extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));

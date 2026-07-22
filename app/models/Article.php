@@ -148,24 +148,69 @@ class Article {
 	 * @return int
 	 */
 	public function update(array $data, int $user_id) {
+		if (!$this->existsForUser($data['slug'], $user_id)) {
+			return 0;
+		}
+
 		// set query
-		$query = "UPDATE " . $this->table . " SET title=:title, slug=:slug, photo_cover=:photo_cover, body=:body WHERE user_id=:user_id AND is_deleted = 0";
+		$query = "UPDATE " . $this->table . " SET title=:title, photo_cover=:photo_cover, body=:body WHERE user_id=:user_id AND is_deleted = 0 AND slug=:slug";
 
 		// update data
 		$this->db->query($query);
 
 		// bind data
 		$this->db->bind("title", $data['title']);
+		$this->db->bind('photo_cover', $data['photo_cover']);
+		$this->db->bind("body", $data['body']);
+		$this->db->bind("user_id", $user_id);
 		$this->db->bind("slug", $data['slug']);
+
+		// Execute
+		return $this->db->execute() ? 1 : 0;
+	}
+
+	/**
+	 * Update article with new slug.
+	 * @param array $data Form data.
+	 * @param string $newSlug New created slug.
+	 * @param int $user_id User id from sessions.
+	 * @return int
+	 */
+	public function updateTitle(array $data, string $newSlug, int $user_id) {
+		if (!$this->existsForUser($data['slug'], $user_id)) {
+			return 0;
+		}
+
+		$query = "UPDATE " . $this->table . " SET title=:title, slug=:newSlug, photo_cover=:photo_cover, body=:body WHERE user_id=:user_id AND is_deleted = 0 AND slug=:slug";
+
+		$this->db->query($query);
+
+		// bind data
+		$this->db->bind("title", $data['title']);
+		$this->db->bind("slug", $data['slug']);
+		$this->db->bind("newSlug", $newSlug);
 		$this->db->bind('photo_cover', $data['photo_cover']);
 		$this->db->bind("body", $data['body']);
 		$this->db->bind("user_id", $user_id);
 
 		// Execute
-		$this->db->execute();
+		return $this->db->execute() ? 1 : 0;
+	}
 
-		// Check if any updated data
-		return $this->db->rowCount();
+	public function existsForUser(string $slug, int $user_id) {
+		$query = "SELECT 1 FROM " . $this->table . " WHERE slug = :slug AND user_id = :user_id AND is_deleted = 0 LIMIT 1";
+
+		$this->db->query($query);
+		$this->db->bind('slug', $slug);
+		$this->db->bind('user_id', $user_id);
+
+		$result = $this->db->getResult();
+
+		if (is_object($result) && method_exists($result, 'num_rows')) {
+			return $result->num_rows > 0;
+		}
+
+		return !empty($result);
 	}
 
 	/**

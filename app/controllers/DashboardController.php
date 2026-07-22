@@ -239,7 +239,14 @@ class DashboardController extends Controller
 		$postData = $_POST;
 		$fileData = $_FILES;
 		$user = $_SESSION['user_info']['user_id'];
-		$article = $this->model('Article')->findArticle($slug);
+		$newSlug = '';
+		$article = $this->model('Article')->findArticleUser($slug, $user);
+
+		if (!$article) {
+			Flasher::setFlash('artikel gagal', 'diperbarui', 'danger');
+			header('Location: ' . ABSOLUTURL . 'dashboard');
+			exit;
+		}
 
 		// Get data
 		$data = [
@@ -272,6 +279,9 @@ class DashboardController extends Controller
 
 		// Validate form
 		if ($validator->validate($data, $rules)) {
+			// Preserve the current slug so the existing article row is updated correctly.
+			$data['slug'] = $article['slug'];
+
 			// If title is new, generate new slug
 			if ($article['title'] !== $data['title']) {
 				// Lowercase and remove apostrophes 
@@ -290,7 +300,7 @@ class DashboardController extends Controller
 					$slugCount++;
 				}
 
-				$data['slug'] = $newSlug;
+				// $data['slug'] = $newSlug;
 			} else {
 				$data['slug'] = $article['slug'];
 			}
@@ -315,12 +325,16 @@ class DashboardController extends Controller
 				$data['photo_cover'] = $postData['old_photo_cover'];
 			}
 
-			if ($this->model('Article')->update($data, $user) > 0) {
+			if (isset($newSlug) && $newSlug !== '' && $this->model('Article')->updateTitle($data, $newSlug, $user) > 0) {
+				Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');
+				header('Location: ' . ABSOLUTURL . 'dashboard');
+				exit;
+			} elseif ($this->model('Article')->update($data, $user) > 0) {
 				Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');
 				header('Location: ' . ABSOLUTURL . 'dashboard');
 				exit;
 			} else {
-				Flasher::setFlash('arikel gagal', 'diperbarui', 'danger');
+				Flasher::setFlash('artikel gagal', 'diperbarui', 'danger');
 				header('Location: ' . ABSOLUTURL . 'dashboard');
 				exit;
 			}
