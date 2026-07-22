@@ -1,42 +1,88 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="auto">
+
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>PHP MVC | <?= $data['judul']; ?></title>
+	<meta name="description" content="Primitive blogpost">
+	<title>Gornal Blog | <?php echo $data['judul'] ?? 'Primitive blogpost'; ?></title>
 
 	<!-- Bootstrap CSS -->
-	<link href="<?= BASEURL; ?>css/bootstrap.css" rel="stylesheet">	  
-</head>
-<body>
-	<!-- Navbar -->
-	 <div class="container-sm">
-		 <nav class="navbar navbar-expand-lg bg-body-tertiary px-5">
-			<div class="container-fluid">
-				<a class="navbar-brand" href="/">PHP MVC</a>
-				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-					<span class="navbar-toggler-icon"></span>
-				</button>
-				<div class="collapse navbar-collapse">
-					<div class="navbar-nav">
-						<a class="nav-link" aria-current="page" href="/">Home</a>
+	<link href="<?php echo BASEURL; ?>css/bootstrap/bootstrap.min.css" rel="stylesheet">
 
-						<?php if (isset($_SESSION['user_info'])) { ?>
+	<!-- Custom styles for this template -->
+	<link rel="stylesheet" href="<?php echo BASEURL; ?>css/templates/blog.css">
+
+	<!-- Bootstrap icons -->
+	<link rel="stylesheet" href="<?php echo BASEURL; ?>css/icons/bootstrap-icons.min.css">
+</head>
+
+<body>
+	<!-- Themes button -->
+	<div class="dropdown position-fixed bottom-0 end-0 mb-3 me-3 bd-mode-toggle">
+		<button class="btn btn-bd-primary py-2 dropdown-toggle d-flex align-items-center" id="bd-theme" type="button" aria-expanded="false" data-bs-toggle="dropdown" aria-label="Toggle theme (auto)">
+			<i class="bi bi-circle-half"></i>
+			<span class="visually-hidden" id="bd-theme-text">Toggle theme</span>
+		</button>
+		<ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="bd-theme-text">
+			<li>
+				<button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light" aria-pressed="false">
+					<i class="bi bi-sun-fill"></i>
+					Light
+					<i class="bi bi-check2"></i>
+				</button>
+			</li>
+			<li>
+				<button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark" aria-pressed="false">
+					<i class="bi bi-moon-stars-fill"></i>
+					Dark
+					<i class="bi bi-check2"></i>
+				</button>
+			</li>
+			<li>
+				<button type="button" class="dropdown-item d-flex align-items-center active" data-bs-theme-value="auto" aria-pressed="true">
+					<i class="bi bi-circle-half"></i>
+					Auto
+					<i class="bi bi-check2"></i>
+				</button>
+			</li>
+		</ul>
+	</div>
+
+	<!-- Navbar -->
+	<nav class="navbar navbar-expand-lg bg-body-tertiary px-5" data-bs-theme="dark" id="navbar">
+		<div class="container-fluid">
+			<a class="navbar-brand" href="/">Gornal Blog</a>
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarCollapse">
+				<ul class="navbar-nav me-auto mb-2 mb-md-0">
+					<li class="nav-item">
+						<a class="nav-link active" aria-current="page" href="/">Home</a>
+					</li>
+					<?php if (isset($_SESSION['user_info'])) { ?>
+						<li class="nav-item">
 							<a class="nav-link" href="<?= ABSOLUTURL; ?>dashboard">Dashboard</a>
+						</li>
+					<?php } ?>
+				</ul>
+				<div class="mb-2 mb-md-0 navbar-nav">
+					<form class="d-flex" role="search" action="#">
+						<input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+						<button class="btn btn-outline-success mx-3" type="submit">Search</button>
+					</form>
+					<div class="nav-item justify-content-end">
+						<?php if (!isset($_SESSION['user_info'])) { ?>
+							<a class="nav-link link-info" href="<?= ABSOLUTURL; ?>login">Login</a>
+						<?php } else { ?>
+							<a class="nav-link link-danger" href="<?= ABSOLUTURL; ?>login/logout">logout</a>
 						<?php } ?>
-						</div>
 					</div>
 				</div>
-				<div class="collapse navbar-collapse justify-content-end">					
-					<?php if (!isset($_SESSION['user_info'])) { ?>
-						<a class="nav-link" href="<?= ABSOLUTURL; ?>login">Login</a>
-					<?php } else { ?>
-						 <a class="nav-link" href="<?= ABSOLUTURL; ?>login/logout">logout</a>
-					<?php } ?>
 			</div>
-		 </nav>
-	 </div>
+		</div>
+	</nav>
 
-	 <!-- Main content -->
-	<main>
-		<div class="container-sm">
+	<!-- Main content -->
+	<main class="container" data-bs-theme="light">

@@ -13,7 +13,7 @@
 						<div class="card-body d-flex flex-column">
 							<h5 class="card-title"><?php echo htmlspecialchars($firstArticle['title'] ?? '', ENT_QUOTES); ?></h5>
 							<small class="text-muted mb-2"><?php echo htmlspecialchars($firstArticle['author'] ?? '', ENT_QUOTES); ?></small>
-							<p class="card-text flex-grow-1"><?php echo htmlspecialchars(substr($firstArticle['body'] ?? '', 0, 120), ENT_QUOTES); ?></p>
+							<p class="card-text flex-grow-1"><?php echo htmlspecialchars(substr($firstArticle['body'] ?? '', 0, 180), ENT_QUOTES); ?></p>
 							<a href="<?php echo ABSOLUTURL; ?>home/detail/<?php echo htmlspecialchars($firstArticle['slug'] ?? '', ENT_QUOTES); ?>" class="btn btn-primary mt-auto">Read More</a>
 						</div>
 					</div>
@@ -21,16 +21,21 @@
 			</div>
 
 			<?php if (count($articles) > 1) : ?>
-				<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4 mt-2">
+				<div class="row mt-4">
 					<?php foreach (array_slice($articles, 1) as $article) : ?>
-						<div class="col">
-							<div class="card h-100 shadow-sm overflow-hidden">
-								<img src="<?php echo htmlspecialchars($article['photo_cover'] ?? '...', ENT_QUOTES); ?>" class="card-img-top img-fluid" alt="<?php echo htmlspecialchars($article['slug'] ?? '', ENT_QUOTES); ?>" style="height: 180px; object-fit: cover;">
-								<div class="card-body d-flex flex-column">
-									<h5 class="card-title"><?php echo htmlspecialchars($article['title'] ?? '', ENT_QUOTES); ?></h5>
-									<small class="text-muted mb-2"><?php echo htmlspecialchars($article['author'] ?? '', ENT_QUOTES); ?></small>
-									<p class="card-text flex-grow-1"><?php echo htmlspecialchars(substr($article['body'] ?? '', 0, 80), ENT_QUOTES); ?></p>
-									<a href="<?php echo ABSOLUTURL; ?>home/detail/<?php echo htmlspecialchars($article['slug'] ?? '', ENT_QUOTES); ?>" class="btn btn-primary mt-auto">Read More</a>
+						<div class="col-md-6">
+							<div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+								<div class="col p-4 d-flex flex-column position-static">
+									<h3 class="mb-0"><?php echo htmlspecialchars(substr($article['title'] ?? '', 0, 60), ENT_QUOTES); ?></h3>
+									<small class="mb-1 text-body-secondary"><?php echo htmlspecialchars($article['author'] ?? '', ENT_QUOTES); ?></small>
+									<p class="card-text mb-auto"><?php echo htmlspecialchars(substr($article['body'] ?? '', 0, 80), ENT_QUOTES); ?></p>
+									<a href="<?php echo ABSOLUTURL; ?>home/detail/<?php echo htmlspecialchars($article['slug'] ?? '', ENT_QUOTES); ?>" class="icon-link gap-1 icon-link-hover stretched-link">
+										Read More
+										<i class="bi bi-chevron-double-right"></i>
+									</a>
+								</div>
+								<div class="col-auto d-none d-lg-block">
+									<img src="<?php echo htmlspecialchars($article['photo_cover'] ?? '...', ENT_QUOTES); ?>" class="bd-placeholder-img" width="200" height="250" alt="<?php echo htmlspecialchars($article['slug'] ?? '', ENT_QUOTES); ?>" style="height: 180px; object-fit: cover;">
 								</div>
 							</div>
 						</div>
