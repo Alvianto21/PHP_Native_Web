@@ -94,7 +94,7 @@ class Database {
 	/**
 	 * Execute the prepared statement.
 	 *
-	 * @return void
+	 * @return bool
 	 */
 	public function execute() {
 		return $this->stmt->execute();
