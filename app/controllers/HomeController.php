@@ -31,6 +31,7 @@ class HomeController extends Controller{
 		}
 
 		$data['judul'] = 'Halaman Home';
+		$data['style'] = "blog.css";
 
 		$this->view('templates/header', $data);
 		$this->view('homes/home', $data);
@@ -44,6 +45,7 @@ class HomeController extends Controller{
 		$uploader = new UploadImage();
 
 		$data['judul'] = 'Detail article';
+		$data['style'] = "blog.css";
 		$article = $this->model('Article')->findArticle($slug);
 
 		if ($article) {

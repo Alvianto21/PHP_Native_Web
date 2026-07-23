@@ -11,6 +11,7 @@ class LoginController extends Controller
 		}
 
 		$data['judul'] = 'Halaman Login';
+		$data['style'] = "sign-in.css";
 
 		$this->view('templates/header', $data);
 		$this->view('login/index');
@@ -87,6 +88,7 @@ class LoginController extends Controller
 	public function register()
 	{
 		$data['judul'] = 'Halaman Register';
+		$data['style'] = "sign-up.css";
 
 		$this->view('templates/header', $data);
 		$this->view('login/register');

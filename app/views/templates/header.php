@@ -10,11 +10,16 @@
 	<!-- Bootstrap CSS -->
 	<link href="<?php echo BASEURL; ?>css/bootstrap/bootstrap.min.css" rel="stylesheet">
 
-	<!-- Custom styles for this template -->
-	<link rel="stylesheet" href="<?php echo BASEURL; ?>css/templates/blog.css">
+	<?php if (!empty($data['style'])) : ?>
+		<!-- Custom styles for this template -->
+		<link rel="stylesheet" href="<?php echo BASEURL; ?>css/templates/<?php echo $data['style']; ?>">
+	<?php endif; ?>
 
 	<!-- Bootstrap icons -->
 	<link rel="stylesheet" href="<?php echo BASEURL; ?>css/icons/bootstrap-icons.min.css">
+
+	<!-- Bootstrap theme switcher -->
+	<script src="<?php echo BASEURL; ?>js/theme/color-modes.js"></script>
 </head>
 
 <body>
@@ -68,10 +73,6 @@
 					<?php } ?>
 				</ul>
 				<div class="mb-2 mb-md-0 navbar-nav">
-					<form class="d-flex" role="search" action="#">
-						<input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-						<button class="btn btn-outline-success mx-3" type="submit">Search</button>
-					</form>
 					<div class="nav-item justify-content-end">
 						<?php if (!isset($_SESSION['user_info'])) { ?>
 							<a class="nav-link link-info" href="<?= ABSOLUTURL; ?>login">Login</a>

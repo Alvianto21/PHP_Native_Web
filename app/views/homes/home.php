@@ -50,7 +50,7 @@
 
 <div class="container">
 	<div class="pagination mt-5">
-		<nav aria-label="Page Navigation">
+		<nav aria-label="Page Navigation" class="blog-pagination">
 			<ul class="pagination">
 				<?php if ($data['pages'] > 1) { ?>
 					<li class="page-item">
