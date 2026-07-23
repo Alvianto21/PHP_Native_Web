@@ -15,8 +15,20 @@ class DashboardController extends Controller
 
 		$uploader = new UploadImage();
 
+		// Set pagination
+		$perPage = 5;
+		$totalPage = $this->model('Article')->count();
+		$maxPage = ceil($totalPage / $perPage);
+		$data['total'] = $maxPage;
+
+		// // cari hakaman saat ini
+		$page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+		$page = max(1, min($page, $maxPage));
+		$startPage = ($page - 1) * $perPage;
+		$data['pages'] = $page;
+
 		$data['judul'] = 'Halaman Dashboard';
-		$data['articles'] = $this->model('Article')->getByUsers($_SESSION['user_info']['user_id']);
+		$data['articles'] = $this->model('Article')->getByUsers($_SESSION['user_info']['user_id'], $perPage, $startPage);
 
 		if (!empty($data['articles'])) {
 			foreach ($data['articles'] as &$article) {

@@ -12,16 +12,20 @@ class Article {
 	}
 
 	/**
-	 * Get all articles frm a user except is deleted.
+	 * Get all articles frm a user except is deleted with pagination.
 	 * @param int $user_id - User id from sessions.
+	 * @param int $limit Max data output.
+	 * @param int $offset Start data position.
 	 * @return array[] - Article data.
 	 */
-	public function getByUsers(int $user_id) {
-		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body FROM `{$this->table}` JOIN `{$this->tableRelations}` ON articles.user_id = users.id WHERE users.id = :user_id AND is_deleted = 0";
+	public function getByUsers(int $user_id, int $limit, int $offset) {
+		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body FROM `{$this->table}` JOIN `{$this->tableRelations}` ON articles.user_id = users.id WHERE users.id = :user_id AND is_deleted = 0 LIMIT :limit OFFSET :offset";
 
 		$this->db->query($query);
 
 		$this->db->bind('user_id', $user_id);
+		$this->db->bind('limit', $limit, PDO::PARAM_INT);
+		$this->db->bind('offset', $offset, PDO::PARAM_INT);
 		
 		return $this->db->resultSet();
 	}

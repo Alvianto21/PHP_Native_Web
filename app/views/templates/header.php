@@ -13,7 +13,10 @@
 	<?php if (!empty($data['style'])) : ?>
 		<!-- Custom styles for this template -->
 		<link rel="stylesheet" href="<?php echo BASEURL; ?>css/templates/<?php echo $data['style']; ?>">
-	<?php endif; ?>
+		<?php endif; ?>
+
+		<!-- Mainstyles for this template -->
+		<link rel="stylesheet" href="<?php echo BASEURL; ?>css/templates/app.css">
 
 	<!-- Bootstrap icons -->
 	<link rel="stylesheet" href="<?php echo BASEURL; ?>css/icons/bootstrap-icons.min.css">
