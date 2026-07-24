@@ -25,7 +25,7 @@
 	<script src="<?php echo BASEURL; ?>js/theme/color-modes.js"></script>
 </head>
 
-<body data-bs-theme="light">
+<body data-bs-theme="auto">
 	<!-- Themes button -->
 	<div class="dropdown position-fixed bottom-0 end-0 mb-3 me-3 bd-mode-toggle">
 		<button class="btn btn-bd-primary py-2 dropdown-toggle d-flex align-items-center" id="bd-theme" type="button" aria-expanded="false" data-bs-toggle="dropdown" aria-label="Toggle theme (auto)">
@@ -37,28 +37,28 @@
 				<button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light" aria-pressed="false">
 					<i class="bi bi-sun-fill"></i>
 					Light
-					<i class="bi bi-check2"></i>
+					<i class="bi bi-check2 ms-auto" style="visibility: hidden;"></i>
 				</button>
 			</li>
 			<li>
 				<button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark" aria-pressed="false">
 					<i class="bi bi-moon-stars-fill"></i>
 					Dark
-					<i class="bi bi-check2"></i>
+					<i class="bi bi-check2 ms-auto" style="visibility: hidden;"></i>
 				</button>
 			</li>
 			<li>
 				<button type="button" class="dropdown-item d-flex align-items-center active" data-bs-theme-value="auto" aria-pressed="true">
 					<i class="bi bi-circle-half"></i>
 					Auto
-					<i class="bi bi-check2"></i>
+					<i class="bi bi-check2 ms-auto" style="visibility: visible;"></i>
 				</button>
 			</li>
 		</ul>
 	</div>
 
 	<!-- Navbar -->
-	<nav class="navbar navbar-expand-lg bg-body-tertiary px-5" data-bs-theme="dark" id="navbar">
+	<nav class="navbar navbar-expand-lg bg-body-tertiary px-5" data-bs-theme="auto" id="navbar">
 		<div class="container-fluid">
 			<a class="navbar-brand" href="/">Gornal Blog</a>
 			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">

@@ -29,6 +29,17 @@
 
   setTheme(getPreferredTheme())
 
+  const getThemeIconClass = theme => {
+    switch (theme) {
+      case 'light':
+        return 'bi-sun-fill'
+      case 'dark':
+        return 'bi-moon-stars-fill'
+      default:
+        return 'bi-circle-half'
+    }
+  }
+
   const showActiveTheme = (theme, focus = false) => {
     const themeSwitcher = document.querySelector('#bd-theme')
 
@@ -37,19 +48,39 @@
     }
 
     const themeSwitcherText = document.querySelector('#bd-theme-text')
-    const activeThemeIcon = document.querySelector('.theme-icon-active use')
     const btnToActive = document.querySelector(`[data-bs-theme-value="${theme}"]`)
-    const svgOfActiveBtn = btnToActive.querySelector('svg use').getAttribute('href')
+
+    if (!btnToActive) {
+      return
+    }
+
+    const themeSwitcherIcon = themeSwitcher.querySelector('i')
+    const activeThemeIcon = btnToActive.querySelector('i')
 
     document.querySelectorAll('[data-bs-theme-value]').forEach(element => {
       element.classList.remove('active')
       element.setAttribute('aria-pressed', 'false')
+
+      const checkIcon = element.querySelector('.bi-check2')
+      if (checkIcon) {
+        checkIcon.style.visibility = 'hidden'
+      }
     })
 
     btnToActive.classList.add('active')
     btnToActive.setAttribute('aria-pressed', 'true')
-    activeThemeIcon.setAttribute('href', svgOfActiveBtn)
-    const themeSwitcherLabel = `${themeSwitcherText.textContent} (${btnToActive.dataset.bsThemeValue})`
+
+    const activeCheckIcon = btnToActive.querySelector('.bi-check2')
+    if (activeCheckIcon) {
+      activeCheckIcon.style.visibility = 'visible'
+    }
+
+    if (themeSwitcherIcon && activeThemeIcon) {
+      const iconClass = [...activeThemeIcon.classList].find(cls => cls.startsWith('bi-')) || getThemeIconClass(theme)
+      themeSwitcherIcon.className = `bi ${iconClass}`
+    }
+
+    const themeSwitcherLabel = `${themeSwitcherText ? themeSwitcherText.textContent : 'Toggle theme'} (${btnToActive.dataset.bsThemeValue})`
     themeSwitcher.setAttribute('aria-label', themeSwitcherLabel)
 
     if (focus) {
