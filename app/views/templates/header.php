@@ -67,18 +67,18 @@
 			<div class="collapse navbar-collapse" id="navbarCollapse">
 				<ul class="navbar-nav me-auto mb-2 mb-md-0">
 					<li class="nav-item">
-						<a class="nav-link active" aria-current="page" href="/">Home</a>
+						<a class="nav-link <?php echo $data['judul'] === 'Halaman Home' ? 'active' : ''; ?>" aria-current="<?php echo $data['judul'] === 'Halaman Home' ? 'page' : ''; ?>" href="/">Home</a>
 					</li>
 					<?php if (isset($_SESSION['user_info'])) { ?>
 						<li class="nav-item">
-							<a class="nav-link" href="<?= ABSOLUTURL; ?>dashboard">Dashboard</a>
+							<a class="nav-link <?php echo $data['judul'] === 'Halaman Dashboard' ? 'active' : ''; ?>" aria-current="<?php echo $data['judul'] === 'Halaman Dashboard' ? 'page' : ''; ?>" href="<?= ABSOLUTURL; ?>dashboard">Dashboard</a>
 						</li>
 					<?php } ?>
 				</ul>
 				<div class="mb-2 mb-md-0 navbar-nav">
 					<div class="nav-item justify-content-end">
 						<?php if (!isset($_SESSION['user_info'])) { ?>
-							<a class="nav-link link-info" href="<?= ABSOLUTURL; ?>login">Login</a>
+							<a class="nav-link link-info <?php echo $data['judul'] === 'Halaman Login' ? 'active' : ''; ?>" aria-current="<?php echo $data['judul'] === 'Halaman Login' ? 'page' : ''; ?>" href="<?= ABSOLUTURL; ?>login">Login</a>
 						<?php } else { ?>
 							<a class="nav-link link-danger" href="<?= ABSOLUTURL; ?>login/logout">logout</a>
 						<?php } ?>
