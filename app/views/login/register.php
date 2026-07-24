@@ -2,7 +2,7 @@
 	$errors = (array)($_SESSION['errors'] ?? []);
 	$old = (array)($_SESSION['old_input'] ?? []); 
 ?>
-<section class="d-flex align-items-center py-4 bg-body-tertiary">
+<section class="d-flex align-items-center justify-content-center py-4 bg-body-tertiary">
 	<div class="form-signup w-100 m-auto">
 		<form action="<?php echo ABSOLUTURL; ?>login/store" method="post" enctype="multipart/form-data" id="create_users">
 			<h1 class="h3 mb-3 fw-normal text-center">Please sign up</h1>

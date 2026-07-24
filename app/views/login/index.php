@@ -8,7 +8,7 @@
 	</div>
 </div>
 
-<section class="d-flex align-items-center py-4 bg-body-tertiary">
+<section class="d-flex align-items-center justify-content-center py-4 bg-body-tertiary">
 	<div class="form-signin w-100 m-auto">
 		<form action="<?php echo ABSOLUTURL; ?>login/authen" method="post" id="login_user">
 			<h1 class="h3 mb-3 fw-normal">Please sign in</h1>
