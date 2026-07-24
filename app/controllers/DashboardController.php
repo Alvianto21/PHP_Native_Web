@@ -53,6 +53,7 @@ class DashboardController extends Controller
 		}
 
 		$data['judul'] = 'Buat Artikel Baru';
+		$data['style'] = "article.css";
 
 		$this->view('templates/header', $data);
 		$this->view('dashboard/create');
@@ -182,6 +183,8 @@ class DashboardController extends Controller
 		$user = $_SESSION['user_info']['user_id'];
 
 		$data['judul'] = 'Detail article';
+		$data['style'] = "blog.css";
+
 		$article = $this->model('Article')->findArticleUser($slug, $user);
 
 		if ($article) {
@@ -210,6 +213,8 @@ class DashboardController extends Controller
 		}
 
 		$data['judul'] = 'Edit Artikel';
+		$data['style'] = "article.css";
+		
 		$user = $_SESSION['user_info']['user_id'];
 		$article = $this->model('Article')->findArticleUser($slug, $user);
 

@@ -1,5 +1,5 @@
 <?php $articles = (array)($data['articles'] ?? []); ?>
-<div class="row">
+<div class="row mt-3">
 	<div class="col-md-5">
 		<?php Flasher::showFlash(); ?>
 	</div>

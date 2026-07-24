@@ -1,0 +1,19 @@
+section {
+  height: 100%;
+}
+
+.form-article {
+  max-width: 50%;
+  padding: 1rem;
+}
+
+.form-article .form-floating:focus-within {
+  z-index: 2;
+}
+
+.form-article textarea, input[type="text"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+

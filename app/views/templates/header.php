@@ -25,7 +25,7 @@
 	<script src="<?php echo BASEURL; ?>js/theme/color-modes.js"></script>
 </head>
 
-<body>
+<body data-bs-theme="light">
 	<!-- Themes button -->
 	<div class="dropdown position-fixed bottom-0 end-0 mb-3 me-3 bd-mode-toggle">
 		<button class="btn btn-bd-primary py-2 dropdown-toggle d-flex align-items-center" id="bd-theme" type="button" aria-expanded="false" data-bs-toggle="dropdown" aria-label="Toggle theme (auto)">
@@ -89,4 +89,4 @@
 	</nav>
 
 	<!-- Main content -->
-	<main class="container" data-bs-theme="light">
+	<main class="container">
