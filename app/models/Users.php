@@ -61,4 +61,24 @@ class Users {
 
 		return $this->db->single();
 	}
+
+	/**
+	 * Show user profile.
+	 * @param int $user_id User id from session.
+	 * @return array|bool User data.
+	 */
+	public function show(int $user_id) {
+		$query = "SELECT email, username, photo_profile FROM " . $this->table . " WHERE id = :user_id";
+
+		// Find user
+		$this->db->query($query);
+
+		// Bind data
+		$this->db->bind('user_id', $user_id, PDO::PARAM_INT);
+
+		// Execute
+		$this->db->execute();
+
+		return $this->db->single();
+	}
 }

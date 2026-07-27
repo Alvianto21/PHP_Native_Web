@@ -58,7 +58,7 @@
 	</div>
 
 	<!-- Navbar -->
-	<nav class="navbar navbar-expand-lg bg-body-tertiary px-5" data-bs-theme="auto" id="navbar">
+	<nav class="navbar navbar-expand-lg bg-body-tertiary fixed-top" data-bs-theme="auto" id="navbar">
 		<div class="container-fluid">
 			<a class="navbar-brand" href="/">Gornal Blog</a>
 			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,6 +72,9 @@
 					<?php if (isset($_SESSION['user_info'])) { ?>
 						<li class="nav-item">
 							<a class="nav-link <?php echo $data['judul'] === 'Halaman Dashboard' ? 'active' : ''; ?>" aria-current="<?php echo $data['judul'] === 'Halaman Dashboard' ? 'page' : ''; ?>" href="<?= ABSOLUTURL; ?>dashboard">Dashboard</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link <?php echo $data['judul'] === 'Halaman Profile' ? 'active' : ''; ?>" aria-current="<?php echo $data['judul'] === 'Halaman Profile' ? 'page' : ''; ?>" href="<?= ABSOLUTURL; ?>profile">Profile</a>
 						</li>
 					<?php } ?>
 				</ul>
