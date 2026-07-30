@@ -221,7 +221,7 @@ class DashboardController extends Controller
 		if ($article) {
 			$data['article'] = $article;
 		} else {
-			header('LOCATION: ' . ABSOLUTURL . 'admin');
+			header('LOCATION: ' . ABSOLUTURL . 'dashboard');
 			exit;
 		}
 
@@ -258,6 +258,8 @@ class DashboardController extends Controller
 		$user = $_SESSION['user_info']['user_id'];
 		$newSlug = '';
 		$article = $this->model('Article')->findArticleUser($slug, $user);
+		$dataKey = [];
+		$dataUpdate = [];
 
 		if (!$article) {
 			Flasher::setFlash('artikel gagal', 'diperbarui', 'danger');
@@ -342,11 +344,17 @@ class DashboardController extends Controller
 				$data['photo_cover'] = $postData['old_photo_cover'];
 			}
 
-			if (isset($newSlug) && $newSlug !== '' && $this->model('Article')->updateTitle($data, $newSlug, $user) > 0) {
-				Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');
-				header('Location: ' . ABSOLUTURL . 'dashboard');
-				exit;
-			} elseif ($this->model('Article')->update($data, $user) > 0) {
+			// Separate key and value for update
+			foreach($data as $updateData => $updateValue) {
+				if ($updateData === 'photo_cover' && is_array($updateValue) && ($updateValue['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+					$updateValue = $postData['old_photo_cover'] ?? $article['photo_cover'];
+				} elseif (array_key_exists($updateData, $article) && $article[$updateData] != $updateValue) {
+					$dataKey[] = "{$updateData} = :{$updateData}";
+					$dataUpdate[$updateData] = $updateValue;
+				}
+			}
+
+			if ($this->model('Article')->update($dataUpdate, $dataKey, $user, $slug) > 0) {
 				Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');
 				header('Location: ' . ABSOLUTURL . 'dashboard');
 				exit;

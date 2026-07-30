@@ -59,7 +59,7 @@ class LoginController extends Controller
 		// Validate data
 		if ($validator->validate($data, $rules)) {
 			// Find user
-			$user = $this->model('Users')->findEmail($data['email']);
+			$user = $this->model('Users')->findEmail(filter_var($data['email'], FILTER_SANITIZE_EMAIL));
 
 			// Check users if exist
 			if ($user && password_verify($data['password'], $user['password'])) {

@@ -1,5 +1,10 @@
 <?php $user = (array) ($data['user']); ?>
 <section class="container marketing">
+	<div class="row mt-3">
+		<div class="col-md-5">
+			<?php Flasher::showFlash(); ?>
+		</div>
+	</div>
 	<hr class="featurette-divider">
 	<div class="row featurette">
 		<div class="col-md-7 order-md-3">
@@ -12,8 +17,8 @@
 		</div>
 	</div>
 	<div class="d-flex gap-2 justify-content-center py-5">
-		<a href="http://" type="button" class="btn btn-warning rounded-pill px-3">
-			<span class="class="badge rounded-pill text-bg-warning"">Edit Profile</span>
+		<a href="<?php echo ABSOLUTURL ?>profile/edit/<?php echo htmlspecialchars($user['username']); ?>" type="button" class="btn btn-warning rounded-pill px-3">
+			<span class="class=" badge rounded-pill text-bg-warning"">Edit Profile</span>
 		</a>
 		<a href="http://" type="button" class="btn btn-danger rounded-pill px-3">
 			<span class="badge rounded-pill text-bg-danger">Delete</span>

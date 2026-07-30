@@ -92,6 +92,22 @@ class Database {
 	}
 
 	/**
+	 * Same as bind function but can accept multiple params and values simultaneously.
+	 * Example [['name', $name]].
+	 * Example [['name', $name, PDO::PARAM_*]]
+	 * @param array $bindings The data will be bind.
+	 * @return void
+	 */
+	public function multiBind(array $bindings) {
+		foreach($bindings as $binding) {
+			$param = $binding[0];
+			$value = $binding[1];
+			$type = $binding[3] ?? null;
+			$this->bind($param, $value, $type);
+		}
+	}
+
+	/**
 	 * Execute the prepared statement.
 	 *
 	 * @return bool

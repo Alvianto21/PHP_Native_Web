@@ -27,11 +27,13 @@ class Users {
 		if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) return 0;
 
 		// bind data
-		$this->db->bind('email', $data['email']);
-		$this->db->bind('username', $data['username']);
-		$this->db->bind('photo_profile', $data['photo_profile']);
-		$this->db->bind('role', "user");
-		$this->db->bind('password', $data['password']);
+		$this->db->multiBind([
+			['email', $data['email']],
+			['username', $data['username']],
+			['photo_profile', $data['photo_profile']],
+			['password', $data['password']],
+			['role', 'user']
+		]);
 
 		// execute
 		$this->db->execute();
@@ -40,23 +42,47 @@ class Users {
 	}	
 	
 	/**
-	 * Find user by email
-	 * @param string $data - user email
-	 * @return array|bool - user data
+	 * Find user by email for login.
+	 * @param string $data User email.
+	 * @return array|bool User data.
 	 */
 	public function findEmail(string $data) {
 		// set query
-		$query = 'SELECT * FROM ' . $this->table . ' WHERE email = :email';
+		$query = 'SELECT id, email, password FROM ' . $this->table . ' WHERE email = :email';
 
 		// find user
 		$this->db->query($query);
-
-		$data = filter_var($data, FILTER_SANITIZE_EMAIL);
 
 		// bind data
 		$this->db->bind('email', $data);
 
 		// execute
+		$this->db->execute();
+
+		return $this->db->single();
+	}
+
+	/**
+	 * Find user by username.
+	 * Return user data if any.
+	 * @param string $username User's username
+	 * @param array $columns Columns to be selected.
+	 * All columns is default if not filled.
+	 * Example: $columns = ['email', 'username'].
+	 * @return array|bool User data
+	 */
+	public function findUsername(string $username, array $columns = ['*']) {
+		// Set columns
+		$fields = implode(', ', $columns);
+		$query = "SELECT {$fields} FROM " . $this->table . " WHERE username = :username";
+
+		// Find user
+		$this->db->query($query);
+
+		// Bind data
+		$this->db->bind('username', $username);
+
+		// Execute
 		$this->db->execute();
 
 		return $this->db->single();
@@ -80,5 +106,30 @@ class Users {
 		$this->db->execute();
 
 		return $this->db->single();
+	}
+
+	/**
+	 * Update user.
+	 * @param array $data Form data
+	 * @param array $columns Columns to be selected.
+	 * @param string $username Username param from URL.
+	 * @return int
+	 */
+	public function update(array $data, array $columns, string $username) {
+		$fields = implode(', ', $columns);
+		$query = "UPDATE " . $this->table . " SET " . $fields . " WHERE username = :username";
+
+		// Prepare query
+		$this->db->query($query);
+
+		// Bind data
+		foreach($data as $key => $value) {
+			$this->db->bind($key, $value);
+		}
+
+		$this->db->bind('username', $username);
+
+		// Execute and return
+		return $this->db->execute() ? 1 : 0;
 	}
 }
