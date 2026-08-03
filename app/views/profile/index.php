@@ -20,10 +20,31 @@
 		<a href="<?php echo ABSOLUTURL ?>profile/edit/<?php echo htmlspecialchars($user['username']); ?>" type="button" class="btn btn-warning rounded-pill px-3">
 			<span class="class=" badge rounded-pill text-bg-warning"">Edit Profile</span>
 		</a>
-		<a href="http://" type="button" class="btn btn-danger rounded-pill px-3">
-			<span class="badge rounded-pill text-bg-danger">Delete</span>
-		</a>
+		<button href="/" type="button" class="btn btn-danger rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#account_remove">
+			<span class="badge rounded-pill text-bg-danger">Delete Account</span>
+		</button>
 	</div>
 	<hr class="featurette-divider">
 </section>
+
+<!-- Modal -->
+<section class="modal fate" id="account_remove" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="account_remove_modal" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5">Delete Account?</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<p>Are you sure want delete yor Account?</p>
+				<p>Your articles will deleted too.</p>				
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+				<a type="button" class="btn btn-danger" href="<?php echo ABSOLUTURL; ?>/profile/delete">Delete anyway</a>
+			</div>
+		</div>
+	</div>
+</section>
+
 <?php unset($user, $data['user']); ?>

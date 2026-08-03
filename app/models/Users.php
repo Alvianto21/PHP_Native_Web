@@ -48,7 +48,7 @@ class Users {
 	 */
 	public function findEmail(string $data) {
 		// set query
-		$query = 'SELECT id, email, password FROM ' . $this->table . ' WHERE email = :email';
+		$query = 'SELECT id, email, username, password FROM ' . $this->table . ' WHERE email = :email AND is_deleted = 0';
 
 		// find user
 		$this->db->query($query);
@@ -74,7 +74,7 @@ class Users {
 	public function findUsername(string $username, array $columns = ['*']) {
 		// Set columns
 		$fields = implode(', ', $columns);
-		$query = "SELECT {$fields} FROM " . $this->table . " WHERE username = :username";
+		$query = "SELECT {$fields} FROM " . $this->table . " WHERE username = :username AND is_deleted = 0";
 
 		// Find user
 		$this->db->query($query);
@@ -89,12 +89,32 @@ class Users {
 	}
 
 	/**
+	 * Find user by id and username.
+	 * @param int $user_id User id from sessions.
+	 * @return bool Return true if exist.
+	 */
+	public function findUser(int $user_id) {
+		$query = "SELECT id, photo_profile FROM " . $this->table . " WHERE id = :user_id AND is_deleted = 0";
+
+		// Find user
+		$this->db->query($query);
+
+		// Bind params
+		$this->db->bind('user_id', $user_id);
+
+		// Execute
+		$this->db->execute();
+
+		return $this->db->single();
+	}
+
+	/**
 	 * Show user profile.
 	 * @param int $user_id User id from session.
 	 * @return array|bool User data.
 	 */
 	public function show(int $user_id) {
-		$query = "SELECT email, username, photo_profile FROM " . $this->table . " WHERE id = :user_id";
+		$query = "SELECT email, username, photo_profile FROM " . $this->table . " WHERE id = :user_id AND is_deleted = 0";
 
 		// Find user
 		$this->db->query($query);
@@ -131,5 +151,25 @@ class Users {
 
 		// Execute and return
 		return $this->db->execute() ? 1 : 0;
+	}
+
+	/**
+	 * Delete user.
+	 * @param int $user_id User id from sessions.
+	 * @return int
+	 */
+	public function delete(int $user_id) {
+		$query = "UPDATE " . $this->table . " SET is_deleted = 1, photo_profile = NULL WHERE id = :user_id";
+
+		// Delete user
+		$this->db->query($query);
+
+		// Bind data
+		$this->db->bind('user_id', $user_id, PDO::PARAM_INT);
+
+		// Execute
+		$this->db->execute();
+
+		return $this->db->rowCount();
 	}
 }

@@ -54,6 +54,7 @@ class ProfileController extends Controller
 		$this->view('templates/footer');
 	}
 
+	// Update user
 	public function update(string $username)
 	{
 		require_once __DIR__ . '/../request/Validator.php';
@@ -181,7 +182,66 @@ class ProfileController extends Controller
 				'email' => $data['email'],
 				'username' => $data['username']
 			];
-			header('Location: '. ABSOLUTURL . 'profile/edit/' . $username);
+			header('Location: ' . ABSOLUTURL . 'profile/edit/' . $username);
+			exit;
+		}
+	}
+
+	// Delete user
+	public function delete()
+	{
+		require_once __DIR__ . '/../request/UploadImage.php';
+
+		// cek login
+		if (!isset($_SESSION['user_info'])) {
+			header('LOCATION: ' . ABSOLUTURL . 'login');
+			exit;
+		}
+
+		$uploader = new UploadImage();
+		$user_id = $_SESSION['user_info']['user_id'];
+
+		$userTarget = $this->model('Users')->findUser($user_id);
+
+		// If user exist, find corresponding article by that user
+		if ($userTarget) {
+			$articleTarget = $this->model('Article')->findArticlesUsers($user_id);
+
+			// If article exist remove photo_cover
+			if ($articleTarget) {
+				$this->model('Article')->deleteAll($user_id);
+			}
+
+			$this->model('Users')->delete($user_id);
+
+			if ($userTarget && isset($articleTarget)) {
+				foreach ($articleTarget as $article) {
+					$uploader->delete($article['photo_profile']);
+				}
+
+				$uploader->delete($userTarget['photo_profile']);
+
+				// Clear and destroy sessions
+				$_SESSION = [];
+				session_destroy();
+
+				// Redirect to home page
+				header('LOCATION: ' . BASEURL);
+				exit;
+			} elseif ($userTarget) {
+				$uploader->delete($userTarget['photo_profile']);
+
+				// Clear and destroy sessions
+				$_SESSION = [];
+				session_destroy();
+
+				// Redirect to home page
+				header('LOCATION: ' . BASEURL);
+				exit;
+			}
+		} else {
+			// Redirect to home page
+			header('LOCATION: ' . BASEURL);
 			exit;
 		}
 	}

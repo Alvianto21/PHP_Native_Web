@@ -5,6 +5,8 @@ CREATE TABLE `users` (
 	photo_profile VARCHAR(255) NULL,
 	role VARCHAR(100) NOT NULL DEFAULT 'user',
 	password VARCHAR(255) NOT NULL,
+	is_deleted BOOLEAN DEFAULT FALSE,
 	INDEX idx_email (email),
-	INDEX idx_username (username)
+	INDEX idx_username (username),
+	INDEX odx_is_deleted (is_deleted)
 );

@@ -19,7 +19,7 @@ class Article {
 	 * @return array[] - Article data.
 	 */
 	public function getByUsers(int $user_id, int $limit, int $offset) {
-		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body FROM `{$this->table}` JOIN `{$this->tableRelations}` ON articles.user_id = users.id WHERE users.id = :user_id AND is_deleted = 0 LIMIT :limit OFFSET :offset";
+		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body FROM `{$this->table}` JOIN `{$this->tableRelations}` ON articles.user_id = users.id WHERE articles.is_deleted = 0 AND users.id = :user_id LIMIT :limit OFFSET :offset";
 
 		$this->db->query($query);
 
@@ -40,7 +40,7 @@ class Article {
 	 */
 	public function paginator(int $limit, int $offset) {
 		// set query
-		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id WHERE is_deleted = 0 ORDER BY articles.id DESC LIMIT :limit OFFSET :offset";
+		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id WHERE articles.is_deleted = 0 ORDER BY articles.id DESC LIMIT :limit OFFSET :offset";
 
 		// get data
 		$this->db->query($query);
@@ -120,6 +120,18 @@ class Article {
 
 		// Return data
 		return $this->db->single();
+	}
+
+	public function findArticlesUsers(int $user_id) {
+		$query = "SELECT photo_cover FROM " . $this->table . " WHERE is_deleted = 0 AND user_id = :user_id";
+
+		// Prepare
+		$this->db->query($query);
+
+		// Bind data
+		$this->db->bind('user_id', $user_id, PDO::PARAM_INT);
+
+		return $this->db->resultSet();
 	}
 
 	/**
@@ -229,6 +241,26 @@ class Article {
 		$this->db->execute();
 
 		// Count row table
+		return $this->db->rowCount();
+	}
+
+	/**
+	 * Delete all article by user id.
+	 * @param int $user_id User id from sessions.
+	 * @return int
+	 */
+	public function deleteAll(int $user_id) {
+		$query = "UPDATE " . $this->table . " SET is_deleted = 1, photo_cover = NULL WHERE user_id = :user_id";
+
+		// Set query
+		$this->db->query($query);
+
+		// Bind data
+		$this->db->bind('user_id', $user_id, PDO::PARAM_INT);
+
+		// Execute
+		$this->db->execute();
+
 		return $this->db->rowCount();
 	}
 }
