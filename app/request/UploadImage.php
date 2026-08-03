@@ -86,7 +86,7 @@ class UploadImage
 	public function delete(string $path):void {
 		$file = $this->storage . $path;
 
-		if (file_exists($file)) {
+		if (file_exists($file) && $path !== null) {
 			unlink($file);
 		} else {
 			error_log("File with path " . $path . " not found.");

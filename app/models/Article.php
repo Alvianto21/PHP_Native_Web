@@ -90,7 +90,7 @@ class Article {
 	 * @return array|bool article data.
 	 */
 	public function findArticle(string $slug) {
-		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id WHERE slug = :slug AND is_deleted = 0";
+		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id WHERE slug = :slug AND articles.is_deleted = 0";
 
 		// Set query
 		$this->db->query($query);
