@@ -148,7 +148,7 @@ class Users {
 	 * @return array[] Array data.
 	 */
 	public function showAll(int $limit, int $offset) {
-		$query = "SELECT email, username, role, COUNT(*) OVER() AS total FROM " . $this->table . " ORDER BY id ASC LIMIT :limit OFFSET :offset";
+		$query = "SELECT email, username, role, COUNT(*) OVER() AS total FROM " . $this->table . " ORDER BY id DESC LIMIT :limit OFFSET :offset";
 
 		// Get data
 		$this->db->query($query);
