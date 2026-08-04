@@ -39,7 +39,20 @@ class Users {
 		$this->db->execute();
 
 		return $this->db->rowCount();	
-	}	
+	}
+	
+	/**
+	 * Count all users.
+	 * @return int Return total users.
+	 */
+	public function count() {
+		$query = "SELECT COUNT(*) AS total FROM " . $this->table;
+
+		// Prepare query
+		$this->db->query($query);
+
+		return $this->db->coloms();
+	}
 	
 	/**
 	 * Find user by email for login.
@@ -48,7 +61,7 @@ class Users {
 	 */
 	public function findEmail(string $data) {
 		// set query
-		$query = 'SELECT id, email, username, password FROM ' . $this->table . ' WHERE email = :email AND is_deleted = 0';
+		$query = 'SELECT id, email, username, password, role FROM ' . $this->table . ' WHERE email = :email AND is_deleted = 0';
 
 		// find user
 		$this->db->query($query);
@@ -127,6 +140,27 @@ class Users {
 
 		return $this->db->single();
 	}
+
+	/**
+	 * Show all users with pagination.
+	 * @param int $limit Max data output.
+	 * @param int $offset Start data position.
+	 * @return array[] Array data.
+	 */
+	public function showAll(int $limit, int $offset) {
+		$query = "SELECT email, username, role, COUNT(*) OVER() AS total FROM " . $this->table . " ORDER BY id ASC LIMIT :limit OFFSET :offset";
+
+		// Get data
+		$this->db->query($query);
+
+		// Bind data
+		$this->db->multiBind([
+			['limit', $limit, PDO::PARAM_INT],
+			['offset', $offset, PDO::PARAM_INT]
+		]);
+
+		return $this->db->resultSet();
+	} 
 
 	/**
 	 * Update user.

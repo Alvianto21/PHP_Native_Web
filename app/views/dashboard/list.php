@@ -23,7 +23,7 @@
 				</thead>
 				<tbody>
 					<?php
-					$index = 1;
+					$index = (int) 1;
 					foreach ($articles as $article): ?>
 						<tr>
 							<th scope="row"><?php echo $index; ?></th>
@@ -54,19 +54,19 @@
 			<ul class="pagination">
 				<?php if ($data['pages'] > 1) { ?>
 					<li class="page-item">
-						<a href="<?= ABSOLUTURL; ?>dashboard?page<?= $data['pages'] - 1; ?>" class="page-link">&laquo; Prev</a>
+						<a href="<?php echo ABSOLUTURL; ?>dashboard?page<?= $data['pages'] - 1; ?>" class="page-link">&laquo; Prev</a>
 					</li>
 				<?php } ?>
 
 				<?php for ($i = 1; $i <= $data['total']; $i++) { ?>
 					<li class="page-item">
-						<a href="<?= ABSOLUTURL; ?>dashboard?page=<?= $i; ?>" class="page-link <?= $data['pages'] == $i ? 'active' : '' ?>"><?= $i; ?></a>
+						<a href="<?php echo ABSOLUTURL; ?>dashboard?page=<?= $i; ?>" class="page-link <?= $data['pages'] == $i ? 'active' : '' ?>"><?= $i; ?></a>
 					</li>
 				<?php } ?>
 
 				<?php if ($data['pages'] < $data['total']) { ?>
 					<li class="page-item">
-						<a href="<?= ABSOLUTURL; ?>dashboard?page=<?= $data['pages'] + 1; ?>" class="page-link">Next &raquo;</a>
+						<a href="<?php echo ABSOLUTURL; ?>dashboard?page=<?= $data['pages'] + 1; ?>" class="page-link">Next &raquo;</a>
 					</li>
 				<?php } ?>
 			</ul>

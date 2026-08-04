@@ -71,19 +71,27 @@
 					</li>
 					<?php if (isset($_SESSION['user_info'])) { ?>
 						<li class="nav-item">
-							<a class="nav-link <?php echo $data['judul'] === 'Halaman Dashboard' ? 'active' : ''; ?>" aria-current="<?php echo $data['judul'] === 'Halaman Dashboard' ? 'page' : ''; ?>" href="<?= ABSOLUTURL; ?>dashboard">Dashboard</a>
+							<a class="nav-link <?php echo $data['judul'] === 'Halaman Dashboard' ? 'active' : ''; ?>" aria-current="<?php echo $data['judul'] === 'Halaman Dashboard' ? 'page' : ''; ?>" href="<?php echo ABSOLUTURL; ?>dashboard">Dashboard</a>
 						</li>
 						<li class="nav-item">
-							<a class="nav-link <?php echo $data['judul'] === 'Halaman Profile' ? 'active' : ''; ?>" aria-current="<?php echo $data['judul'] === 'Halaman Profile' ? 'page' : ''; ?>" href="<?= ABSOLUTURL; ?>profile">Profile</a>
+							<a class="nav-link <?php echo $data['judul'] === 'Halaman Profile' ? 'active' : ''; ?>" aria-current="<?php echo $data['judul'] === 'Halaman Profile' ? 'page' : ''; ?>" href="<?php echo ABSOLUTURL; ?>profile">Profile</a>
 						</li>
+						<?php if ($_SESSION['user_info']['user_role'] === 'admin'): ?>
+							<li class="nav-item">
+								<a href="<?php echo ABSOLUTURL; ?>admin/users" class="nav-link <?php echo $data['judul'] === 'Halaman users admin' ? 'active' : ''; ?>" aria-current="<?php echo $data['judul'] === 'Halaman users admin' ? 'page' : ''; ?>">Users</a>
+							</li>
+							<li class="nav-item">
+								<a href="#" class="nav-link <?php echo $data['judul'] === 'Halaman Admin' ? 'active' : ''; ?>" aria-current="<?php echo $data['judul'] === 'Halaman Admin' ? 'page' : ''; ?>">Articles</a>
+							</li>
+						<?php endif; ?>
 					<?php } ?>
 				</ul>
 				<div class="mb-2 mb-md-0 navbar-nav">
 					<div class="nav-item justify-content-end">
 						<?php if (!isset($_SESSION['user_info'])) { ?>
-							<a class="nav-link link-info <?php echo $data['judul'] === 'Halaman Login' ? 'active' : ''; ?>" aria-current="<?php echo $data['judul'] === 'Halaman Login' ? 'page' : ''; ?>" href="<?= ABSOLUTURL; ?>login">Login</a>
+							<a class="nav-link link-info <?php echo $data['judul'] === 'Halaman Login' ? 'active' : ''; ?>" aria-current="<?php echo $data['judul'] === 'Halaman Login' ? 'page' : ''; ?>" href="<?php echo ABSOLUTURL; ?>login">Login</a>
 						<?php } else { ?>
-							<a class="nav-link link-danger" href="<?= ABSOLUTURL; ?>login/logout">logout</a>
+							<a class="nav-link link-danger" href="<?php echo ABSOLUTURL; ?>login/logout">logout</a>
 						<?php } ?>
 					</div>
 				</div>
