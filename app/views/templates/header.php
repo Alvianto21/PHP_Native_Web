@@ -81,7 +81,7 @@
 								<a href="<?php echo ABSOLUTURL; ?>admin/users" class="nav-link <?php echo $data['judul'] === 'Halaman users admin' ? 'active' : ''; ?>" aria-current="<?php echo $data['judul'] === 'Halaman users admin' ? 'page' : ''; ?>">Users</a>
 							</li>
 							<li class="nav-item">
-								<a href="#" class="nav-link <?php echo $data['judul'] === 'Halaman Admin' ? 'active' : ''; ?>" aria-current="<?php echo $data['judul'] === 'Halaman Admin' ? 'page' : ''; ?>">Articles</a>
+								<a href="<?php echo ABSOLUTURL; ?>/admin/articles" class="nav-link <?php echo $data['judul'] === 'Halaman articles admin' ? 'active' : ''; ?>" aria-current="<?php echo $data['judul'] === 'Halaman articles admin' ? 'page' : ''; ?>">Articles</a>
 							</li>
 						<?php endif; ?>
 					<?php } ?>

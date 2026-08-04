@@ -26,9 +26,9 @@
 						?>
 							<tr>
 								<th><?php echo $index; ?></th>
-								<td><?php echo $user['email']; ?></td>
-								<td><?php echo $user['username']; ?></td>
-								<td><?php echo $user['role']; ?></td>
+								<td><?php echo htmlspecialchars($user['email']); ?></td>
+								<td><?php echo htmlspecialchars($user['username']); ?></td>
+								<td><?php echo htmlspecialchars($user['role']); ?></td>
 								<td>
 									<a href="#" class="badge bg-warning text-decoration-none">Edit</a>
 									<a href="#" class="badge bg-danger text-decoration-none">Delete</a>
@@ -43,7 +43,7 @@
 		<?php else: ?>
 			<p class="alert alert-info text-center text-capitalize fx-3">
 				Noting in here.
-				<a href="<?= ABSOLUTURL; ?>admin/users" class="page-link">Go back</a>
+				<a href="<?php echo ABSOLUTURL; ?>admin/users" class="page-link">Go back</a>
 			</p>
 		<?php endif; ?>
 	</div>

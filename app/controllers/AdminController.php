@@ -33,4 +33,33 @@ class AdminController extends Controller
 		$this->view('admin/users', $data);
 		$this->view('templates/footer');
 	}
+
+	public function articles() {
+		// check session and permissions
+		if (isset($_SESSION['user_info']) && $_SESSION['user_info']['user_role'] !== 'admin') {
+			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
+			header('LOCATION: ' . ABSOLUTURL . 'login');
+			exit;
+		}
+
+		// Set pagination
+		$perPage = 5;
+		$totalPage = $this->model('Article')->count();
+		$maxPage = ceil($totalPage / $perPage);
+		$data['total'] = $maxPage;
+
+		// // cari hakaman saat ini
+		$page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+		$page = max(1, min($page, $maxPage));
+		$startPage = ($page - 1) * $perPage;
+		$data['pages'] = $page;
+
+		// ambil data berserta offset
+		$data['articles'] = $this->model('Article')->adminPaginator($perPage, $startPage);
+		$data['judul'] = "Halaman articles admin";
+
+		$this->view('templates/header', $data);
+		$this->view('admin/articles', $data);
+		$this->view('templates/footer');
+	}
 }

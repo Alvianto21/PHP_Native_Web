@@ -55,6 +55,28 @@ class Article {
 	}
 
 	/**
+	 * Show all articles for admin tables.
+	 * @param int $limit Max data output.
+	 * @param int $offset Start data position.
+	 * @return array[] array data.
+	 */
+	public function adminPaginator(int $limit, int $offset) {
+		// set query
+		$query = "SELECT articles.title, articles.slug, articles.body, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id ORDER BY articles.id DESC LIMIT :limit OFFSET :offset";
+
+		// get data
+		$this->db->query($query);
+
+		// bind data
+		$this->db->multiBind([
+			['limit', $limit, PDO::PARAM_INT],
+			['offset', $offset, PDO::PARAM_INT]
+		]);
+
+		return $this->db->resultSet();
+	}
+
+	/**
 	 * Count article data.
 	 * @return int total articles.
 	 */
