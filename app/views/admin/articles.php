@@ -15,7 +15,7 @@
 						<th scope="col">#</th>
 						<th scope="col">Title</th>
 						<th scope="col">Author</th>
-						<th scope="col">Body</th>
+						<th scope="col">Status</th>
 						<th scope="col">Actions</th>
 					</tr>
 				</thead>
@@ -28,10 +28,10 @@
 							<th><?php echo $index; ?></th>
 							<td><?php echo htmlspecialchars($article['title']); ?></td>
 							<td><?php echo htmlspecialchars($article['author']); ?></td>
-							<td><?php echo htmlspecialchars(substr($article['body'], 0, 60)) ?></td>
+							<td><?php echo htmlspecialchars($article['is_deleted']); ?></td>
 							<td>
+								<a href="<?php echo ABSOLUTURL ?>admin/showArticle/<?php echo htmlspecialchars($article['slug']); ?>" class="badge text-bg-primary text-decoration-none">Show</a>
 								<a href="#" class="badge bg-warning text-decoration-none">Edit</a>
-								<a href="#" class="badge bg-danger text-decoration-none">Delete</a>
 							</td>
 						</tr>
 					<?php 
@@ -67,7 +67,7 @@
 
 				<?php if ($data['pages'] < $data['total']) { ?>
 					<li class="page-item">
-						<a href="<?php echo ABSOLUTURL; ?>dashboard?page=<?php echo $data['pages'] + 1; ?>" class="page-link">Next &raquo;</a>
+						<a href="<?php echo ABSOLUTURL; ?>admin/articles?page=<?php echo $data['pages'] + 1; ?>" class="page-link">Next &raquo;</a>
 					</li>
 				<?php } ?>
 			</ul>

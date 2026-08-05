@@ -62,7 +62,7 @@ class Article {
 	 */
 	public function adminPaginator(int $limit, int $offset) {
 		// set query
-		$query = "SELECT articles.title, articles.slug, articles.body, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id ORDER BY articles.id DESC LIMIT :limit OFFSET :offset";
+		$query = "SELECT articles.title, articles.slug, articles.is_deleted, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id ORDER BY articles.id DESC LIMIT :limit OFFSET :offset";
 
 		// get data
 		$this->db->query($query);
@@ -113,6 +113,19 @@ class Article {
 	 */
 	public function findArticle(string $slug) {
 		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id WHERE slug = :slug AND articles.is_deleted = 0";
+
+		// Set query
+		$this->db->query($query);
+
+		// Bind data
+		$this->db->bind('slug', $slug);
+
+		// Return data
+		return $this->db->single();
+	}
+
+	public function findArticleAdmin(string $slug) {
+		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id WHERE slug = :slug";
 
 		// Set query
 		$this->db->query($query);

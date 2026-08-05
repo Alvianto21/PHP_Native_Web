@@ -30,8 +30,8 @@
 								<td><?php echo htmlspecialchars($user['username']); ?></td>
 								<td><?php echo htmlspecialchars($user['role']); ?></td>
 								<td>
+									<a href="<?php echo ABSOLUTURL; ?>admin/showUser/<?php echo htmlspecialchars($user['username']); ?>" class="badge text-bg-primary text-decoration-none">Show</a>
 									<a href="#" class="badge bg-warning text-decoration-none">Edit</a>
-									<a href="#" class="badge bg-danger text-decoration-none">Delete</a>
 								</td>
 							</tr>
 						<?php 
@@ -67,7 +67,7 @@
 
 				<?php if ($data['pages'] < $data['total']) { ?>
 					<li class="page-item">
-						<a href="<?php echo ABSOLUTURL; ?>dashboard?page=<?= $data['pages'] + 1; ?>" class="page-link">Next &raquo;</a>
+						<a href="<?php echo ABSOLUTURL; ?>admin/users?page=<?= $data['pages'] + 1; ?>" class="page-link">Next &raquo;</a>
 					</li>
 				<?php } ?>
 			</ul>

@@ -122,6 +122,26 @@ class Users {
 	}
 
 	/**
+	 * Find user and get all data except their password.
+	 * @param string $username User's username.
+	 * @return array|bool If any return user data
+	 */
+	public function findUserAdmin(string $username) {
+		$query = "SELECT email, username, photo_profile, role, is_deleted FROM " . $this->table . " WHERE username = :username";
+
+		// Prep query
+		$this->db->query($query);
+
+		// Bind data
+		$this->db->bind('username', $username);
+
+		// Execute
+		$this->db->execute();
+
+		return $this->db->single();
+	}
+
+	/**
 	 * Show user profile.
 	 * @param int $user_id User id from session.
 	 * @return array|bool User data.
