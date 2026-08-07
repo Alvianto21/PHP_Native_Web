@@ -116,6 +116,16 @@ class Validator
 							$this->addError($field, "The '{$field}' is required when $other is present.");
 						}
 						break;
+					case 'boolean':
+						if(!in_array($value, ['0', '1'], true)) {
+							$this->addError($field, "The '{$field}' input is invalid.");
+						}
+						break;
+					case 'role_user':
+						if (!in_array($value, $ruleValue, true)) {
+							$this->addError($field, "The '{$field}' input is invalid.");
+						}
+						break;
 					case "signature":
 						if ($this->hasRealValue($value)) {
 							$isValidUrl = filter_var($value, FILTER_VALIDATE_URL);

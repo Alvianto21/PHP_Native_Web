@@ -17,7 +17,14 @@ class ProfileController extends Controller
 
 		$data['judul'] = 'Halaman Profile';
 		$data['style'] = "profile.css";
-		$data['user'] = $this->model('Users')->show($_SESSION['user_info']['user_id']);
+		$user = $this->model('Users')->show($_SESSION['user_info']['user_id']);
+
+		if ($user) {
+			$data['user'] = $user;
+		} else {
+			header('LOCATION: ' . ABSOLUTURL . 'dashboard');
+			exit;
+		}
 
 		if (!empty($data['user']['photo_profile'])) {
 			$data['user']['photo_profile'] = $uploader->show($data['user']['photo_profile']);
@@ -67,7 +74,7 @@ class ProfileController extends Controller
 		}
 
 		if ($_SERVER['REQUEST_METHOD'] !== "POST") {
-			header('LOCATION:  . ABSOLUTURL . dashboard');
+			header('LOCATION: ' . ABSOLUTURL . 'dashboard');
 			exit;
 		}
 
@@ -89,7 +96,7 @@ class ProfileController extends Controller
 			'photo_profile' => $fileData['photo_profile'] ?? '',
 			'photo_path' => $postData['photo_path'] ?? '',
 			'password' => $validator->clearData($postData['password'] ?? ''),
-			'password_confirm' => $postData['password_confirm'] ?? ''
+			'password_confirm' => $validator->clearData($postData['password_confirm'] ?? '')
 		];
 		$rules = [
 			"email" => [

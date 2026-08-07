@@ -31,7 +31,7 @@
 								<td><?php echo htmlspecialchars($user['role']); ?></td>
 								<td>
 									<a href="<?php echo ABSOLUTURL; ?>admin/showUser/<?php echo htmlspecialchars($user['username']); ?>" class="badge text-bg-primary text-decoration-none">Show</a>
-									<a href="#" class="badge bg-warning text-decoration-none">Edit</a>
+									<a href="<?php echo ABSOLUTURL; ?>admin/editUser/<?php echo htmlspecialchars($user['username']); ?>" class="badge bg-warning text-decoration-none">Edit</a>
 								</td>
 							</tr>
 						<?php 

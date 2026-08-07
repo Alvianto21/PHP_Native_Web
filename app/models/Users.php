@@ -102,6 +102,32 @@ class Users {
 	}
 
 	/**
+	 * Admin function version from findUser function.
+	 * Find user by username.
+	 * @param string $username User's username.
+	 * @param array $columns Columns to be selected.
+	 * All columns is default if not filled.
+	 * Example: $columns = ['email', 'username'].
+	 * @return array|bool User data if any.
+	 */
+	public function findUsernameAdmin(string $username, array $columns = ['*']) {
+		// Set columns
+		$fields = implode(', ', $columns);
+		$query = "SELECT {$fields} FROM " . $this->table . " WHERE username = :username";
+
+		// Find user
+		$this->db->query($query);
+
+		// Bind data
+		$this->db->bind('username', $username);
+
+		// Execute
+		$this->db->execute();
+
+		return $this->db->single();
+	}
+
+	/**
 	 * Find user by id and username.
 	 * @param int $user_id User id from sessions.
 	 * @return bool Return true if exist.
