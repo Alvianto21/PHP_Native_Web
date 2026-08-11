@@ -31,7 +31,7 @@
 							<td><?php echo htmlspecialchars($article['is_deleted']); ?></td>
 							<td>
 								<a href="<?php echo ABSOLUTURL ?>admin/showArticle/<?php echo htmlspecialchars($article['slug']); ?>" class="badge text-bg-primary text-decoration-none">Show</a>
-								<a href="#" class="badge bg-warning text-decoration-none">Edit</a>
+								<a href="<?php echo ABSOLUTURL; ?>admin/editArticle/<?php echo htmlspecialchars($article['slug']); ?>" class="badge bg-warning text-decoration-none">Edit</a>
 							</td>
 						</tr>
 					<?php 

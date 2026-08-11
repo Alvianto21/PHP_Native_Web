@@ -44,20 +44,30 @@
 				<?php endif; ?>
 			</div>
 			<div class="form-floating form-control mb-3">
-				<select name="is_deleted" id="is_deleted" class="form-select" required>
-					<option value="">Select Account Status</option>
-					<option value="0" <?php echo $user['is_deleted'] === 0 ? 'selected' : ''; ?>>Available</option>
-					<option value="1" <?php echo $user['is_deleted'] === 1 ? 'selected' : ''; ?>>Deleted</option>
+				<select name="is_deleted" id="is_deleted" class="form-select <?php echo !empty($errors['is_deleted']) ? 'is-invalid' : ''; ?>" required>
+					<option value="" selected>Select Account Status</option>
+					<option value="0" <?php echo ((isset($old['is_deleted']) ? $old['is_deleted'] : $user['is_deleted']) === 0) ? 'selected' : ''; ?>>Available</option>
+					<option value="1" <?php echo ((isset($old['is_deleted']) ? $old['is_deleted'] : $user['is_deleted']) === 1) ? 'selected' : ''; ?>>Deleted</option>
 				</select>
 				<label for="is_deleted" class="form-label">Account Status</label>
+				<?php if (!empty($errors["is_deleted"])): ?>
+					<div class="invalid-feedback">
+						<?php echo htmlspecialchars($errors['is_deleted']); ?>
+					  </div>
+				<?php endif; ?>
 			</div>
 			<div class="form-floating form-control mb-3">
-				<select name="role" id="role" class="form-select" required>
-					<option value="">Select User Role</option>
-					<option value="user" <?php echo $user['role'] === 'user' ? 'selected' : ''; ?>>User</option>
-					<option value="admin" <?php echo $user['role'] === 'admin' ? 'selected' : ''; ?>>Admin</option>
+				<select name="role" id="role" class="form-select <?php echo !empty($errors['role']) ? 'is-invalid' : ''; ?>" required>
+					<option value="" selected>Select User Role</option>
+					<option value="user" <?php echo ((isset($old['role']) ? $old['role'] : $user['role']) === 'user') ? 'selected' : ''; ?>>User</option>
+					<option value="admin" <?php echo ((isset($old['role']) ? $old['role'] : $user['role']) === 'admin') ? 'selected' : ''; ?>>Admin</option>
 				</select>
 				<label for="role" class="form-label">User Role</label>
+				<?php if (!empty($errors["role"])): ?>
+					<div class="invalid-feedback">
+						<?php echo htmlspecialchars($errors['role']); ?>
+					  </div>
+				<?php endif; ?>
 			</div>
 			<div class="form-floating form-group form-check mb-3">
 				<input type="text" name="password" id="password" readonly class="form-control-plaintext">

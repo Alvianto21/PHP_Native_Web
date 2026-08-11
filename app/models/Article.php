@@ -124,6 +124,11 @@ class Article {
 		return $this->db->single();
 	}
 
+	/**
+	 * Find user's article for admin user role.
+	 * @param string $slug Article slug.
+	 * @return array|bool Return article if any
+	 */
 	public function findArticleAdmin(string $slug) {
 		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id WHERE slug = :slug";
 
@@ -157,16 +162,22 @@ class Article {
 		return $this->db->single();
 	}
 
-	public function findArticlesUsers(int $user_id) {
-		$query = "SELECT photo_cover FROM " . $this->table . " WHERE is_deleted = 0 AND user_id = :user_id";
+	/**
+	 * find user's Article for admin user role for update feature.
+	 * @param string $slug Slug article.
+	 * @return array|bool Return article if any.
+	 */
+	public function findArticlesUsers(string $slug) {
+		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, articles.is_deleted, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id WHERE articles.slug = :slug";
 
-		// Prepare
+		// Set query
 		$this->db->query($query);
 
 		// Bind data
-		$this->db->bind('user_id', $user_id, PDO::PARAM_INT);
+		$this->db->bind('slug', $slug);
 
-		return $this->db->resultSet();
+		// Return data
+		return $this->db->single();
 	}
 
 	/**
@@ -229,6 +240,33 @@ class Article {
 	}
 
 	/**
+	 * Same as update function, bit for admin user role.
+	 * @param array $data Form data.
+	 * @param array $columns Columns to be selected.
+	 * @param string $slug Slug param from URL.
+	 * @return int
+	 */
+	public function updateAdmin(array $data, array $columns, string $slug) {
+		$fields = implode(', ', $columns);
+
+		// set query
+		$query = "UPDATE " . $this->table . " JOIN " . $this->tableRelations . " SET " . $fields . " WHERE slug = :slug AND users.is_deleted = 0 AND articles.user_id = users.id";
+
+		// update data
+		$this->db->query($query);
+
+		// bind data
+		foreach($data as $key => $value) {
+			$this->db->bind($key, $value);
+		}
+
+		$this->db->bind('slug', $slug);
+
+		// Execute
+		return $this->db->execute() ? 1 : 0;
+	}
+
+	/**
 	 * Search if 1 article with specific user exist.
 	 * @param string $slug Slug article.
 	 * @param int $user_id User id.
@@ -277,6 +315,20 @@ class Article {
 
 		// Count row table
 		return $this->db->rowCount();
+	}
+
+	/**
+	 * Get all cover photo paths for a user's articles.
+	 * @param int $user_id User id.
+	 * @return array[]
+	 */
+	public function getCoverPhotosByUser(int $user_id) {
+		$query = "SELECT photo_cover FROM " . $this->table . " WHERE user_id = :user_id AND photo_cover IS NOT NULL";
+
+		$this->db->query($query);
+		$this->db->bind('user_id', $user_id, PDO::PARAM_INT);
+
+		return $this->db->resultSet();
 	}
 
 	/**

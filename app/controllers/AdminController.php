@@ -143,7 +143,8 @@ class AdminController extends Controller
 	}
 
 	// Update user
-	public function userUpdate(string $username) {
+	public function userUpdate(string $username)
+	{
 		require_once __DIR__ . '/../request/Validator.php';
 		require_once __DIR__ . '/../request/UploadImage.php';
 
@@ -249,8 +250,13 @@ class AdminController extends Controller
 				}
 			}
 
-			// If photo_profile updated, upload new photo profile and destroy old photo
-			if ($data['photo_profile']['error'] === UPLOAD_ERR_OK) {
+			$isDeletingUser = isset($data['is_deleted']) && $data['is_deleted'] === '1';
+			$wasUserDeleted = isset($user['is_deleted']) && (string) $user['is_deleted'] === '1';
+
+			// If admin deletes the user, clear the profile photo path in the update data.
+			if ($isDeletingUser) {
+				$data['photo_profile'] = null;
+			} elseif ($data['photo_profile']['error'] === UPLOAD_ERR_OK) {
 				$data['photo_profile'] = $uploader->update($data['photo_profile'], $postData['old_photo_profile'], 'profiles');
 			} elseif ($data['photo_profile']['error'] === UPLOAD_ERR_NO_FILE) {
 				$data['photo_profile'] = $postData['old_photo_profile'];
@@ -276,10 +282,31 @@ class AdminController extends Controller
 			}
 
 			if ($this->model('Users')->update($dataUpdate, $dataKey, $username) > 0) {
+				if ($isDeletingUser && !$wasUserDeleted) {
+					$oldProfile = $postData['old_photo_profile'] ?? $user['photo_profile'] ?? '';
+					$articleModel = $this->model('Article');
+					$coverPhotos = $articleModel->getCoverPhotosByUser((int) $user['id']);
+					$articleModel->deleteAll((int) $user['id']);
+
+					if (!empty($oldProfile)) {
+						$uploader->delete($oldProfile);
+					}
+
+					foreach ($coverPhotos as $photo) {
+						if (!empty($photo['photo_cover'])) {
+							$uploader->delete($photo['photo_cover']);
+						}
+					}
+				}
+
 				Flasher::setFlash('Profil ' . $username . ' berhasil', 'diperbarui', 'success');
 				header('Location: ' . ABSOLUTURL . 'admin/users');
 				exit;
-			};
+			} else {
+				Flasher::setFlash('Profil ' . $username . ' gagal', 'diperbarui', 'danger');
+				header('Location: ' . ABSOLUTURL . 'admin/users');
+				exit;
+			}
 		} else {
 			$_SESSION['errors'] = $validator->errors();
 			$_SESSION['old_input'] = [
@@ -290,7 +317,7 @@ class AdminController extends Controller
 			];
 			header('Location: ' . ABSOLUTURL . 'admin/editUser/' . $username);
 			exit;
-		}		
+		}
 	}
 
 
@@ -367,5 +394,202 @@ class AdminController extends Controller
 		$this->view('templates/header', $data);
 		$this->view('admin/showArticle', $data);
 		$this->view('templates/footer');
+	}
+
+	// Edit article page
+	public function editArticle(string $slug)
+	{
+		// check session and permissions
+		if (!isset($_SESSION['user_info'])) {
+			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
+			header('LOCATION: ' . ABSOLUTURL . 'login');
+			exit;
+		}
+
+		if ($_SESSION['user_info']['user_role'] !== 'admin') {
+			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
+			header('LOCATION: ' . ABSOLUTURL . 'dashboard');
+			exit;
+		}
+
+		$data['judul'] = 'Halaman Edit article';
+		$data['style'] = "article.css";
+		$article = $this->model('Article')->findArticlesUsers($slug);
+
+		if ($article) {
+			$data['article'] = $article;
+		} else {
+			header('Location: ' . ABSOLUTURL . 'admin/articles');
+			exit;
+		}
+
+		$this->view('templates/header', $data);
+		$this->view('admin/editArticle', $data);
+		$this->view('templates/footer');
+	}
+
+	// Update article
+	public function articleUpdate(string $slug)
+	{
+		require_once __DIR__ . '/../request/Validator.php';
+		require_once __DIR__ . '/../request/UploadImage.php';
+
+		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+			header('LOCATION: ' . ABSOLUTURL . 'admin/users');
+			return;
+		}
+
+		// check session and permissions
+		if (!isset($_SESSION['user_info'])) {
+			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
+			header('LOCATION: ' . ABSOLUTURL . 'login');
+			exit;
+		}
+
+		if ($_SESSION['user_info']['user_role'] !== 'admin') {
+			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
+			header('LOCATION: ' . ABSOLUTURL . 'dashboard');
+			exit;
+		}
+
+		$_SESSION['errors'] = [];
+		$_SESSION['old_input'] = [];
+
+		$validator = new Validator();
+		$uploader = new UploadImage();
+
+		$postData = $_POST;
+		$fileData = $_FILES;
+		$dataKey = [];
+		$dataUpdate = [];
+
+		$article = $this->model('Article')->findArticlesUsers($slug);
+		$data = [
+			'title' => $validator->clearData($postData['title'] ?? ''),
+			'slug' => '',
+			'photo_cover' => $fileData['photo_cover'] ?? '',
+			'photo_path' => $postData['photo_path'] ?? '',
+			'is_deleted' => $validator->clearData($postData['is_deleted'] ?? ''),
+			'body' => $validator->clearData($postData['body'] ?? '')
+		];
+		$rules = [
+			'title' => [
+				'required' => true,
+				'min' => 10,
+				'max' => 200
+			],
+			'photo_cover' => [
+				"size" => 500000, // 500 Kb
+				"img" => true
+			],
+			'photo_path' => [
+				'required_if' => 'photo_cover',
+				'signature' => true,
+			],
+			'is_deleted' => [
+				'required' => true,
+				'boolean' => true
+			],
+			'body' => [
+				'required' => true,
+				'min' => 200
+			]
+		];
+
+		// Validate input
+		if ($validator->validate($data, $rules)) {
+			// If title is new, generate new slug
+			if ($article['title'] !== $data['title']) {
+				// Lowercase and remove apostrophes 
+				$newSlug = strtolower(preg_replace("~[‘’`']+~", '', $data['title']));
+
+				// Replace non-alphanumeric characters with spaces
+				$newSlug = preg_replace("~[^a-z0-9]+~", ' ', $newSlug);
+
+				// Replace spaces with hyphens and add it to data
+				$baseSlug = preg_replace('~[ ]+~', '-', trim($newSlug));
+				$newSlug = $baseSlug;
+				$slugCount = 1;
+
+				while ($this->model('Article')->findSlug($newSlug)) {
+					$newSlug = $baseSlug . '-' . $slugCount;
+					$slugCount++;
+				}
+			} else {
+				$data['slug'] = $article['slug'];
+			}
+
+			if (!empty($data['photo_path'])) {
+				$checkUrl = $validator->validateSignUrl($data['photo_path']);
+
+				if ($checkUrl !== true) {
+					http_response_code(403);
+					echo $checkUrl;
+					exit($checkUrl);
+				}
+			}
+
+			$isDeletingArticle = isset($data['is_deleted']) && $data['is_deleted'] === '1';
+			$wasArticleDeleted = isset($article['is_deleted']) && (string) $article['is_deleted'] === '1';
+
+			// When admin deletes the article, clear photo_cover in the update payload.
+			if ($isDeletingArticle) {
+				$data['photo_cover'] = null;
+			} elseif ($data['photo_cover']['error'] === UPLOAD_ERR_OK) {
+				$data['photo_cover'] = $uploader->update($data['photo_cover'], $postData['old_photo_cover'], 'covers');
+			} elseif ($data['photo_cover']['error'] === UPLOAD_ERR_NO_FILE) {
+				$data['photo_cover'] = $postData['old_photo_cover'];
+			}
+
+			// Separate key and value for update
+			foreach ($data as $updateData => $updateValue) {
+				if ($updateData === 'photo_cover' && is_array($updateValue) && ($updateValue['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+					$updateValue = $postData['old_photo_cover'] ?? $article['photo_cover'];
+				}
+
+				// Always prefer explicit articles.is_deleted to avoid ambiguity
+				if ($updateData === 'is_deleted') {
+					if (array_key_exists($updateData, $article) && $article[$updateData] != $updateValue) {
+						$dataKey[] = "articles.{$updateData} = :{$updateData}";
+						$dataUpdate[$updateData] = $updateValue;
+					}
+					continue;
+				}
+
+				if ($updateData === 'photo_path') {
+					continue;
+				}
+
+				if (array_key_exists($updateData, $article) && $article[$updateData] != $updateValue) {
+					$dataKey[] = "{$updateData} = :{$updateData}";
+					$dataUpdate[$updateData] = $updateValue;
+				}
+			}
+
+			if ($this->model('Article')->updateAdmin($dataUpdate, $dataKey, $slug) > 0) {
+				if ($isDeletingArticle && !$wasArticleDeleted && !empty($article['photo_cover'])) {
+					$uploader->delete($article['photo_cover']);
+				}
+
+				Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');
+				header('Location: ' . ABSOLUTURL . 'admin/articles');
+				exit;
+			} else {
+				Flasher::setFlash('artikel gagal', 'diperbarui', 'success');
+				header('Location: ' . ABSOLUTURL . 'admin/articles');
+				exit;
+			}
+		} else {
+			$_SESSION['errors'] = $validator->errors();
+			$_SESSION['old'] = [
+				'title' => $data['title'],
+				'photo_cover' => $data['photo_cover'],
+				'is_deleted' => $data['is_deleted'],
+				'body' => $data['body']
+			];
+
+			header('Location: ' . ABSOLUTURL . 'admin/editArticle/' . $slug);
+			exit;
+		}
 	}
 }
