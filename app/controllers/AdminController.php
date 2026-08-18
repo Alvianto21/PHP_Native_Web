@@ -2,8 +2,14 @@
 
 class AdminController extends Controller
 {
-	// Users page
-	public function users()
+
+	/**
+	 * User identifier.
+	 * @var string User IP address.
+	 */
+	protected $userIdentifier;
+
+	public function __construct()
 	{
 		// check session and permissions
 		if (!isset($_SESSION['user_info'])) {
@@ -18,6 +24,13 @@ class AdminController extends Controller
 			exit;
 		}
 
+		$clientIP = !empty($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
+		$this->userIdentifier = $clientIP;
+	}
+
+	// Users page
+	public function users()
+	{
 		// cari halaman saat ini
 		$perPage = 10;
 		$startPage = isset($_GET['page']) ? (int) $_GET['page'] + $perPage : (int) 0;
@@ -44,19 +57,6 @@ class AdminController extends Controller
 	public function showUser(string $username)
 	{
 		require_once __DIR__ . '/../request/UploadImage.php';
-
-		// check session and permissions
-		if (!isset($_SESSION['user_info'])) {
-			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
-			header('LOCATION: ' . ABSOLUTURL . 'login');
-			exit;
-		}
-
-		if ($_SESSION['user_info']['user_role'] !== 'admin') {
-			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
-			header('LOCATION: ' . ABSOLUTURL . 'dashboard');
-			exit;
-		}
 
 		$uploader = new UploadImage();
 
@@ -85,19 +85,6 @@ class AdminController extends Controller
 	// Edit user page
 	public function editUser(string $username)
 	{
-		// check session and permissions
-		if (!isset($_SESSION['user_info'])) {
-			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
-			header('LOCATION: ' . ABSOLUTURL . 'login');
-			exit;
-		}
-
-		if ($_SESSION['user_info']['user_role'] !== 'admin') {
-			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
-			header('LOCATION: ' . ABSOLUTURL . 'dashboard');
-			exit;
-		}
-
 		$data['judul'] = "Halaman Edit User";
 		$data['style'] = 'sign-up.css';
 		$user = $this->model('Users')->findUserAdmin($username);
@@ -123,12 +110,6 @@ class AdminController extends Controller
 			return;
 		}
 
-		if ($_SESSION['user_info']['user_role'] !== 'admin') {
-			http_response_code(403);
-			echo json_encode(['error' => "You did'n have requirement"]);
-			exit;
-		}
-
 		$characters = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
 		$max = strlen($characters) - 1;
 		$password = '';
@@ -148,21 +129,28 @@ class AdminController extends Controller
 		require_once __DIR__ . '/../request/Validator.php';
 		require_once __DIR__ . '/../request/UploadImage.php';
 
+		$limiter = new RateLimiter(30, 60, 100, 3600);
+
 		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 			header('LOCATION: ' . ABSOLUTURL . 'admin/users');
 			return;
 		}
 
-		// check session and permissions
-		if (!isset($_SESSION['user_info'])) {
-			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
-			header('LOCATION: ' . ABSOLUTURL . 'login');
-			exit;
+		if (!filter_var($this->userIdentifier, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6)) {
+			exit("Error: Invalid IP address.");
 		}
 
-		if ($_SESSION['user_info']['user_role'] !== 'admin') {
-			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
-			header('LOCATION: ' . ABSOLUTURL . 'dashboard');
+		if (!$limiter->limiter($this->userIdentifier)) {
+			$retryAt = $limiter->attemptRetryAfter();
+
+			http_response_code(429);
+			header('Content-Type: application/json');
+			header("Retry-After: {$retryAt}");
+
+			echo json_encode([
+				'error' => 'Too many request.',
+				'retry_after' => $retryAt
+			]);
 			exit;
 		}
 
@@ -324,19 +312,6 @@ class AdminController extends Controller
 	// Articles page
 	public function articles()
 	{
-		// check session and permissions
-		if (!isset($_SESSION['user_info'])) {
-			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
-			header('LOCATION: ' . ABSOLUTURL . 'login');
-			exit;
-		}
-
-		if ($_SESSION['user_info']['user_role'] !== 'admin') {
-			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
-			header('LOCATION: ' . ABSOLUTURL . 'dashboard');
-			exit;
-		}
-
 		// Set pagination
 		$perPage = 5;
 		$totalPage = $this->model('Article')->count();
@@ -367,13 +342,6 @@ class AdminController extends Controller
 	{
 		require_once __DIR__ . '/../request/UploadImage.php';
 
-		// check session and permissions
-		if (!isset($_SESSION['user_info'])) {
-			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
-			header('LOCATION: ' . ABSOLUTURL . 'login');
-			exit;
-		}
-
 		$uploader = new UploadImage();
 
 		$data['judul'] = "Halaman Info Article";
@@ -399,19 +367,6 @@ class AdminController extends Controller
 	// Edit article page
 	public function editArticle(string $slug)
 	{
-		// check session and permissions
-		if (!isset($_SESSION['user_info'])) {
-			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
-			header('LOCATION: ' . ABSOLUTURL . 'login');
-			exit;
-		}
-
-		if ($_SESSION['user_info']['user_role'] !== 'admin') {
-			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
-			header('LOCATION: ' . ABSOLUTURL . 'dashboard');
-			exit;
-		}
-
 		$data['judul'] = 'Halaman Edit article';
 		$data['style'] = "article.css";
 		$article = $this->model('Article')->findArticlesUsers($slug);
@@ -434,21 +389,28 @@ class AdminController extends Controller
 		require_once __DIR__ . '/../request/Validator.php';
 		require_once __DIR__ . '/../request/UploadImage.php';
 
+		$limiter = new RateLimiter(30, 60, 100, 3600);
+
 		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 			header('LOCATION: ' . ABSOLUTURL . 'admin/users');
 			return;
 		}
 
-		// check session and permissions
-		if (!isset($_SESSION['user_info'])) {
-			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
-			header('LOCATION: ' . ABSOLUTURL . 'login');
-			exit;
+		if (!filter_var($this->userIdentifier, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6)) {
+			exit("Error: Invalid IP address.");
 		}
 
-		if ($_SESSION['user_info']['user_role'] !== 'admin') {
-			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
-			header('LOCATION: ' . ABSOLUTURL . 'dashboard');
+		if (!$limiter->limiter($this->userIdentifier)) {
+			$retryAt = $limiter->attemptRetryAfter();
+
+			http_response_code(429);
+			header('Content-Type: application/json');
+			header("Retry-After: {$retryAt}");
+
+			echo json_encode([
+				'error' => 'Too many request.',
+				'retry_after' => $retryAt
+			]);
 			exit;
 		}
 

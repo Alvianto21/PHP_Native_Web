@@ -2,16 +2,29 @@
 
 class ProfileController extends Controller
 {
-	// View profile
-	public function index()
-	{
-		require_once __DIR__ . '/../request/UploadImage.php';
 
+	/**
+	 * User identifier.
+	 * @var string User IP address.
+	 */
+	protected $userIdentifier;
+
+	public function __construct()
+	{
 		// cek login
 		if (!isset($_SESSION['user_info'])) {
 			header('LOCATION: ' . ABSOLUTURL . 'login');
 			exit;
 		}
+
+		$clientIP = !empty($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
+		$this->userIdentifier = $clientIP;
+	}
+
+	// View profile
+	public function index()
+	{
+		require_once __DIR__ . '/../request/UploadImage.php';
 
 		$uploader = new UploadImage();
 
@@ -38,12 +51,6 @@ class ProfileController extends Controller
 	// Edit profile
 	public function edit(string $username)
 	{
-		// cek login
-		if (!isset($_SESSION['user_info'])) {
-			header('LOCATION: ' . ABSOLUTURL . 'login');
-			exit;
-		}
-
 		$data['judul'] = 'Edit Profile';
 		$data['style'] = "sign-up.css";
 
@@ -67,14 +74,28 @@ class ProfileController extends Controller
 		require_once __DIR__ . '/../request/Validator.php';
 		require_once __DIR__ . '/../request/UploadImage.php';
 
-		// cek login
-		if (!isset($_SESSION['user_info'])) {
-			header('LOCATION: ' . ABSOLUTURL . 'login');
-			exit;
-		}
+		$limiter = new RateLimiter(30, 60, 100, 3600);
 
 		if ($_SERVER['REQUEST_METHOD'] !== "POST") {
 			header('LOCATION: ' . ABSOLUTURL . 'dashboard');
+			exit;
+		}
+
+		if (!filter_var($this->userIdentifier, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6)) {
+			exit("Error: Invalid IP address.");
+		}
+
+		if (!$limiter->limiter($this->userIdentifier)) {
+			$retryAt = $limiter->attemptRetryAfter();
+
+			http_response_code(429);
+			header('Content-Type: application/json');
+			header("Retry-After: {$retryAt}");
+
+			echo json_encode([
+				'error' => 'Too many request.',
+				'retry_after' => $retryAt
+			]);
 			exit;
 		}
 
@@ -198,12 +219,6 @@ class ProfileController extends Controller
 	public function delete()
 	{
 		require_once __DIR__ . '/../request/UploadImage.php';
-
-		// cek login
-		if (!isset($_SESSION['user_info'])) {
-			header('LOCATION: ' . ABSOLUTURL . 'login');
-			exit;
-		}
 
 		$uploader = new UploadImage();
 		$user_id = $_SESSION['user_info']['user_id'];

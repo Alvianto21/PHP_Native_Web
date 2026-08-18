@@ -2,6 +2,19 @@
 
 class LoginController extends Controller
 {
+
+	/**
+	 * User identifier.
+	 * @var string User IP address.
+	 */
+	protected $userIdentifier;
+
+	public function __construct()
+	{
+		$clientIP = !empty($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
+		$this->userIdentifier = $clientIP;
+	}
+	
 	// halaman login
 	public function index()
 	{
@@ -23,9 +36,29 @@ class LoginController extends Controller
 	{
 		require_once __DIR__ . '/../request/Validator.php';
 
+		$limiter = new RateLimiter(30, 60, 100, 3600);
+
 		// Cek method
 		if ($_SERVER['REQUEST_METHOD'] !== "POST") {
 			header('LOCATION: ' . ABSOLUTURL . 'login');
+			exit;
+		}
+
+		if (!filter_var($this->userIdentifier, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6)) {
+			exit("Error: Invalid IP address.");
+		}
+
+		if (!$limiter->limiter($this->userIdentifier)) {
+			$retryAt = $limiter->attemptRetryAfter();
+
+			http_response_code(429);
+			header('Content-Type: application/json');
+			header("Retry-After: {$retryAt}");
+
+			echo json_encode([
+				'error' => 'Too many request.',
+				'retry_after' => $retryAt
+			]);
 			exit;
 		}
 
@@ -101,9 +134,29 @@ class LoginController extends Controller
 		require_once __DIR__ . '/../request/Validator.php';
 		require_once __DIR__ . '/../request/UploadImage.php';
 
+		$limiter = new RateLimiter(30, 60, 100, 3600);
+
 		// cek method
 		if ($_SERVER['REQUEST_METHOD'] !== "POST") {
 			header('LOCATION: ' . ABSOLUTURL . 'login/register');
+			exit;
+		}
+
+		if (!filter_var($this->userIdentifier, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6)) {
+			exit("Error: Invalid IP address.");
+		}
+
+		if (!$limiter->limiter($this->userIdentifier)) {
+			$retryAt = $limiter->attemptRetryAfter();
+
+			http_response_code(429);
+			header('Content-Type: application/json');
+			header("Retry-After: {$retryAt}");
+			
+			echo json_encode([
+				'error' => 'Too many request.',
+				'retry_after' => $retryAt
+			]);
 			exit;
 		}
 

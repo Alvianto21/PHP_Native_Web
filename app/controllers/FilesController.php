@@ -1,16 +1,49 @@
 <?php
 
 class FilesController extends Controller {
+
+	/**
+	 * User identifier.
+	 * @var string User IP address or user sessions id.
+	 */
+	protected $userIdentifier;
+
+	public function __construct()
+	{
+		$clientIP = !empty($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
+		$this->userIdentifier = $clientIP;
+	}
+	
 	/**
 	 * Generate temp sign URL for form
 	 * @return void - return temp sign URL
 	 */
 	public function signUrl() {
+		$limiter = new RateLimiter(30, 60, 100, 3600);
+
 		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 			http_response_code(405);
 			echo json_encode(['error' => 'Method Not Allowed']);
 			return;
-		} 
+		}
+		
+		if (!filter_var($this->userIdentifier, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6)) {
+			exit("Error: Invalid IP address.");
+		}
+
+		if (!$limiter->limiter($this->userIdentifier)) {
+			$retryAt = $limiter->attemptRetryAfter();
+
+			http_response_code(429);
+			header('Content-Type: application/json');
+			header("Retry-After: {$retryAt}");
+			
+			echo json_encode([
+				'error' => 'Too many request.',
+				'retry_after' => $retryAt
+			]);
+			exit;
+		}
 
 		$secretKey = getenv('APP_KEY') ?: 'change-me';
 		$expired = time() + 300; // 5 mins

@@ -2,16 +2,30 @@
 
 class DashboardController extends Controller
 {
+
+	/**
+	 * User identifier.
+	 * @var string User IP address.
+	 */
+	protected $userIdentifier;
+
+	public function __construct()
+	{
+		// cek login
+		if (!isset($_SESSION['user_info'])) {
+			Flasher::setFlash('Mohon maaf, ', 'aksess halaman ini ditolak!', 'danger');
+			header('LOCATION: ' . ABSOLUTURL . 'login');
+			exit;
+		}
+
+		$clientIP = !empty($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
+		$this->userIdentifier = $clientIP;
+	}
+
 	// articles table
 	public function index()
 	{
 		require_once __DIR__ . '/../request/UploadImage.php';
-
-		// cek login
-		if (!isset($_SESSION['user_info'])) {
-			header('LOCATION: ' . ABSOLUTURL . 'login');
-			exit;
-		}
 
 		$uploader = new UploadImage();
 
@@ -46,12 +60,6 @@ class DashboardController extends Controller
 	// create article
 	public function create()
 	{
-		// cek login
-		if (!isset($_SESSION['user_info'])) {
-			header('LOCATION: ' . ABSOLUTURL . 'login');
-			exit;
-		}
-
 		$data['judul'] = 'Buat Artikel Baru';
 		$data['style'] = "article.css";
 
@@ -66,15 +74,29 @@ class DashboardController extends Controller
 		require_once __DIR__ . '/../request/Validator.php';
 		require_once __DIR__ . '/../request/UploadImage.php';
 
-		// cek login
-		if (!isset($_SESSION['user_info'])) {
-			header('LOCATION: ' . ABSOLUTURL . 'login');
-			exit;
-		}
+		$limiter = new RateLimiter(30, 60, 100, 3600);
 
 		// cek method
 		if ($_SERVER['REQUEST_METHOD'] !== "POST") {
 			header('LOCATION: ' . ABSOLUTURL . 'dashboard');
+			exit;
+		}
+
+		if (!filter_var($this->userIdentifier, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6)) {
+			exit("Error: Invalid IP address.");
+		}
+
+		if (!$limiter->limiter($this->userIdentifier)) {
+			$retryAt = $limiter->attemptRetryAfter();
+
+			http_response_code(429);
+			header('Content-Type: application/json');
+			header("Retry-After: {$retryAt}");
+
+			echo json_encode([
+				'error' => 'Too many request.',
+				'retry_after' => $retryAt
+			]);
 			exit;
 		}
 
@@ -173,12 +195,6 @@ class DashboardController extends Controller
 	{
 		require_once __DIR__ . '/../request/UploadImage.php';
 
-		// cek login
-		if (!isset($_SESSION['user_info'])) {
-			header('LOCATION: ' . ABSOLUTURL . 'login');
-			exit;
-		}
-
 		$uploader = new UploadImage();
 		$user = $_SESSION['user_info']['user_id'];
 
@@ -206,15 +222,9 @@ class DashboardController extends Controller
 	// edit article
 	public function edit(string $slug)
 	{
-		// cek login
-		if (!isset($_SESSION['user_info'])) {
-			header('LOCATION: ' . ABSOLUTURL . 'login');
-			exit;
-		}
-
 		$data['judul'] = 'Edit Artikel';
 		$data['style'] = "article.css";
-		
+
 		$user = $_SESSION['user_info']['user_id'];
 		$article = $this->model('Article')->findArticleUser($slug, $user);
 
@@ -236,14 +246,28 @@ class DashboardController extends Controller
 		require_once __DIR__ . '/../request/Validator.php';
 		require_once __DIR__ . '/../request/UploadImage.php';
 
-		// cek login
-		if (!isset($_SESSION['user_info'])) {
-			header('LOCATION: ' . ABSOLUTURL . 'login');
-			exit;
-		}
+		$limiter = new RateLimiter(30, 60, 100, 3600);
 
 		if ($_SERVER['REQUEST_METHOD'] !== "POST") {
 			header('LOCATION:  . ABSOLUTURL . dashboard');
+			exit;
+		}
+
+		if (!filter_var($this->userIdentifier, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6)) {
+			exit("Error: Invalid IP address.");
+		}
+
+		if (!$limiter->limiter($this->userIdentifier)) {
+			$retryAt = $limiter->attemptRetryAfter();
+
+			http_response_code(429);
+			header('Content-Type: application/json');
+			header("Retry-After: {$retryAt}");
+
+			echo json_encode([
+				'error' => 'Too many request.',
+				'retry_after' => $retryAt
+			]);
 			exit;
 		}
 
@@ -345,7 +369,7 @@ class DashboardController extends Controller
 			}
 
 			// Separate key and value for update
-			foreach($data as $updateData => $updateValue) {
+			foreach ($data as $updateData => $updateValue) {
 				if ($updateData === 'photo_cover' && is_array($updateValue) && ($updateValue['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
 					$updateValue = $postData['old_photo_cover'] ?? $article['photo_cover'];
 				} elseif (array_key_exists($updateData, $article) && $article[$updateData] != $updateValue) {
@@ -380,12 +404,6 @@ class DashboardController extends Controller
 	{
 		require_once __DIR__ . '/../request/UploadImage.php';
 
-		// cek login
-		if (!isset($_SESSION['user_info'])) {
-			header('LOCATION: ' . ABSOLUTURL . 'login');
-			exit;
-		}
-
 		$uploader = new UploadImage();
 		$user = $_SESSION['user_info']['user_id'];
 
@@ -393,7 +411,7 @@ class DashboardController extends Controller
 
 		if ($articleTarget) {
 			$article = $this->model('Article')->delete($slug, $user);
-			
+
 			if ($article) {
 				$uploader->delete($articleTarget['photo_cover']);
 				Flasher::setFlash('artikel berhasil', 'dihapus', 'success');

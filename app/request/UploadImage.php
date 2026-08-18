@@ -10,6 +10,10 @@ class UploadImage
 	public function __construct()
 	{
 		$this->storage = dirname(__DIR__, 2) . '/storage/uploads/';
+
+		if (!is_dir($this->storage)) {
+			mkdir($this->storage, 0777, true);
+		}
 	}
 
 	/**
