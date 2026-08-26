@@ -104,7 +104,7 @@ class Validator
 						}
 						break;
 					case 'match':
-						if ($this->isEmptyValue($value) !== $this->hasRealValue($data[$ruleValue])) {
+						if ((string) $value !== (string) ($data[$ruleValue] ?? '')) {
 							$this->addError($field, "The '{$field}' must match $ruleValue.");
 							break;
 						}

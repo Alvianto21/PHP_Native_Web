@@ -166,7 +166,6 @@ class LoginController extends Controller
 		$validator = new Validator();
 		$uploader = new UploadImage();
 
-		$secret = getenv("APP_KEY");
 		$postData = $_POST;
 		$fileData = $_FILES;
 
@@ -227,7 +226,11 @@ class LoginController extends Controller
 			}
 
 			// File handling
-			$data['photo_profile'] = $uploader->store($data['photo_profile'], "profiles");
+			if ($data['photo_profile']['error'] !== UPLOAD_ERR_NO_FILE) {
+				$data['photo_profile'] = $uploader->store($data['photo_profile'], "profiles");
+			} else {
+				$data['photo_profile'] = null;
+			}
 
 			// hash password
 			$data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
@@ -243,6 +246,8 @@ class LoginController extends Controller
 				exit;
 			}
 		} else {
+			echo "create user {$data['username']} failed.\n";
+			var_dump($validator->errors());
 			$_SESSION['errors'] = $validator->errors();
 			$_SESSION['old_input'] = [
 				'email' => $data['email'],
