@@ -8,5 +8,5 @@ CREATE TABLE `users` (
 	is_deleted BOOLEAN DEFAULT FALSE,
 	INDEX idx_email (email),
 	INDEX idx_username (username),
-	INDEX odx_is_deleted (is_deleted)
+	INDEX idx_is_deleted (is_deleted)
 );
