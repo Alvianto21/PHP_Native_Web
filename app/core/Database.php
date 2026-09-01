@@ -102,7 +102,7 @@ class Database {
 		foreach($bindings as $binding) {
 			$param = $binding[0];
 			$value = $binding[1];
-			$type = $binding[3] ?? null;
+			$type = $binding[2] ?? null;
 			$this->bind($param, $value, $type);
 		}
 	}
