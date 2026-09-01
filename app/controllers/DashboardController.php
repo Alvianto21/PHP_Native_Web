@@ -171,7 +171,11 @@ class DashboardController extends Controller
 			$data['slug'] = $slug;
 
 			// File handling
-			$data['photo_cover'] = $uploader->store($data['photo_cover'], "covers");
+			if ($data['photo_cover']['error'] !== UPLOAD_ERR_NO_FILE) {
+				$data['photo_cover'] = $uploader->store($data['photo_cover'], 'covers');
+			} else {
+				$data['photo_cover'] = null;
+			}
 
 			if ($this->model('Article')->create($data, $user)) {
 				Flasher::setFlash('artikel berhasil', 'ditambahkan', 'success');
