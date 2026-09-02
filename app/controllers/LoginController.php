@@ -268,7 +268,7 @@ class LoginController extends Controller
 		}
 
 		// hapus semua session
-		$_SESSION = [];
+		session_unset();
 
 		// hapus session
 		session_destroy();
