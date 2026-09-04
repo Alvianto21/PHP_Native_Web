@@ -347,7 +347,7 @@ class DashboardController extends Controller
 					$slugCount++;
 				}
 
-				// $data['slug'] = $newSlug;
+				$data['slug'] = $newSlug;
 			} else {
 				$data['slug'] = $article['slug'];
 			}

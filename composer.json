@@ -1,5 +1,8 @@
 {
     "require-dev": {
         "phpunit/phpunit": "13"
+    },
+    "scripts": {
+        "tests" : "phpunit"
     }
 }
