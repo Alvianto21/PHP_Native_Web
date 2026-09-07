@@ -367,7 +367,7 @@ class DashboardController extends Controller
 
 			// If photo_cover updated, upload new photo cover and destroy old photo
 			if ($data['photo_cover']['error'] === UPLOAD_ERR_OK) {
-				$data['photo_cover'] = $uploader->update($data['photo_cover'], $postData['old_photo_cover'], 'covers');
+				$data['photo_cover'] = $uploader->update($data['photo_cover'], (string) $postData['old_photo_cover'], 'covers');
 			} elseif ($data['photo_cover']['error'] === UPLOAD_ERR_NO_FILE) {
 				$data['photo_cover'] = $postData['old_photo_cover'];
 			}

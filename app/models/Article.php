@@ -220,7 +220,7 @@ class Article {
 	public function update(array $data, array $columns, int $user_id, string $slug) {
 		$fields = implode(', ', $columns);
 		// set query
-		$query = "UPDATE " . $this->table . " SET " . $fields . " WHERE user_id=:user_id AND is_deleted = 0 AND slug=:slug";
+		$query = "UPDATE " . $this->table . " SET " . $fields . " WHERE user_id=:user_id AND is_deleted = 0 AND slug=:current_slug";
 
 		// update data
 		$this->db->query($query);
@@ -232,7 +232,7 @@ class Article {
 
 		$this->db->multiBind([
 			['user_id', $user_id],
-			['slug', $slug]
+			['current_slug', $slug]
 		]);
 
 		// Execute
@@ -250,7 +250,7 @@ class Article {
 		$fields = implode(', ', $columns);
 
 		// set query
-		$query = "UPDATE " . $this->table . " JOIN " . $this->tableRelations . " SET " . $fields . " WHERE slug = :slug AND users.is_deleted = 0 AND articles.user_id = users.id";
+		$query = "UPDATE " . $this->table . " JOIN " . $this->tableRelations . " SET " . $fields . " WHERE slug = :current_slug AND users.is_deleted = 0 AND articles.user_id = users.id";
 
 		// update data
 		$this->db->query($query);
@@ -260,7 +260,7 @@ class Article {
 			$this->db->bind($key, $value);
 		}
 
-		$this->db->bind('slug', $slug);
+		$this->db->bind('current_slug', $slug);
 
 		// Execute
 		return $this->db->execute() ? 1 : 0;

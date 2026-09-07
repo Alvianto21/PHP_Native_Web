@@ -245,7 +245,7 @@ class AdminController extends Controller
 			if ($isDeletingUser) {
 				$data['photo_profile'] = null;
 			} elseif ($data['photo_profile']['error'] === UPLOAD_ERR_OK) {
-				$data['photo_profile'] = $uploader->update($data['photo_profile'], $postData['old_photo_profile'], 'profiles');
+				$data['photo_profile'] = $uploader->update($data['photo_profile'], (string) $postData['old_photo_profile'], 'profiles');
 			} elseif ($data['photo_profile']['error'] === UPLOAD_ERR_NO_FILE) {
 				$data['photo_profile'] = $postData['old_photo_profile'];
 			}
@@ -498,7 +498,7 @@ class AdminController extends Controller
 			if ($isDeletingArticle) {
 				$data['photo_cover'] = null;
 			} elseif ($data['photo_cover']['error'] === UPLOAD_ERR_OK) {
-				$data['photo_cover'] = $uploader->update($data['photo_cover'], $postData['old_photo_cover'], 'covers');
+				$data['photo_cover'] = $uploader->update($data['photo_cover'], (string) $postData['old_photo_cover'], 'covers');
 			} elseif ($data['photo_cover']['error'] === UPLOAD_ERR_NO_FILE) {
 				$data['photo_cover'] = $postData['old_photo_cover'];
 			}

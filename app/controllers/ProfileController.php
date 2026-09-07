@@ -175,7 +175,7 @@ class ProfileController extends Controller
 
 			// If photo_profile updated, upload new photo profile and destroy old photo
 			if ($data['photo_profile']['error'] === UPLOAD_ERR_OK) {
-				$data['photo_profile'] = $uploader->update($data['photo_profile'], $postData['old_photo_profile'], 'profiles');
+				$data['photo_profile'] = $uploader->update($data['photo_profile'], (string) $postData['old_photo_profile'], 'profiles');
 			} elseif ($data['photo_profile']['error'] === UPLOAD_ERR_NO_FILE) {
 				$data['photo_profile'] = $postData['old_photo_profile'];
 			}
