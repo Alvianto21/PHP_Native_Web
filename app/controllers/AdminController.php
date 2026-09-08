@@ -277,12 +277,12 @@ class AdminController extends Controller
 					$articleModel->deleteAll((int) $user['id']);
 
 					if (!empty($oldProfile)) {
-						$uploader->delete($oldProfile);
+						$uploader->delete((string) $oldProfile);
 					}
 
 					foreach ($coverPhotos as $photo) {
 						if (!empty($photo['photo_cover'])) {
-							$uploader->delete($photo['photo_cover']);
+							$uploader->delete((string) $photo['photo_cover']);
 						}
 					}
 				}
@@ -530,7 +530,7 @@ class AdminController extends Controller
 
 			if ($this->model('Article')->updateAdmin($dataUpdate, $dataKey, $slug) > 0) {
 				if ($isDeletingArticle && !$wasArticleDeleted && !empty($article['photo_cover'])) {
-					$uploader->delete($article['photo_cover']);
+					$uploader->delete((string) $article['photo_cover']);
 				}
 
 				Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');

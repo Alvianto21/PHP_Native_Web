@@ -43,6 +43,10 @@ class LoginControllerStub extends LoginController
 		$validator = new Validator();
 		$uploader = new UploadImage();
 
+		if ($_SERVER['REQUEST_METHOD'] !== "POST") {
+			return "method not allowed";
+		}
+
 		$data = [
 			'email' => $validator->clearData($postData['email'] ?? ''),
 			'username' => $validator->clearData($postData['username'] ?? ''),
@@ -123,6 +127,11 @@ class LoginControllerStub extends LoginController
 		require_once __DIR__ . '/../../app/request/Validator.php';
 
 		$validator = new Validator();
+
+		if ($_SERVER['REQUEST_METHOD'] !== "POST") {
+			return "method not allowed";
+		}
+
 		$_SESSION['errors'] = [];
 		$_SESSION['old_input'] = [];
 
@@ -832,7 +841,7 @@ class LoginTest extends TestCase
 		$_SERVER = [];
 		$_POST = [];
 		$_FILES = [];
-		$_SESSION = [];
+		session_unset();
 		session_destroy();
 		parent::tearDown();
 	}

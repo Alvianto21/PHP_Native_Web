@@ -65,7 +65,7 @@ class TestUsersModel
 		foreach ($bindings as $binding) {
 			$param = $binding[0];
 			$value = $binding[1];
-			$type = $binding[3] ?? null;
+			$type = $binding[2] ?? null;
 			$this->bind($param, $value, $type);
 		}
 	}
@@ -89,6 +89,31 @@ class TestUsersModel
 			['photo_profile', $data['photo_profile']],
 			['password', $data['password']],
 			['role', 'user']
+		]);
+
+		$this->stmt->execute();
+
+		return $this->stmt->rowCount();
+	}
+
+	public function createAdmin(array $data) {
+		$query = "INSERT INTO " . $this->table . " (email, username, photo_profile, role,  password) VALUES (:email, :username, :photo_profile, :role, :password)";
+
+		echo "executing...\n";
+
+		$this->query($query);
+
+		// clear email
+		$data['email'] = filter_var($data['email'], FILTER_SANITIZE_EMAIL);
+
+		if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) return 0;
+
+		$this->multiBind([
+			['email', $data['email']],
+			['username', $data['username']],
+			['photo_profile', $data['photo_profile']],
+			['password', $data['password']],
+			['role', 'admin']
 		]);
 
 		$this->stmt->execute();

@@ -1,13 +1,15 @@
 <?php
 
-class Article {	
-	
+class Article
+{
+
 	private $table = 'articles';
 	private $tableRelations = 'users';
-	private $db; 
+	private $db;
 
 	// koneksi ke database
-	public function __construct() {
+	public function __construct()
+	{
 		$this->db = new Database();
 	}
 
@@ -18,7 +20,8 @@ class Article {
 	 * @param int $offset Start data position.
 	 * @return array[] - Article data.
 	 */
-	public function getByUsers(int $user_id, int $limit, int $offset) {
+	public function getByUsers(int $user_id, int $limit, int $offset)
+	{
 		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body FROM `{$this->table}` JOIN `{$this->tableRelations}` ON articles.user_id = users.id WHERE articles.is_deleted = 0 AND users.id = :user_id LIMIT :limit OFFSET :offset";
 
 		$this->db->query($query);
@@ -28,7 +31,7 @@ class Article {
 			['limit', $limit, PDO::PARAM_INT],
 			['offset', $offset, PDO::PARAM_INT]
 		]);
-		
+
 		return $this->db->resultSet();
 	}
 
@@ -38,7 +41,8 @@ class Article {
 	 * @param int $offset Start data position.
 	 * @return array[] array data.
 	 */
-	public function paginator(int $limit, int $offset) {
+	public function paginator(int $limit, int $offset)
+	{
 		// set query
 		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id WHERE articles.is_deleted = 0 ORDER BY articles.id DESC LIMIT :limit OFFSET :offset";
 
@@ -60,7 +64,8 @@ class Article {
 	 * @param int $offset Start data position.
 	 * @return array[] array data.
 	 */
-	public function adminPaginator(int $limit, int $offset) {
+	public function adminPaginator(int $limit, int $offset)
+	{
 		// set query
 		$query = "SELECT articles.title, articles.slug, articles.is_deleted, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id ORDER BY articles.id DESC LIMIT :limit OFFSET :offset";
 
@@ -80,10 +85,11 @@ class Article {
 	 * Count article data.
 	 * @return int total articles.
 	 */
-	public function count() {
+	public function count()
+	{
 		$query = "SELECT COUNT(*) AS total FROM " . $this->table .  " WHERE is_deleted = 0";
 		$this->db->query($query);
-		
+
 		return $this->db->coloms();
 	}
 
@@ -93,7 +99,8 @@ class Article {
 	 * @param string $slug Slug to search for.
 	 * @return bool True when the slug exists, otherwise false.
 	 */
-	public function findSlug(string $slug) {
+	public function findSlug(string $slug)
+	{
 		$this->db->query('SELECT 1 FROM ' . $this->table . ' WHERE slug = ? LIMIT 1');
 		$this->db->bind(1, $slug);
 
@@ -111,7 +118,8 @@ class Article {
 	 * @param string $slug slug Title.
 	 * @return array|bool article data.
 	 */
-	public function findArticle(string $slug) {
+	public function findArticle(string $slug)
+	{
 		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id WHERE slug = :slug AND articles.is_deleted = 0";
 
 		// Set query
@@ -129,7 +137,8 @@ class Article {
 	 * @param string $slug Article slug.
 	 * @return array|bool Return article if any
 	 */
-	public function findArticleAdmin(string $slug) {
+	public function findArticleAdmin(string $slug)
+	{
 		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id WHERE slug = :slug";
 
 		// Set query
@@ -148,7 +157,8 @@ class Article {
 	 * @param int $user_id user id from session.
 	 * @return array|bool article data.
 	 */
-	public function findArticleUser(string $slug, int $user_id) {
+	public function findArticleUser(string $slug, int $user_id)
+	{
 		$query = "SELECT title, slug, photo_cover, body FROM " . $this->table . " WHERE slug = :slug AND user_id = :user_id AND is_deleted = 0";
 
 		// Set query
@@ -167,7 +177,8 @@ class Article {
 	 * @param string $slug Slug article.
 	 * @return array|bool Return article if any.
 	 */
-	public function findArticlesUsers(string $slug) {
+	public function findArticlesUsers(string $slug)
+	{
 		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, articles.is_deleted, users.username AS author FROM " . $this->table . " JOIN " . $this->tableRelations . " ON articles.user_id = users.id WHERE articles.slug = :slug";
 
 		// Set query
@@ -186,7 +197,8 @@ class Article {
 	 * @param int  $user_id - User id from session.
 	 * @return int
 	 */
-	public function create(array $data, int $user_id) {		
+	public function create(array $data, int $user_id)
+	{
 		// set query
 		$query = "INSERT INTO " . $this->table . " (title, slug, photo_cover, user_id, body) VALUES (:title, :slug, :photo_cover, :user_id, :body)";
 
@@ -217,7 +229,12 @@ class Article {
 	 * @param string $slug Slug param from URL.
 	 * @return int
 	 */
-	public function update(array $data, array $columns, int $user_id, string $slug) {
+	public function update(array $data, array $columns, int $user_id, string $slug)
+	{
+		if (empty($columns)) {
+			return 1;
+		}
+
 		$fields = implode(', ', $columns);
 		// set query
 		$query = "UPDATE " . $this->table . " SET " . $fields . " WHERE user_id=:user_id AND is_deleted = 0 AND slug=:current_slug";
@@ -226,7 +243,7 @@ class Article {
 		$this->db->query($query);
 
 		// bind data
-		foreach($data as $key => $value) {
+		foreach ($data as $key => $value) {
 			$this->db->bind($key, $value);
 		}
 
@@ -246,7 +263,12 @@ class Article {
 	 * @param string $slug Slug param from URL.
 	 * @return int
 	 */
-	public function updateAdmin(array $data, array $columns, string $slug) {
+	public function updateAdmin(array $data, array $columns, string $slug)
+	{
+		if (empty($columns)) {
+			return 1;
+		}
+
 		$fields = implode(', ', $columns);
 
 		// set query
@@ -256,7 +278,7 @@ class Article {
 		$this->db->query($query);
 
 		// bind data
-		foreach($data as $key => $value) {
+		foreach ($data as $key => $value) {
 			$this->db->bind($key, $value);
 		}
 
@@ -272,7 +294,8 @@ class Article {
 	 * @param int $user_id User id.
 	 * @return bool
 	 */
-	public function existsForUser(string $slug, int $user_id) {
+	public function existsForUser(string $slug, int $user_id)
+	{
 		$query = "SELECT 1 FROM " . $this->table . " WHERE slug = :slug AND user_id = :user_id AND is_deleted = 0 LIMIT 1";
 
 		$this->db->query($query);
@@ -297,7 +320,8 @@ class Article {
 	 * @param int $user_id User id from session.
 	 * @return int
 	 */
-	public function delete(string $slug, int $user_id) {
+	public function delete(string $slug, int $user_id)
+	{
 		// set query
 		$query = "UPDATE " . $this->table . " SET is_deleted = 1, photo_cover = NULL WHERE user_id= :user_id AND slug = :slug";
 
@@ -322,7 +346,8 @@ class Article {
 	 * @param int $user_id User id.
 	 * @return array[]
 	 */
-	public function getCoverPhotosByUser(int $user_id) {
+	public function getCoverPhotosByUser(int $user_id)
+	{
 		$query = "SELECT photo_cover FROM " . $this->table . " WHERE user_id = :user_id AND photo_cover IS NOT NULL";
 
 		$this->db->query($query);
@@ -336,7 +361,8 @@ class Article {
 	 * @param int $user_id User id from sessions.
 	 * @return int
 	 */
-	public function deleteAll(int $user_id) {
+	public function deleteAll(int $user_id)
+	{
 		$query = "UPDATE " . $this->table . " SET is_deleted = 1, photo_cover = NULL WHERE user_id = :user_id";
 
 		// Set query

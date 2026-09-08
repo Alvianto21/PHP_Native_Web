@@ -382,6 +382,12 @@ class DashboardController extends Controller
 				}
 			}
 
+			if (empty($dataKey)) {
+				Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');
+				header('Location: ' . ABSOLUTURL . 'dashboard');
+				exit;
+			}
+
 			if ($this->model('Article')->update($dataUpdate, $dataKey, $user, $slug) > 0) {
 				Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');
 				header('Location: ' . ABSOLUTURL . 'dashboard');
@@ -417,7 +423,7 @@ class DashboardController extends Controller
 			$article = $this->model('Article')->delete($slug, $user);
 
 			if ($article) {
-				$uploader->delete($articleTarget['photo_cover']);
+				$uploader->delete((string) $articleTarget['photo_cover']);
 				Flasher::setFlash('artikel berhasil', 'dihapus', 'success');
 				header('Location: ' . ABSOLUTURL . 'dashboard');
 				exit;

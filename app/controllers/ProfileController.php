@@ -238,10 +238,10 @@ class ProfileController extends Controller
 
 			if ($userTarget && isset($articleTarget)) {
 				foreach ($articleTarget as $article) {
-					$uploader->delete($article['photo_profile']);
+					$uploader->delete((string) $article['photo_profile']);
 				}
 
-				$uploader->delete($userTarget['photo_profile']);
+				$uploader->delete((string) $userTarget['photo_profile']);
 
 				// Clear and destroy sessions
 				$_SESSION = [];
@@ -251,7 +251,7 @@ class ProfileController extends Controller
 				header('LOCATION: ' . BASEURL);
 				exit;
 			} elseif ($userTarget) {
-				$uploader->delete($userTarget['photo_profile']);
+				$uploader->delete((string) $userTarget['photo_profile']);
 
 				// Clear and destroy sessions
 				$_SESSION = [];
