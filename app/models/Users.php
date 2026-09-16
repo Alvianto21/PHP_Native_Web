@@ -168,6 +168,78 @@ class Users {
 	}
 
 	/**
+	 * Validate is email exist.
+	 * @param string $email The email being searched for.
+	 * @return bool Return true if exist otherwise return false.
+	 */
+	public function isEmailExist(string $email) {
+		$query = "SELECT 1 FROM " . $this->table . " WHERE email = :email LIMIT 1";
+
+		// Prep query
+		$this->db->query($query);
+
+		// Bind data
+		$this->db->bind('email', $email);
+
+		return $this->db->coloms() !== 0;
+	}
+
+	/**
+	 * Validate email exist except in id.
+	 * @param string $email The email being searched for.
+	 * @param int $user_id User id from sessions.
+	 * @return bool Return true if exist otherwise return false.
+	 */
+	public function isEmailExistExceptId(string $email, int $user_id) {
+		$query = "SELECT 1 FROM " . $this->table . " WHERE email = :email AND id != :id LIMIT 1";
+
+		// Prep query
+		$this->db->query($query);
+
+		// Bind data
+		$this->db->bind('email', $email);
+		$this->db->bind('id', $user_id);
+
+		return $this->db->coloms() !== 0;
+	}
+
+	/**
+	 * Is username exist.
+	 * @param string $username The username being search for.
+	 * @return bool Return true if exist otherwise return false.
+	 */
+	public function isUsernameExist(string $username) {
+		$query = "SELECT 1 FROM " . $this->table . " WHERE username = :username LIMIT 1";
+
+		// Prep query
+		$this->db->query($query);
+
+		// Bind data
+		$this->db->bind('username', $username);
+
+		return $this->db->coloms() !== 0;
+	}
+
+	/**
+	 * Is username exist except in id.
+	 * @param string $username The username being search for.
+	 * @param int $user_id User id from sessions.
+	 * @return bool Return true if exist otherwise return false.
+	 */
+	public function isUsernameExistExceptId(string $username, int $user_id) {
+		$query = "SELECT 1 FROM " . $this->table . " WHERE username = :username AND id != :id LIMIT 1";
+
+		// Prep query
+		$this->db->query($query);
+
+		// Bind data
+		$this->db->bind('username', $username);
+		$this->db->bind('id', $user_id);
+
+		return $this->db->coloms() !== 0;
+	}
+
+	/**
 	 * Show user profile.
 	 * @param int $user_id User id from session.
 	 * @return array|bool User data.
@@ -213,11 +285,12 @@ class Users {
 	 * @param array $data Form data
 	 * @param array $columns Columns to be selected.
 	 * @param string $username Username param from URL.
+	 * @param int $user_id User id from sessions.
 	 * @return int
 	 */
-	public function update(array $data, array $columns, string $username) {
+	public function update(array $data, array $columns, string $username, int $user_id) {
 		$fields = implode(', ', $columns);
-		$query = "UPDATE " . $this->table . " SET " . $fields . " WHERE username = :username";
+		$query = "UPDATE " . $this->table . " SET " . $fields . " WHERE username = :current_username AND id = :user_id";
 
 		// Prepare query
 		$this->db->query($query);
@@ -227,7 +300,8 @@ class Users {
 			$this->db->bind($key, $value);
 		}
 
-		$this->db->bind('username', $username);
+		$this->db->bind('current_username', $username);
+		$this->db->bind('user_id', $user_id);
 
 		// Execute and return
 		return $this->db->execute() ? 1 : 0;

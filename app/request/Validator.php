@@ -2,7 +2,15 @@
 
 class Validator
 {
+	/**
+	 * Error massages.
+	 */
 	private array $errors = [];
+
+	/**
+	 * database connection.
+	 */
+	private ?PDO $db = null;
 
 	/**
 	 * Determine whether the given value is considered empty for validation.
@@ -74,8 +82,8 @@ class Validator
 				}
 
 				if (!array_key_exists($field, $data) && !in_array($rule, ['required', 'required_if'], true)) {
-                    continue;
-                }
+					continue;
+				}
 
 				switch ($rule) {
 					case 'required':
@@ -117,7 +125,7 @@ class Validator
 						}
 						break;
 					case 'boolean':
-						if(!in_array($value, ['0', '1'], true)) {
+						if (!in_array($value, ['0', '1'], true)) {
 							$this->addError($field, "The '{$field}' input is invalid.");
 						}
 						break;
@@ -171,6 +179,22 @@ class Validator
 
 						if (!in_array($imgTypeFile, $allowExt, true) || !in_array($imgMime, $allowMime, true)) {
 							$this->addError($field, "The '{$field}' only JPG, PNG, or JPEG");
+						}
+						break;
+					case 'unique':
+						/**
+						 * This rule use:
+						 *  - callable: function($value): bool  -> returns TRUE if value EXISTS
+						 * because database connection only be set by database helper class or class that extending database helper. 
+						 */
+						try {
+							$exist = (bool) call_user_func($ruleValue, $value);
+						} catch (Throwable $th) {
+							$exist = true;
+						}
+
+						if ($exist) {
+							$this->addError($field, "The '{$field}' has already been taken.");
 						}
 						break;
 					default:

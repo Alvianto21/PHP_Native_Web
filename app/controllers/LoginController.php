@@ -183,13 +183,22 @@ class LoginController extends Controller
 			"email" => [
 				"required" => true,
 				"email" => true,
-				"regex" => "/^[A-Za-z0-9._]+@[A-Za-z0-9._]+$/"
+				"regex" => "/^[A-Za-z0-9._]+@[A-Za-z0-9._]+$/",
+				'unique' => function ($value) {
+					$email = filter_var($value, FILTER_SANITIZE_EMAIL);
+					$user = $this->model('Users')->isEmailExist($email);
+					return (bool) $user;
+				}
 			],
 			"username" => [
 				"required" => true,
 				"min" => 5,
 				"max" => 25,
-				"regex" => "/^[A-Za-z0-9]+$/"
+				"regex" => "/^[A-Za-z0-9]+$/",
+				'unique' => function ($value) {
+					$user = $this->model('Users')->isUsernameExist($value) ?? null;
+					return (bool) $user;
+				}
 			],
 			"photo_profile" => [
 				"size" => 500000, // 500 Kb

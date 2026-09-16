@@ -180,13 +180,22 @@ class AdminController extends Controller
 			'email' => [
 				"required" => true,
 				"email" => true,
-				"regex" => "/^[A-Za-z0-9._]+@[A-Za-z0-9._]+$/"
+				"regex" => "/^[A-Za-z0-9._]+@[A-Za-z0-9._]+$/",
+				'unique' => function ($value) {
+					$email = filter_var($value, FILTER_SANITIZE_EMAIL);
+					$user = $this->model('Users')->isEmailExist($email);
+					return (bool) $user;
+				}
 			],
 			'username' => [
 				"required" => true,
 				"min" => 5,
 				"max" => 25,
-				"regex" => "/^[A-Za-z0-9]+$/"
+				"regex" => "/^[A-Za-z0-9]+$/",
+				'unique' => function ($value) {
+					$user = $this->model('Users')->isUsernameExist($value) ?? null;
+					return (bool) $user;
+				}
 			],
 			'photo_profile' => [
 				"size" => 500000, // 500 Kb
@@ -267,6 +276,12 @@ class AdminController extends Controller
 					$dataKey[] = "{$updateData} = :{$updateData}";
 					$dataUpdate[$updateData] = $updateValue;
 				}
+			}
+
+			if (empty($dataKey)) {
+				Flasher::setFlash('Profil ' . $username . ' berhasil', 'diperbarui', 'success');
+				header('Location: ' . ABSOLUTURL . 'admin/users');
+				exit;
 			}
 
 			if ($this->model('Users')->update($dataUpdate, $dataKey, $username) > 0) {
@@ -526,6 +541,12 @@ class AdminController extends Controller
 					$dataKey[] = "{$updateData} = :{$updateData}";
 					$dataUpdate[$updateData] = $updateValue;
 				}
+			}
+
+			if (empty($dataKey)) {
+				Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');
+				header('Location: ' . ABSOLUTURL . 'admin/articles');
+				exit;
 			}
 
 			if ($this->model('Article')->updateAdmin($dataUpdate, $dataKey, $slug) > 0) {

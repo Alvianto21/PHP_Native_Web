@@ -111,6 +111,7 @@ class ProfileController extends Controller
 		$dataUpdate = [];
 
 		$user = $this->model('Users')->findUsername($username, ['email', 'username', 'photo_profile', 'password']);
+		$activeUser = $_SESSION['user_info']['user_id'];
 		$data = [
 			'email' => $validator->clearData($postData['email'] ?? ''),
 			'username' => $validator->clearData($postData['username'] ?? ''),
@@ -123,13 +124,24 @@ class ProfileController extends Controller
 			"email" => [
 				"required" => true,
 				"email" => true,
-				"regex" => "/^[A-Za-z0-9._]+@[A-Za-z0-9._]+$/"
+				"regex" => "/^[A-Za-z0-9._]+@[A-Za-z0-9._]+$/",
+				'unique' => function ($value) {
+					$email = filter_var($value, FILTER_SANITIZE_EMAIL);
+					$user_id = $_SESSION['user_info']['user_id'];
+					$user = $this->model('Users')->isEmailExistExceptId($email, $user_id);
+					return (bool) $user;
+				}
 			],
 			"username" => [
 				"required" => true,
 				"min" => 5,
 				"max" => 25,
-				"regex" => "/^[A-Za-z0-9]+$/"
+				"regex" => "/^[A-Za-z0-9]+$/",
+				'unique' => function ($value) {
+					$user_id = $_SESSION['user_info']['user_id'];
+					$user = $this->model('Users')->isUsernameExistExceptId($value, $user_id) ?? null;
+					return (bool) $user;
+				}
 			],
 			"photo_profile" => [
 				"size" => 500000, // 500 Kb
@@ -199,7 +211,13 @@ class ProfileController extends Controller
 				}
 			}
 
-			if ($this->model('Users')->update($dataUpdate, $dataKey, $username) > 0) {
+			if (empty($dataKey)) {
+				Flasher::setFlash('Profil berhasil', 'diperbarui', 'success');
+				header('Location: ' . ABSOLUTURL . 'profile');
+				exit;
+			}
+
+			if ($this->model('Users')->update($dataUpdate, $dataKey, $username, $activeUser) > 0) {
 				Flasher::setFlash('Profil berhasil', 'diperbarui', 'success');
 				header('Location: ' . ABSOLUTURL . 'profile');
 				exit;
