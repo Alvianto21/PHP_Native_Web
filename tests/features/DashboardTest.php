@@ -1154,7 +1154,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 
 		$updated_article = $generator->findByTitle($target['title']);
 
-		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover']);
+		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover', 'photo_cover']);
 	}
 
 	#[Test] #[TestDox("Failed update article because new title too short")]
@@ -1198,7 +1198,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 
 		$updated_article = $generator->findByTitle($target['title']);
 
-		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover']);
+		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover', 'photo_cover']);
 	}
 
 	#[Test] #[TestDox("Failed update article because new title too long")]
@@ -1242,7 +1242,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 
 		$updated_article = $generator->findByTitle($target['title']);
 
-		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover']);
+		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover', 'photo_cover']);
 	}
 
 	#[Test] #[TestDox("Failed update article because new photo cover too large")]
@@ -1286,7 +1286,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 
 		$updated_article = $generator->findByTitle($target['title']);
 
-		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover']);
+		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover', 'photo_cover']);
 	}
 
 	#[Test] #[TestDox("Failed update article because new photo cover not image")]
@@ -1305,7 +1305,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 
 		$new_article = [
 			'title' => $target['title'],
-			'photo_path' => 'files/store?expires=1787723741&signature=2e9d87ce138526777f3e31d6d6e45196b355b0cedd1c5f20651ed7933db735ce',
+			'photo_path' => $this->UrlGenerator(),
 			'body' => $target['body'],
 			'old_photo_cover' => $target['photo_cover']
 		];
@@ -1314,7 +1314,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 			'photo_cover' => [
 				'name' => 'cover_3.jpg',
 				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/cover_3.jpg',
+				'tmp_name' => __DIR__ . '/../../storage/tests/ini.txt',
 				'error' => UPLOAD_ERR_OK,
 				'size' => 5000
 			]
@@ -1330,7 +1330,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 
 		$updated_article = $generator->findByTitle($target['title']);
 
-		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover']);
+		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover', 'photo_cover']);
 	}
 
 	#[Test] #[TestDox("Failed update article because photo path invalid")]
@@ -1348,19 +1348,19 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$target = $generator->articlesRadomizer();
 
 		$new_article = [
-			'title' => 'helo',
-			'photo_path' => '',
+			'title' => 'helo world',
+			'photo_path' => 'files/store?expires=1787723741&signature=2e9d87ce138526777f3e31d6d6e45196b355b0cedd1c5f20651ed7933db735ce',
 			'body' => $target['body'],
 			'old_photo_cover' => $target['photo_cover']
 		];
 
 		$new_article_img = [
 			'photo_cover' => [
-				'name' => '',
-				'type' => '',
-				'tmp_name' => '',
-				'error' => UPLOAD_ERR_NO_FILE,
-				'size' => 0
+				'name' => 'cover_2.jpg',
+				'type' => 'image/jpg',
+				'tmp_name' => __DIR__ . '/../../storage/tests/cover_2.jpg',
+				'error' => UPLOAD_ERR_OK,
+				'size' => 4000
 			]
 		];
 
@@ -1374,7 +1374,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 
 		$updated_article = $generator->findByTitle($target['title']);
 
-		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover']);
+		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover', 'photo_cover']);
 	}
 
 	#[Test] #[TestDox("Failed update article because new body too short")]
@@ -1418,7 +1418,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 
 		$updated_article = $generator->findByTitle($target['title']);
 
-		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover']);
+		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover', 'photo_cover']);
 	}
 
 	#[Test] #[TestDox("Success delete article")]
