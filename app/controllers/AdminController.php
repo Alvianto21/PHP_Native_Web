@@ -181,21 +181,24 @@ class AdminController extends Controller
 				"required" => true,
 				"email" => true,
 				"regex" => "/^[A-Za-z0-9._]+@[A-Za-z0-9._]+$/",
-				'unique' => function ($value) {
-					$email = filter_var($value, FILTER_SANITIZE_EMAIL);
-					$user = $this->model('Users')->isEmailExist($email);
-					return (bool) $user;
-				}
+				// TODO: cari cara pakai rule unik untuk admin
+				// 'unique' => function ($value) {
+				// 	$email = filter_var($value, FILTER_SANITIZE_EMAIL);
+				// 	$user_id = $_SESSION['user_info']['user_id'];
+				// 	$user = $this->model('Users')->isEmailExistExceptId($email, $user_id);
+				// 	return (bool) $user;
+				// }
 			],
 			'username' => [
 				"required" => true,
 				"min" => 5,
 				"max" => 25,
 				"regex" => "/^[A-Za-z0-9]+$/",
-				'unique' => function ($value) {
-					$user = $this->model('Users')->isUsernameExist($value) ?? null;
-					return (bool) $user;
-				}
+				// 'unique' => function ($value) {
+				// 	$user_id = $_SESSION['user_info']['user_id'];
+				// 	$user = $this->model('Users')->isUsernameExistExceptId($value, $user_id) ?? null;
+				// 	return (bool) $user;
+				// }
 			],
 			'photo_profile' => [
 				"size" => 500000, // 500 Kb

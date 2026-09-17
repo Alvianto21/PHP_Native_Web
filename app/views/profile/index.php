@@ -13,7 +13,7 @@
 			<p class="lead">Username: <?php echo htmlspecialchars($user['username']); ?></p>
 		</div>
 		<div class="col-md-5 order-md-1">
-			<img class="featurette-image img-fluid mx-auto" src="<?php echo htmlspecialchars($user['photo_profile']); ?>" alt="<?php echo htmlspecialchars($user['username']); ?>" width="300" height="300">
+			<img class="featurette-image img-fluid mx-auto" src="<?php echo htmlspecialchars($user['photo_profile'] ?? '', ENT_QUOTES); ?>" alt="<?php echo htmlspecialchars($user['username']); ?>" width="300" height="300">
 		</div>
 	</div>
 	<div class="d-flex gap-2 justify-content-center py-5">

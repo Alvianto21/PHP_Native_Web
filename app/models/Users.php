@@ -285,12 +285,11 @@ class Users {
 	 * @param array $data Form data
 	 * @param array $columns Columns to be selected.
 	 * @param string $username Username param from URL.
-	 * @param int $user_id User id from sessions.
 	 * @return int
 	 */
-	public function update(array $data, array $columns, string $username, int $user_id) {
+	public function update(array $data, array $columns, string $username) {
 		$fields = implode(', ', $columns);
-		$query = "UPDATE " . $this->table . " SET " . $fields . " WHERE username = :current_username AND id = :user_id";
+		$query = "UPDATE " . $this->table . " SET " . $fields . " WHERE username = :current_username";
 
 		// Prepare query
 		$this->db->query($query);
@@ -301,7 +300,6 @@ class Users {
 		}
 
 		$this->db->bind('current_username', $username);
-		$this->db->bind('user_id', $user_id);
 
 		// Execute and return
 		return $this->db->execute() ? 1 : 0;

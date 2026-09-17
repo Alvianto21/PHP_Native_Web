@@ -192,6 +192,31 @@ class Article
 	}
 
 	/**
+	 * Find article bt user id.
+	 * @param int $user_id User id from sessions.
+	 * @param array $columns Columns to be selected.
+	 * All columns is default if not filled.
+	 * Example: $columns = ['title', 'body'].
+	 * @return array[] Return article data if any.
+	 */
+	public function findArticleByUser(int $user_id, array $columns = ['*']) {
+		// Set columns
+		$fields = implode(', ', $columns);
+		$query = "SELECT {$fields} FROM " . $this->table . " WHERE user_id = :user_id AND is_deleted = 0";
+
+		// Set query
+		$this->db->query($query);
+
+		// Bind data
+		$this->db->bind('user_id', $user_id);
+
+		// Execute
+		$this->db->execute();
+
+		return $this->db->resultSet();
+	}
+
+	/**
 	 * Create new article.
 	 * @param array $data - Form data.
 	 * @param int  $user_id - User id from session.

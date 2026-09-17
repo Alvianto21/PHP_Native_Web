@@ -111,7 +111,6 @@ class ProfileController extends Controller
 		$dataUpdate = [];
 
 		$user = $this->model('Users')->findUsername($username, ['email', 'username', 'photo_profile', 'password']);
-		$activeUser = $_SESSION['user_info']['user_id'];
 		$data = [
 			'email' => $validator->clearData($postData['email'] ?? ''),
 			'username' => $validator->clearData($postData['username'] ?? ''),
@@ -217,7 +216,7 @@ class ProfileController extends Controller
 				exit;
 			}
 
-			if ($this->model('Users')->update($dataUpdate, $dataKey, $username, $activeUser) > 0) {
+			if ($this->model('Users')->update($dataUpdate, $dataKey, $username) > 0) {
 				Flasher::setFlash('Profil berhasil', 'diperbarui', 'success');
 				header('Location: ' . ABSOLUTURL . 'profile');
 				exit;
@@ -245,21 +244,23 @@ class ProfileController extends Controller
 
 		// If user exist, find corresponding article by that user
 		if ($userTarget) {
-			$articleTarget = $this->model('Article')->findArticlesUsers($user_id);
+			$articleTarget = $this->model('Article')->findArticleByUser($user_id, ['slug', 'photo_cover']);
 
 			// If article exist remove photo_cover
 			if ($articleTarget) {
 				$this->model('Article')->deleteAll($user_id);
-			}
-
-			$this->model('Users')->delete($user_id);
-
-			if ($userTarget && isset($articleTarget)) {
+				
 				foreach ($articleTarget as $article) {
-					$uploader->delete((string) $article['photo_profile']);
+					if (!empty($article['photo_cover'])) {
+						$uploader->delete((string) $article['photo_cover']);
+					}
 				}
 
-				$uploader->delete((string) $userTarget['photo_profile']);
+				$this->model('Users')->delete($user_id);
+
+				if (!empty($userTarget['photo_profile'])) {
+					$uploader->delete((string) $userTarget['photo_profile']);
+				}
 
 				// Clear and destroy sessions
 				$_SESSION = [];
@@ -268,8 +269,12 @@ class ProfileController extends Controller
 				// Redirect to home page
 				header('LOCATION: ' . BASEURL);
 				exit;
-			} elseif ($userTarget) {
-				$uploader->delete((string) $userTarget['photo_profile']);
+			} else {
+				$this->model('Users')->delete($user_id);
+
+				if (!empty($userTarget['photo_profile'])) {
+					$uploader->delete((string) $userTarget['photo_profile']);
+				}
 
 				// Clear and destroy sessions
 				$_SESSION = [];
