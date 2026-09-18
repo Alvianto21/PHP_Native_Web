@@ -397,6 +397,19 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 		return $this->stmt->fetch(PDO::FETCH_ASSOC);
 	}
 
+	public function findArticlesUsers(string $slug) {
+		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, articles.is_deleted, users.username AS author FROM {$this->table} JOIN {$this->tableRelations} ON articles.user_id = users.id WHERE articles.slug = :slug";
+
+		echo "retrieving data from database...\n";
+		$this->query($query);
+
+		$this->bind('slug', $slug);
+
+		$this->execute();
+
+		return $this->stmt->fetch(PDO::FETCH_ASSOC);
+	}
+
 	public function isArticleDeleted(string $slug, int $user_id): bool {
 		$query = "SELECT 1 FROM {$this->table} WHERE is_deleted = 1 AND slug = :slug AND user_id = :user_id";
 
@@ -411,6 +424,19 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 		return $this->execute() ? true : false;
 	}
 	
+	public function findArticleByUser(int $user_id, array $columns = ['*']) {
+		$fields = implode(', ', $columns);
+		$query = "SELECT {$fields} FROM {$this->table} WHERE user_id = :user_id AND is_deleted = 0";
+
+		echo "retrieving data from database...\n";
+		$this->query($query);
+
+		$this->bind('user_id', $user_id, PDO::PARAM_INT);
+
+		$this->execute();
+
+		return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
+	}
 
 	public function update(array $data, array $columns, int $user_id, string $slug)
 	{
@@ -446,6 +472,19 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 			['user_id', $user_id, PDO::PARAM_INT],
 			['slug', $slug]
 		]);
+
+		$this->execute();
+
+		return $this->stmt->rowCount();
+	}
+
+	public function deleteAll(int $user_id) {
+		$query = "UPDATE {$this->table} SET is_deleted = 1, photo_cover = NULL WHERE user_id = :user_id";
+
+		echo "setting data as deleted...\n";
+		$this->query($query);
+
+		$this->bind('user_id', $user_id, PDO::PARAM_INT);
 
 		$this->execute();
 

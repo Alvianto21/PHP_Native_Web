@@ -238,11 +238,13 @@ class HelperLogin extends LoginController {
 	
 	public function logoutUser(): string|bool {
 		if (!isset($_SESSION['user_info'])) {
+			echo "Unauthorized.\n";
 			return "Unauthorized";
 		}
 
 		session_unset();
 		session_destroy();
+		echo "user logout.\n";
 
 		return true;
 	}
