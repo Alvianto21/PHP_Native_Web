@@ -934,7 +934,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 
 		$controller = new DashboardControllerStub($this->db);
 
-		$target = 'This is the first article body.';
+		$target = 'This-is-the-first-article-body.';
 
 		$action = $controller->showArticle($target);
 
@@ -1044,7 +1044,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 			'title' => 'Sint exercitation nostrud cupiditate dolor praesentium do laborum animi.',
 			'photo_path' => '',
 			'old_photo_cover' => $target['photo_cover'],
-			'body' => $target
+			'body' => $target['body']
 		];
 
 		$new_article_img = [

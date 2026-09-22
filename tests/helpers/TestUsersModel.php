@@ -7,16 +7,119 @@ class TestUsersModel
 		//
 	}
 
+	private function pathGenerator()
+	{
+		$secretKey = getenv('APP_KEY') ?: 'change-me';
+		$expired = time() + 300; // 5 mins
+		$signature = hash_hmac('sha256', (string) $expired, $secretKey);
+		return ABSOLUTURL . 'files/store?expires=' . $expired . '&sig=' . $signature;
+	}
+
 	protected $table = 'users';
 
 	protected $usersSeeder = [
 		'data_1' => [
 			'email' => 'abc@gmail.com',
-			'username' => 'abc43'
+			'username' => 'abc43',
+			'photo_path' => '',
+			'password' => 'abc43abc34',
+			'password_confirm' => 'abc43abc34'
+		],
+		'data_2' => [
+			'email' => 'kurnia@example.com',
+			'username' => 'kutnia5543',
+			'photo_path' => '',
+			'password' => 'kurnia99kurnia',
+			'password_confirm' => 'kurnia99kurnia'
+		],
+		'data_3' => [
+			'email' => 'tempes69@yahoo.com',
+			'username' => 'tempes69',
+			'photo_path' => '',
+			'password' => 'tempestempa69',
+			'password_confirm' => 'tempestempa69'
+		],
+		'data_4' => [
+			'email' => 'kaliandra@gmail.com',
+			'username' => 'kaliandra5571',
+			'photo_path',
+			'password' => 'kaliandraakiandra',
+			'password_confirm' => 'kaliandrakaliandra'
+		],
+		'data_5' => [
+			'email' => 'barbariandri@example.com',
+			'username' => 'barbariandri',
+			'photo_path' => '',
+			'password' => 'barbariang',
+			'password_confirm' => 'barbariang'
 		]
 	];
 
-	protected $usersImgSeeder = [];
+	protected array $userAdmin = [
+		'email' => 'akagi@gmail.com',
+		'username' => 'javelin1',
+		'photo_path' => '',
+		'password' => 'union777union',
+		'password_confirm' => 'union777union'
+	];
+
+	protected $usersImgSeeder = [
+		'data_1' => [
+			'photo_profile' => [
+				'name' => '',
+				'type' => '',
+				'tmp_name' => '',
+				'error' => UPLOAD_ERR_NO_FILE,
+				'size' => 0
+			]
+		],
+		'data_2' => [
+			'photo_profile' => [
+				'name' => 'users.jpg',
+				'type' => 'image/jpg',
+				'tmp_name' => __DIR__ . '/../../storage/tests/user3.jpg',
+				'error' => UPLOAD_ERR_OK,
+				'size' => 10000
+			]
+		],
+		'data_3' => [
+			'photo_profile' => [
+				'name' => '',
+				'type' => '',
+				'tmp_name' => '',
+				'error' => UPLOAD_ERR_NO_FILE,
+				'size' => 0
+			]
+		],
+		'data_4' => [
+			'photo_profile' => [
+				'name' => 'users.jpg',
+				'type' => 'image/jpg',
+				'tmp_name' => __DIR__ . '/../../storage/tests/user.jpg',
+				'error' => UPLOAD_ERR_OK,
+				'size' => 5000
+			]
+		],
+		'data_5' => [
+			'photo_profile' => [
+				'name' => '',
+				'type' => '',
+				'tmp_name' => '',
+				'error' => UPLOAD_ERR_NO_FILE,
+				'size' => 0
+			]
+		]
+	];
+
+	protected array $userAdminImg = [
+		'photo_profile' => [
+			'name' => 'users.jpg',
+			'type' => 'image/jpg',
+			'tmp_name' => __DIR__ . '/../../storage/tests/user3.jpg',
+			'error' => UPLOAD_ERR_OK,
+			'size' => 10000
+		]
+	];
 
 	/** @var \PDOStatement Current prepared statement */
 	private $stmt;
@@ -131,6 +234,77 @@ class TestUsersModel
 		return $this->stmt->rowCount();
 	}
 
+	public function usersGenerator(): string {
+		require_once __DIR__ . '/../../app/request/UploadImage.php';
+
+		$_POST = $this->usersSeeder;
+		$_FILES = $this->usersImgSeeder;
+		$uploader = new UploadImage();
+
+		(int) $success = 0;
+		(int) $failed = 0;
+
+		foreach ($_POST as $index => $data) {
+			$formFile = $_FILES[$index]['photo_cover'] ?? null;
+
+			if ($formFile['error'] === UPLOAD_ERR_OK) {
+				$data['photo_profile'] = $uploader->store($formFile, 'profiles');
+			} elseif ($formFile['error'] === UPLOAD_ERR_NO_FILE) {
+				$data['photo_profile'] = null;
+			}
+
+			$data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+
+			$result = $this->create($data);
+
+			if ($result > 0) {
+				$success++;
+				echo "{$success} created.\n";
+			} else {
+				$failed++;
+				echo "{$failed} create failed.\n";
+			}
+		}
+
+		(int) $total = $success + $failed;
+		if ($success === (int) count($this->usersSeeder)) {
+			return "users created";
+		} else {
+			echo "only {$success} from {$total} created.";
+			return "some article failed be created";
+		}
+	}
+
+	public function createAdminUser(): string {
+		require_once __DIR__ . '/../../app/request/UploadImage.php';
+
+		$_POST = $this->userAdmin;
+		$_FILES = $this->userAdminImg;
+		$uploader = new UploadImage();
+
+		if ($_FILES['photo_profile']['error'] === UPLOAD_ERR_OK) {
+			$_POST['photo_profile'] = $uploader->store($_FILES['photo_profile'], 'profiles');
+		} elseif ($_FILES['photo_profile']['error'] === UPLOAD_ERR_NO_FILE) {
+			$_POST['photo_profile'] = null;
+		}
+
+		$result = $this->createAdmin($_POST);
+
+		if ($result > 0) {
+			echo "user role admin created.\n";
+			return "user admin created";
+		} else {
+			echo "failed create admin user.\n";
+			return "failed create admin user";
+		}
+	}
+
+	public function userRandomizer() {
+		$target = array_rand($this->usersSeeder, 1);
+		$user =  $this->usersSeeder[$target];
+		return $user;
+	}
+
 	public function findEmail(string $data)
 	{
 		$query = 'SELECT id, email, username, password, role FROM ' . $this->table . ' WHERE email = :email AND is_deleted = 0';
@@ -175,7 +349,8 @@ class TestUsersModel
 		return $this->stmt->fetch(PDO::FETCH_ASSOC);
 	}
 
-	public function findUser(int $user_id) {
+	public function findUser(int $user_id)
+	{
 		$query = "SELECT id, photo_profile FROM {$this->table} WHERE id = :user_id AND is_deleted = 0";
 
 		echo "retrieving data from database...\n";
@@ -249,7 +424,8 @@ class TestUsersModel
 		return $this->stmt->fetchColumn() !== false;
 	}
 
-	public function isDeleted(int $user_id) {
+	public function isDeleted(int $user_id)
+	{
 		$query = "SELECT id, is_deleted FROM {$this->table} WHERE id = :user_id AND is_deleted = 1";
 
 		echo "retrieving data from database...\n";
@@ -290,7 +466,8 @@ class TestUsersModel
 		return $this->stmt->execute() ? 1 : 0;
 	}
 
-	public function delete(int $user_id) {
+	public function delete(int $user_id)
+	{
 		$query = "UPDATE {$this->table} SET is_deleted = 1, photo_profile = NULL WHERE id = :user_id";
 
 		echo "setting data as deleted...\n";

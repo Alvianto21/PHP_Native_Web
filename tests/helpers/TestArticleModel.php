@@ -380,6 +380,18 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 		return $this->stmt->fetch(PDO::FETCH_ASSOC);
 	}
 
+	public function findArticle(string $slug) {
+		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, users.username AS author FROM {$this->table} JOIN {$this->tableRelations} ON articles.user_id = users.id WHERE slug = :slug AND articles.is_deleted = 0";
+
+		$this->query($query);
+
+		$this->bind('slug', $slug);
+
+		$this->execute();
+
+		return $this->stmt->fetch(PDO::FETCH_ASSOC);
+	}
+
 	public function findArticleUser(string $slug, int $user_id)
 	{
 		$query = "SELECT title, slug, photo_cover, body FROM {$this->table} WHERE slug = :slug AND user_id = :user_id AND is_deleted = 0";
