@@ -303,11 +303,15 @@ class AdminController extends Controller
 							$uploader->delete((string) $photo['photo_cover']);
 						}
 					}
-				}
 
-				Flasher::setFlash('Profil ' . $username . ' berhasil', 'diperbarui', 'success');
-				header('Location: ' . ABSOLUTURL . 'admin/users');
-				exit;
+					Flasher::setFlash('Profil ' . $username . ' berhasil', 'dihapus', 'success');
+					header('Location: ' . ABSOLUTURL . 'admin/users');
+					exit;
+				} else {
+					Flasher::setFlash('Profil ' . $username . ' berhasil', 'diperbarui', 'success');
+					header('Location: ' . ABSOLUTURL . 'admin/users');
+					exit;
+				}
 			} else {
 				Flasher::setFlash('Profil ' . $username . ' gagal', 'diperbarui', 'danger');
 				header('Location: ' . ABSOLUTURL . 'admin/users');
@@ -553,21 +557,27 @@ class AdminController extends Controller
 			}
 
 			if ($this->model('Article')->updateAdmin($dataUpdate, $dataKey, $slug) > 0) {
-				if ($isDeletingArticle && !$wasArticleDeleted && !empty($article['photo_cover'])) {
-					$uploader->delete((string) $article['photo_cover']);
-				}
+				if ($isDeletingArticle && !$wasArticleDeleted) {
+					if (!empty($article['photo_cover'])) {
+						$uploader->delete((string) $article['photo_cover']);
+					}
 
-				Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');
-				header('Location: ' . ABSOLUTURL . 'admin/articles');
-				exit;
+					Flasher::setFlash('artikel berhasil', 'dihapus', 'success');
+					header('Location: ' . ABSOLUTURL . 'admin/articles');
+					exit;
+				} else {
+					Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');
+					header('Location: ' . ABSOLUTURL . 'admin/articles');
+					exit;
+				}
 			} else {
-				Flasher::setFlash('artikel gagal', 'diperbarui', 'success');
+				Flasher::setFlash('artikel gagal', 'diperbarui', 'danger');
 				header('Location: ' . ABSOLUTURL . 'admin/articles');
 				exit;
 			}
 		} else {
 			$_SESSION['errors'] = $validator->errors();
-			$_SESSION['old'] = [
+			$_SESSION['old_input'] = [
 				'title' => $data['title'],
 				'photo_cover' => $data['photo_cover'],
 				'is_deleted' => $data['is_deleted'],

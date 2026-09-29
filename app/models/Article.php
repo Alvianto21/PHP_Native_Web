@@ -282,7 +282,7 @@ class Article
 	}
 
 	/**
-	 * Same as update function, bit for admin user role.
+	 * Same as update function, but for admin user role.
 	 * @param array $data Form data.
 	 * @param array $columns Columns to be selected.
 	 * @param string $slug Slug param from URL.

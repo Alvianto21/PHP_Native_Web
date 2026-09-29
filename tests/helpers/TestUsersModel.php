@@ -55,14 +55,6 @@ class TestUsersModel
 		]
 	];
 
-	protected array $userAdmin = [
-		'email' => 'akagi@gmail.com',
-		'username' => 'javelin1',
-		'photo_path' => '',
-		'password' => 'union777union',
-		'password_confirm' => 'union777union'
-	];
-
 	protected $usersImgSeeder = [
 		'data_1' => [
 			'photo_profile' => [
@@ -108,16 +100,6 @@ class TestUsersModel
 				'error' => UPLOAD_ERR_NO_FILE,
 				'size' => 0
 			]
-		]
-	];
-
-	protected array $userAdminImg = [
-		'photo_profile' => [
-			'name' => 'users.jpg',
-			'type' => 'image/jpg',
-			'tmp_name' => __DIR__ . '/../../storage/tests/user3.jpg',
-			'error' => UPLOAD_ERR_OK,
-			'size' => 10000
 		]
 	];
 
@@ -275,11 +257,11 @@ class TestUsersModel
 		}
 	}
 
-	public function createAdminUser(): string {
+	public function createAdminUser(array $formData, array $fileData): string {
 		require_once __DIR__ . '/../../app/request/UploadImage.php';
 
-		$_POST = $this->userAdmin;
-		$_FILES = $this->userAdminImg;
+		$_POST = $formData;
+		$_FILES = $fileData;
 		$uploader = new UploadImage();
 
 		if ($_FILES['photo_profile']['error'] === UPLOAD_ERR_OK) {
@@ -287,6 +269,8 @@ class TestUsersModel
 		} elseif ($_FILES['photo_profile']['error'] === UPLOAD_ERR_NO_FILE) {
 			$_POST['photo_profile'] = null;
 		}
+
+		$_POST['password'] = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
 		$result = $this->createAdmin($_POST);
 
@@ -303,6 +287,22 @@ class TestUsersModel
 		$target = array_rand($this->usersSeeder, 1);
 		$user =  $this->usersSeeder[$target];
 		return $user;
+	}
+
+	public function showAll(int $limit, int $offset) {
+		$query = "SELECT email, username, role, COUNT(*) OVER() AS total FROM {$this->table} ORDER BY id DESC LIMIT :limit OFFSET :offset";
+
+		echo "retrieving data from database...\n";
+		$this->query($query);
+
+		$this->multiBind([
+			['limit', $limit, PDO::PARAM_INT],
+			['offset', $offset, PDO::PARAM_INT]
+		]);
+
+		$this->stmt->execute();
+
+		return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
 	}
 
 	public function findEmail(string $data)
@@ -349,6 +349,20 @@ class TestUsersModel
 		return $this->stmt->fetch(PDO::FETCH_ASSOC);
 	}
 
+	public function findUsernameAdmin(string $username, array $columns = ['*']) {
+		$fields = implode(', ', $columns);
+		$query = "SELECT {$fields} FROM {$this->table} WHERE username = :username";
+
+		echo "retrieving data from database...\n";
+		$this->query($query);
+
+		$this->bind('username', $username);
+
+		$this->stmt->execute();
+
+		return $this->stmt->fetch(PDO::FETCH_ASSOC);
+	}
+
 	public function findUser(int $user_id)
 	{
 		$query = "SELECT id, photo_profile FROM {$this->table} WHERE id = :user_id AND is_deleted = 0";
@@ -357,6 +371,19 @@ class TestUsersModel
 		$this->query($query);
 
 		$this->bind('user_id', $user_id, PDO::PARAM_INT);
+
+		$this->stmt->execute();
+
+		return $this->stmt->fetch(PDO::FETCH_ASSOC);
+	}
+
+	public function findUserAdmin(string $username) {
+		$query = "SELECT email, username, photo_profile, role, is_deleted FROM {$this->table} WHERE username = :username";
+
+		echo "retrieving data from database...\n";
+		$this->query($query);
+
+		$this->bind('username', $username);
 
 		$this->stmt->execute();
 

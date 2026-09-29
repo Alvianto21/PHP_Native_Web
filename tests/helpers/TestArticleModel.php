@@ -336,6 +336,23 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 		return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
 	}
 
+	public function adminPaginator(int $limit, int $offset)
+	{
+		$query = "SELECT articles.title, articles.slug, articles.is_deleted, users.username AS author FROM {$this->table} JOIN {$this->tableRelations} ON articles.user_id = users.id ORDER BY articles.id DESC LIMIT :limit OFFSET :offset";
+
+		echo "retrieving data from database...\n";
+		$this->query($query);
+
+		$this->multiBind([
+			['limit', $limit, PDO::PARAM_INT],
+			['offset', $offset, PDO::PARAM_INT]
+		]);
+
+		$this->execute();
+
+		return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
+	}
+
 	public function getByUsers(int $user_id, int $limit, int $offset)
 	{
 		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body FROM `{$this->table}` JOIN `{$this->tableRelations}` ON articles.user_id = users.id WHERE articles.is_deleted = 0 AND users.id = :user_id LIMIT :limit OFFSET :offset";
@@ -348,6 +365,20 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 			['limit', $limit, PDO::PARAM_INT],
 			['offset', $offset, PDO::PARAM_INT]
 		]);
+
+		$this->execute();
+
+		return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
+	}
+
+	public function getCoverPhotosByUser(int $user_id)
+	{
+		$query = "SELECT photo_cover FROM {$this->table} WHERE user_id = :user_id AND photo_cover IS NOT NULL";
+
+		echo "retrieving data from database...\n";
+		$this->query($query);
+
+		$this->bind('user_id', $user_id);
 
 		$this->execute();
 
@@ -380,7 +411,8 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 		return $this->stmt->fetch(PDO::FETCH_ASSOC);
 	}
 
-	public function findArticle(string $slug) {
+	public function findArticle(string $slug)
+	{
 		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, users.username AS author FROM {$this->table} JOIN {$this->tableRelations} ON articles.user_id = users.id WHERE slug = :slug AND articles.is_deleted = 0";
 
 		$this->query($query);
@@ -409,7 +441,8 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 		return $this->stmt->fetch(PDO::FETCH_ASSOC);
 	}
 
-	public function findArticlesUsers(string $slug) {
+	public function findArticlesUsers(string $slug)
+	{
 		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, articles.is_deleted, users.username AS author FROM {$this->table} JOIN {$this->tableRelations} ON articles.user_id = users.id WHERE articles.slug = :slug";
 
 		echo "retrieving data from database...\n";
@@ -422,7 +455,22 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 		return $this->stmt->fetch(PDO::FETCH_ASSOC);
 	}
 
-	public function isArticleDeleted(string $slug, int $user_id): bool {
+	public function findArticleAdmin(string $slug)
+	{
+		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, users.username AS author FROM {$this->table} JOIN {$this->tableRelations} ON articles.user_id = users.id WHERE slug = :slug";
+
+		echo "retrieving data from database...\n";
+		$this->query($query);
+
+		$this->bind('slug', $slug);
+
+		$this->execute();
+
+		return $this->stmt->fetch(PDO::FETCH_ASSOC);
+	}
+
+	public function isArticleDeleted(string $slug, int $user_id): bool
+	{
 		$query = "SELECT 1 FROM {$this->table} WHERE is_deleted = 1 AND slug = :slug AND user_id = :user_id";
 
 		echo "checking data status...\n";
@@ -435,8 +483,9 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 
 		return $this->execute() ? true : false;
 	}
-	
-	public function findArticleByUser(int $user_id, array $columns = ['*']) {
+
+	public function findArticleByUser(int $user_id, array $columns = ['*'])
+	{
 		$fields = implode(', ', $columns);
 		$query = "SELECT {$fields} FROM {$this->table} WHERE user_id = :user_id AND is_deleted = 0";
 
@@ -474,7 +523,39 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 		return $this->execute();
 	}
 
-	public function delete(string $slug, int $user_id) {
+	public function updateAdmin(array $data, array $columns, string $slug)
+	{
+		if (empty($columns)) {
+			return 1;
+		}
+
+		$fields = implode(', ', $columns);
+
+		/**
+		 * SQLite syntax can't use UPDATE ... JOIN ... syntax.
+		 * @var mixed
+		 */
+		$query = "UPDATE {$this->table} SET {$fields}
+    WHERE slug = :current_slug
+    AND EXISTS (
+        SELECT 1 FROM {$this->tableRelations}
+        WHERE {$this->table}.user_id = {$this->tableRelations}.id
+        AND {$this->tableRelations}.is_deleted = 0
+    )";
+
+		echo "updateting data...\n";
+		$this->query($query);
+
+		foreach ($data as $key => $value) {
+			$this->bind($key, $value);
+		}
+		$this->bind('current_slug', $slug);
+
+		return $this->execute();
+	}
+
+	public function delete(string $slug, int $user_id)
+	{
 		$query = "UPDATE {$this->table} SET is_deleted = 1, photo_cover = NULL WHERE user_id = :user_id AND slug = :slug";
 
 		echo "setting data as deleted...\n";
@@ -490,7 +571,8 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 		return $this->stmt->rowCount();
 	}
 
-	public function deleteAll(int $user_id) {
+	public function deleteAll(int $user_id)
+	{
 		$query = "UPDATE {$this->table} SET is_deleted = 1, photo_cover = NULL WHERE user_id = :user_id";
 
 		echo "setting data as deleted...\n";
