@@ -43,6 +43,9 @@ class LoginControllerStub extends LoginController
 		$validator = new Validator();
 		$uploader = new UploadImage();
 
+		$_SESSION['errors'] = [];
+		$_SESSION['old_input'] = [];
+
 		if ($_SERVER['REQUEST_METHOD'] !== "POST") {
 			return "method not allowed";
 		}
@@ -60,13 +63,22 @@ class LoginControllerStub extends LoginController
 			"email" => [
 				"required" => true,
 				"email" => true,
-				"regex" => "/^[A-Za-z0-9._]+@[A-Za-z0-9._]+$/"
+				"regex" => "/^[A-Za-z0-9._]+@[A-Za-z0-9._]+$/",
+				'unique' => function ($value) {
+					$email = filter_var($value, FILTER_SANITIZE_EMAIL);
+					$user = $this->model('Users')->isEmailExist($email);
+					return (bool) $user;
+				}
 			],
 			"username" => [
 				"required" => true,
 				"min" => 5,
 				"max" => 25,
-				"regex" => "/^[A-Za-z0-9]+$/"
+				"regex" => "/^[A-Za-z0-9]+$/",
+				'unique' => function ($value) {
+					$user = $this->model('Users')->isUsernameExist($value) ?? null;
+					return (bool) $user;
+				}
 			],
 			"photo_profile" => [
 				"size" => 500000, // 500 Kb
@@ -108,6 +120,7 @@ class LoginControllerStub extends LoginController
 			$data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
 
 			if ($this->model('Users')->create($data) > 0) {
+				unset($_SESSION['errors'], $_SESSION['old_input']);
 				echo "user {$data['username']} created.\n";
 				return "user created";
 			} else {
@@ -117,7 +130,11 @@ class LoginControllerStub extends LoginController
 			}
 		} else {
 			echo "validation failed.\n";
-			var_dump($validator->errors());
+			$_SESSION['errors'] = $validator->errors();
+			$_SESSION['old_input'] = [
+				'email' => $data['email'],
+				'username' => $data['username']
+			];
 			return "form validation failed";
 		}
 	}
@@ -174,7 +191,8 @@ class LoginControllerStub extends LoginController
 			}
 		} else {
 			echo "validation failed.\n";
-			var_dump($validator->errors());
+			$_SESSION['errors'] = $validator->errors();
+			$_SESSION['old_input'] = $data['email'];
 			return "form validation failed";
 		}
 	}
@@ -394,11 +412,10 @@ class LoginTest extends TestCase
 		$action = $controller->registerUser($_POST, $_FILES);
 
 		$this->assertTrue($action === "form validation failed");
-
-		$stmt = $this->db->query("SELECT email, username FROM users");
-		$user = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-		$this->assertNotEquals($new_user['username'], $user);
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('photo_profile', $_SESSION['errors']);
+		$this->assertSame("The 'photo_profile' file is too large.", $_SESSION['errors']['photo_profile']);
 	}
 
 	#[Test] #[TestDox("Failed register new user because photo profile file is not image")]
@@ -431,11 +448,10 @@ class LoginTest extends TestCase
 		$action = $controller->registerUser($_POST, $_FILES);
 
 		$this->assertTrue($action === "form validation failed");
-
-		$stmt = $this->db->query("SELECT email, username FROM users");
-		$user = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-		$this->assertNotEquals($new_user['username'], $user);
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('photo_profile', $_SESSION['errors']);
+		$this->assertSame("The 'photo_profile' only JPG, PNG, or JPEG.", $_SESSION['errors']['photo_profile']);
 	}
 
 	#[Test] #[TestDox("Failed register new user because invalid email address")]
@@ -468,11 +484,75 @@ class LoginTest extends TestCase
 		$action = $controller->registerUser($_POST, $_FILES);
 
 		$this->assertTrue($action === "form validation failed");
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('email', $_SESSION['errors']);
+		$this->assertArrayHasKey('email', $_SESSION['old_input']);
+		$this->assertSame("The 'email' format is invalid.", $_SESSION['errors']['email']);
+		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_user, $_SESSION['old_input'], ['photo_path', 'photo_profile', 'password', 'password_confirm']);
+	}
 
-		$stmt = $this->db->query("SELECT email, username FROM users");
-		$user = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	#[Test] #[TestDox("Failed register user because email already exist")]
+	public function failed_register_user_because_email_already_exist(): void {
+		$controller = new LoginControllerStub($this->db);
 
-		$this->assertNotEquals($new_user['username'], $user);
+		$new_user = [
+			'email' => 'tanika76@example.com',
+			'username' => 'tanika76',
+			'photo_path' => $this->UrlGenerator(),
+			'password' => 'qweasd1234',
+			'password_confirm' => 'qweasd1234'
+		];
+		$new_user_img = [
+			'photo_profile' => [
+				'name' => '',
+				'type' => '',
+				'tmp_name' => '',
+				'error' => UPLOAD_ERR_NO_FILE,
+				'size' => 0,
+			]
+		];
+
+		$_SERVER['REQUEST_METHOD'] = 'POST';
+		$this->userRegister($new_user, $new_user_img);
+		
+		echo "prepare storing...\n";
+		
+		$controller->registerUser($_POST, $_FILES);
+		$_SERVER['REQUEST_METHOD'] = '';
+
+		$new_user_2 = [
+			'email' => $new_user['email'],
+			'username' => 'mamakali',
+			'photo_path' => $this->UrlGenerator(),
+			'password' => 'tanitanitani',
+			'password_confirm' => 'tanitanitani'
+		];
+
+		$new_user_2_img = [
+			'photo_profile' => [
+				'name' => 'user.jpg',
+				'type' => 'image.jpg',
+				'tmp_name' => __DIR__ . '/../../storage/tests/user.jpg',
+				'error' => UPLOAD_ERR_OK,
+				'size' => 6000
+			]
+		];
+
+		$_SERVER['REQUEST_METHOD'] = 'POST';
+		$this->userRegister($new_user_2, $new_user_2_img);
+		
+		echo "prepare storing...\n";
+
+		$action = $controller->registerUser($_POST, $_FILES);
+
+		$this->assertTrue($action === "form validation failed");
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('email', $_SESSION['errors']);
+		$this->assertArrayHasKey('email', $_SESSION['old_input']);
+		$this->assertSame("The 'email' has already been taken.", $_SESSION['errors']['email']);
+		$this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($new_user_2, $_SESSION['old_input'], ['email']);
 	}
 
 	#[Test] #[TestDox("Failed register new user because invalid username")]
@@ -505,11 +585,75 @@ class LoginTest extends TestCase
 		$action = $controller->registerUser($_POST, $_FILES);
 
 		$this->assertTrue($action === "form validation failed");
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('username', $_SESSION['errors']);
+		$this->assertArrayHasKey('username', $_SESSION['old_input']);
+		$this->assertSame("The 'username' format is invalid.", $_SESSION['errors']['username']);
+		$this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($new_user, $_SESSION['old_input'], ['username']);
+	}
 
-		$stmt = $this->db->query("SELECT email, username FROM users");
-		$user = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	#[Test] #[TestDox("Failed register user because username already exist")]
+	public function failed_register_new_user_because_username_already_exist(): void {
+		$controller = new LoginControllerStub($this->db);
 
-		$this->assertNotEquals($new_user['username'], $user);
+		$new_user = [
+			'email' => 'tanika76@example.com',
+			'username' => 'tanika76',
+			'photo_path' => '',
+			'password' => 'qweasd1234',
+			'password_confirm' => 'qweasd1234'
+		];
+		$new_user_img = [
+			'photo_profile' => [
+				'name' => '',
+				'type' => '',
+				'tmp_name' => '',
+				'error' => UPLOAD_ERR_NO_FILE,
+				'size' => 0,
+			]
+		];
+
+		$_SERVER['REQUEST_METHOD'] = 'POST';
+		$this->userRegister($new_user, $new_user_img);
+
+		echo "prepare storing...\n";
+
+		$controller->registerUser($_POST, $_FILES);
+		$_SERVER['REQUEST_METHOD'] = '';
+
+		$new_user_2 = [
+			'email' => 'makamali@gmail.com',
+			'username' => $new_user['username'],
+			'photo_path' => $this->UrlGenerator(),
+			'password' => 'tanitanitani',
+			'password_confirm' => 'tanitanitani'
+		];
+
+		$new_user_2_img = [
+			'photo_profile' => [
+				'name' => 'user.jpg',
+				'type' => 'image.jpg',
+				'tmp_name' => __DIR__ . '/../../storage/tests/user.jpg',
+				'error' => UPLOAD_ERR_OK,
+				'size' => 6000
+			]
+		];
+
+		$_SERVER['REQUEST_METHOD'] = 'POST';
+		$this->userRegister($new_user_2, $new_user_2_img);
+		
+		echo "prepare storing...\n";
+
+		$action = $controller->registerUser($_POST, $_FILES);
+
+		$this->assertTrue($action === "form validation failed");
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('username', $_SESSION['errors']);
+		$this->assertArrayHasKey('username', $_SESSION['old_input']);
+		$this->assertSame("The 'username' has already been taken.", $_SESSION['errors']['username']);
+		$this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($new_user_2, $_SESSION['old_input'], ['username']);
 	}
 
 	#[Test] #[TestDox("Failed register new user because password not match")]
@@ -542,11 +686,10 @@ class LoginTest extends TestCase
 		$action = $controller->registerUser($_POST, $_FILES);
 
 		$this->assertTrue($action === "form validation failed");
-
-		$stmt = $this->db->query("SELECT email, username FROM users");
-		$user = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-		$this->assertNotEquals($new_user['username'], $user);
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('password_confirm', $_SESSION['errors']);
+		$this->assertSame("The 'password_confirm' must match password.", $_SESSION['errors']['password_confirm']);
 	}
 
 	#[Test] #[TestDox("Failed register new user because password too short")]
@@ -579,11 +722,12 @@ class LoginTest extends TestCase
 		$action = $controller->registerUser($_POST, $_FILES);
 
 		$this->assertTrue($action === "form validation failed");
-
-		$stmt = $this->db->query("SELECT email, username FROM users");
-		$user = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-		$this->assertNotEquals($new_user['username'], $user);
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('password', $_SESSION['errors']);
+		$this->assertArrayHasKey('password_confirm', $_SESSION['errors']);
+		$this->assertSame("The 'password' must at least 10 characters.", $_SESSION['errors']['password']);
+		$this->assertSame("The 'password_confirm' must at least 10 characters.", $_SESSION['errors']['password_confirm']);
 	}
 
 	#[Test] #[TestDox("Failed register new user because img path URL invalid")]
@@ -616,11 +760,10 @@ class LoginTest extends TestCase
 		$action = $controller->registerUser($_POST, $_FILES);
 
 		$this->assertTrue($action === "form validation failed");
-
-		$stmt = $this->db->query("SELECT email, username FROM users");
-		$user = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-		$this->assertNotEquals($new_user['username'], $user);
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('photo_path', $_SESSION['errors']);
+		$this->assertSame("The 'photo_path' must be a valid URL.", $_SESSION['errors']['photo_path']);
 	}
 
 	#[Test] #[TestDox("Failed register new user because img path empty but photo profile exist")]
@@ -653,11 +796,10 @@ class LoginTest extends TestCase
 		$action = $controller->registerUser($_POST, $_FILES);
 
 		$this->assertTrue($action === "form validation failed");
-
-		$stmt = $this->db->query("SELECT email, username FROM users");
-		$user = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-		$this->assertNotEquals($new_user['username'], $user);
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('photo_path', $_SESSION['errors']);
+		$this->assertSame("The 'photo_path' is required when photo_profile is present.", $_SESSION['errors']['photo_path']);
 	}
 
 	#[Test] #[TestDox("Success login user")]

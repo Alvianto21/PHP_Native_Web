@@ -199,6 +199,7 @@ class AdminControllerStub extends AdminController
 			}
 
 			if (empty($dataKey)) {
+				unset($_SESSION['errors'], $_SESSION['old_input']);
 				echo "user {$username} profile updated.\n";
 				return "user updated";
 			}
@@ -220,9 +221,11 @@ class AdminControllerStub extends AdminController
 						}
 					}
 
+					unset($_SESSION['errors'], $_SESSION['old_input']);
 					echo "user {$username} deleted.\n";
 					return 'user deleted';
 				} else {
+					unset($_SESSION['errors'], $_SESSION['old_input']);
 					echo "user {$username} profile updated.\n";
 					return "user updated";
 				}

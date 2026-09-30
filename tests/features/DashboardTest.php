@@ -54,6 +54,9 @@ class DashboardControllerStub extends DashboardController
 		$validator = new Validator();
 		$uploader = new UploadImage();
 
+		$_SESSION['errors'] = [];
+		$_SESSION['old_input'] = [];
+
 		if ($_SERVER['REQUEST_METHOD'] !== "POST") {
 			return "method not allowed";
 		}
@@ -125,7 +128,8 @@ class DashboardControllerStub extends DashboardController
 			}
 		} else {
 			echo "validation failed.\n";
-			var_dump($validator->errors());
+			$_SESSION['errors'] = $validator->errors();
+			$_SESSION['old_input'] = $data;
 			return "validation failed";
 		}
 	}
@@ -189,6 +193,9 @@ class DashboardControllerStub extends DashboardController
 
 		$validator = new Validator();
 		$uploader = new UploadImage();
+
+		$_SESSION['errors'] = [];
+		$_SESSION['old_input'] = [];
 
 		$postData = $_POST;
 		$fileData = $_FILES;
@@ -277,11 +284,13 @@ class DashboardControllerStub extends DashboardController
 			}
 
 			if (empty($dataKey)) {
+				unset($_SESSION['errors'], $_SESSION['old_input']);
 				echo "Article with title " . substr($data['title'], 0, 50) . " updated.\n";
 				return "update success";
 			}
 
 			if ($this->model('Article')->update($dataUpdate, $dataKey, $user, $slug) > 0) {
+				unset($_SESSION['errors'], $_SESSION['old_input']);
 				echo "Article with title " . substr($data['title'], 0, 50) . " updated.\n";
 				return "update success";
 			} else {
@@ -290,7 +299,12 @@ class DashboardControllerStub extends DashboardController
 			}
 		} else {
 			echo "validation failed.\n";
-			var_dump($validator->errors());
+			$_SESSION['errors'] = $validator->errors();
+			$_SESSION['old_input'] = [
+				'title' => $data['title'],
+				'photo_cover' =>  $data['photo_cover'],
+				'body' => $data['body']
+			];
 			return "validation failed";
 		}
 	}
@@ -644,11 +658,12 @@ Praesentium voluptatum sequi ex sunt dolorem consectetur accusamus velit commodo
 		$action = $controller->createArticle($new_article, $new_article_img, $user['user_id']);
 
 		$this->assertTrue($action === 'validation failed');
-
-		$stmt = $this->db->query("SELECT title, slug FROM articles ORDER BY id DESC LIMIT 1");
-		$article = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-		$this->assertNotEquals($new_article['title'], $article);
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('title', $_SESSION['errors']);
+		$this->assertArrayHasKey('title', $_SESSION['old_input']);
+		$this->assertSame("The 'title' must at least 10 characters.", $_SESSION['errors']['title']);
+		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_article, $_SESSION['old_input'], ['slug', 'photo_path', 'photo_cover']);
 	}
 
 	#[Test] #[TestDox("Failed create new article because title too long")]
@@ -679,11 +694,12 @@ Praesentium voluptatum sequi ex sunt dolorem consectetur accusamus velit commodo
 		$action = $controller->createArticle($new_article, $new_article_img, $user['user_id']);
 
 		$this->assertTrue($action === 'validation failed');
-
-		$stmt = $this->db->query("SELECT title, slug FROM articles ORDER BY id DESC LIMIT 1");
-		$article = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-		$this->assertNotEquals($new_article['title'], $article);
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('title', $_SESSION['errors']);
+		$this->assertArrayHasKey('title', $_SESSION['old_input']);
+		$this->assertSame("The 'title' may not exceed 200 characters.", $_SESSION['errors']['title']);
+		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_article, $_SESSION['old_input'], ['slug', 'photo_path', 'photo_cover']);
 	}
 
 	#[Test] #[TestDox("Failed create new article because photo cover too large")]
@@ -722,11 +738,11 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$action = $controller->createArticle($_POST, $_FILES, $user['user_id']);
 
 		$this->assertTrue('validation failed' === $action);
-
-		$stmt = $this->db->query("SELECT title, slug FROM articles ORDER BY id DESC LIMIT 1");
-		$article = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-		$this->assertNotEquals($new_article['title'], $article);
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('photo_cover', $_SESSION['errors']);
+		$this->assertArrayHasKey('photo_cover', $_SESSION['old_input']);
+		$this->assertSame("The 'photo_cover' file is too large.", $_SESSION['errors']['photo_cover']);
 	}
 
 	#[Test] #[TestDox("Failed create new article because photo cover not image")]
@@ -765,11 +781,11 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$action = $controller->createArticle($_POST, $_FILES, $user['user_id']);
 
 		$this->assertTrue('validation failed' === $action);
-
-		$stmt = $this->db->query("SELECT title, slug FROM articles ORDER BY id DESC LIMIT 1");
-		$article = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-		$this->assertNotEquals($new_article['title'], $article);
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('photo_cover', $_SESSION['errors']);
+		$this->assertArrayHasKey('photo_cover', $_SESSION['old_input']);
+		$this->assertSame("The 'photo_cover' only JPG, PNG, or JPEG.", $_SESSION['errors']['photo_cover']);
 	}
 
 	#[Test] #[TestDox("failed create new article because photo path empty but photo cover exist")]
@@ -808,11 +824,11 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$action = $controller->createArticle($_POST, $_FILES, $user['user_id']);
 
 		$this->assertTrue('validation failed' === $action);
-
-		$stmt = $this->db->query("SELECT title, slug FROM articles ORDER BY id DESC LIMIT 1");
-		$article = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-		$this->assertNotEquals($new_article['title'], $article);
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('photo_path', $_SESSION['errors']);
+		$this->assertArrayHasKey('photo_path', $_SESSION['old_input']);
+		$this->assertSame("The 'photo_path' is required when photo_cover is present.", $_SESSION['errors']['photo_path']);
 	}
 
 	#[Test] #[TestDox("Failed create new article because photo path invalid")]
@@ -851,11 +867,11 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$action = $controller->createArticle($_POST, $_FILES, $user['user_id']);
 
 		$this->assertTrue('validation failed' === $action);
-
-		$stmt = $this->db->query("SELECT title, slug FROM articles ORDER BY id DESC LIMIT 1");
-		$article = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-		$this->assertNotEquals($new_article['title'], $article);
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('photo_path', $_SESSION['errors']);
+		$this->assertArrayHasKey('photo_path', $_SESSION['old_input']);
+		$this->assertSame("The 'photo_path' must be a valid URL.", $_SESSION['errors']['photo_path']);
 	}
 
 
@@ -891,11 +907,12 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$action = $controller->createArticle($_POST, $_FILES, $user['user_id']);
 
 		$this->assertTrue('validation failed' === $action);
-
-		$stmt = $this->db->query("SELECT title, slug FROM articles ORDER BY id DESC LIMIT 1");
-		$article = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-		$this->assertNotEquals($new_article['title'], $article);
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('body', $_SESSION['errors']);
+		$this->assertArrayHasKey('body', $_SESSION['old_input']);
+		$this->assertSame("The 'body' must at least 200 characters.", $_SESSION['errors']['body']);
+		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_article, $_SESSION['old_input'], ['slug', 'photo_path', 'photo_cover']);
 	}
 
 	#[Test] #[TestDox("Show article page is accessible")]
@@ -1198,7 +1215,13 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 
 		$updated_article = $generator->findByTitle($target['title']);
 
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('title', $_SESSION['errors']);
+		$this->assertArrayHasKey('title', $_SESSION['old_input']);
+		$this->assertSame("The 'title' must at least 10 characters.", $_SESSION['errors']['title']);
 		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover', 'photo_cover']);
+		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_article, $_SESSION['old_input'], ['slug', 'photo_path', 'photo_cover', 'old_photo_cover']);
 	}
 
 	#[Test] #[TestDox("Failed update article because new title too long")]
@@ -1242,7 +1265,13 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 
 		$updated_article = $generator->findByTitle($target['title']);
 
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('title', $_SESSION['errors']);
+		$this->assertArrayHasKey('title', $_SESSION['old_input']);
+		$this->assertSame("The 'title' may not exceed 200 characters.", $_SESSION['errors']['title']);
 		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover', 'photo_cover']);
+		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_article, $_SESSION['old_input'], ['slug', 'photo_path', 'photo_cover', 'old_photo_cover']);
 	}
 
 	#[Test] #[TestDox("Failed update article because new photo cover too large")]
@@ -1283,10 +1312,11 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$action = $controller->updateArticle($target['slug']);
 
 		$this->assertTrue($action === 'validation failed');
-
-		$updated_article = $generator->findByTitle($target['title']);
-
-		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover', 'photo_cover']);
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('photo_cover', $_SESSION['errors']);
+		$this->assertArrayHasKey('photo_cover', $_SESSION['old_input']);
+		$this->assertSame("The 'photo_cover' file is too large.", $_SESSION['errors']['photo_cover']);
 	}
 
 	#[Test] #[TestDox("Failed update article because new photo cover not image")]
@@ -1327,10 +1357,11 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$action = $controller->updateArticle($target['slug']);
 
 		$this->assertTrue($action === 'validation failed');
-
-		$updated_article = $generator->findByTitle($target['title']);
-
-		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover', 'photo_cover']);
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('photo_cover', $_SESSION['errors']);
+		$this->assertArrayHasKey('photo_cover', $_SESSION['old_input']);
+		$this->assertSame("The 'photo_cover' only JPG, PNG, or JPEG.", $_SESSION['errors']['photo_cover']);
 	}
 
 	#[Test] #[TestDox("Failed update article because photo path invalid")]
@@ -1374,7 +1405,12 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 
 		$updated_article = $generator->findByTitle($target['title']);
 
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('photo_path', $_SESSION['errors']);
+		$this->assertSame("The 'photo_path' must be a valid URL.", $_SESSION['errors']['photo_path']);
 		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover', 'photo_cover']);
+		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_article, $_SESSION['old_input'], ['slug', 'photo_path', 'photo_cover', 'old_photo_cover']);
 	}
 
 	#[Test] #[TestDox("Failed update article because new body too short")]
@@ -1418,7 +1454,13 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 
 		$updated_article = $generator->findByTitle($target['title']);
 
+		$this->assertNotNull($_SESSION['errors']);
+		$this->assertNotNull($_SESSION['old_input']);
+		$this->assertArrayHasKey('body', $_SESSION['errors']);
+		$this->assertArrayHasKey('body', $_SESSION['old_input']);
+		$this->assertSame("The 'body' must at least 200 characters.", $_SESSION['errors']['body']);
 		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover', 'photo_cover']);
+		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_article, $_SESSION['old_input'], ['slug', 'photo_path', 'photo_cover', 'old_photo_cover']);
 	}
 
 	#[Test] #[TestDox("Success delete article")]

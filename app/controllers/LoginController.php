@@ -256,7 +256,6 @@ class LoginController extends Controller
 			}
 		} else {
 			echo "create user {$data['username']} failed.\n";
-			var_dump($validator->errors());
 			$_SESSION['errors'] = $validator->errors();
 			$_SESSION['old_input'] = [
 				'email' => $data['email'],

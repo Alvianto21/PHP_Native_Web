@@ -178,7 +178,7 @@ class Validator
 						$allowExt = ["jpg", "jpeg", "png"];
 
 						if (!in_array($imgTypeFile, $allowExt, true) || !in_array($imgMime, $allowMime, true)) {
-							$this->addError($field, "The '{$field}' only JPG, PNG, or JPEG");
+							$this->addError($field, "The '{$field}' only JPG, PNG, or JPEG.");
 						}
 						break;
 					case 'unique':

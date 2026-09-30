@@ -211,12 +211,14 @@ class ProfileController extends Controller
 			}
 
 			if (empty($dataKey)) {
+				unset($_SESSION['errors'], $_SESSION['old_input']);
 				Flasher::setFlash('Profil berhasil', 'diperbarui', 'success');
 				header('Location: ' . ABSOLUTURL . 'profile');
 				exit;
 			}
 
 			if ($this->model('Users')->update($dataUpdate, $dataKey, $username) > 0) {
+				unset($_SESSION['errors'], $_SESSION['old_input']);
 				Flasher::setFlash('Profil berhasil', 'diperbarui', 'success');
 				header('Location: ' . ABSOLUTURL . 'profile');
 				exit;

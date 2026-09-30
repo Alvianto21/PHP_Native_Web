@@ -551,6 +551,7 @@ class AdminController extends Controller
 			}
 
 			if (empty($dataKey)) {
+				unset($_SESSION['errors'], $_SESSION['old_input']);
 				Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');
 				header('Location: ' . ABSOLUTURL . 'admin/articles');
 				exit;
@@ -562,10 +563,12 @@ class AdminController extends Controller
 						$uploader->delete((string) $article['photo_cover']);
 					}
 
+					unset($_SESSION['errors'], $_SESSION['old_input']);
 					Flasher::setFlash('artikel berhasil', 'dihapus', 'success');
 					header('Location: ' . ABSOLUTURL . 'admin/articles');
 					exit;
 				} else {
+					unset($_SESSION['errors'], $_SESSION['old_input']);
 					Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');
 					header('Location: ' . ABSOLUTURL . 'admin/articles');
 					exit;

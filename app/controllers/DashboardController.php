@@ -178,6 +178,7 @@ class DashboardController extends Controller
 			}
 
 			if ($this->model('Article')->create($data, $user)) {
+				unset($_SESSION['errors'], $_SESSION['old_input']);
 				Flasher::setFlash('artikel berhasil', 'ditambahkan', 'success');
 				header('Location: ' . ABSOLUTURL . 'dashboard');
 				exit;
@@ -383,12 +384,14 @@ class DashboardController extends Controller
 			}
 
 			if (empty($dataKey)) {
+				unset($_SESSION['errors'], $_SESSION['old_input']);
 				Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');
 				header('Location: ' . ABSOLUTURL . 'dashboard');
 				exit;
 			}
 
 			if ($this->model('Article')->update($dataUpdate, $dataKey, $user, $slug) > 0) {
+				unset($_SESSION['errors'], $_SESSION['old_input']);
 				Flasher::setFlash('artikel berhasil', 'diperbarui', 'success');
 				header('Location: ' . ABSOLUTURL . 'dashboard');
 				exit;
