@@ -8,38 +8,9 @@ require_once __DIR__ . '/../helpers/UserLogin.php';
 require_once __DIR__ . '/../helpers/TestArticleModel.php';
 require_once __DIR__ . '/../helpers/TestUsersModel.php';
 
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-
-// class TestArticleModel {
-// 	private array $articles = [[
-// 		'title' => 'Welcome to the blog',
-// 		'slug' => 'welcome-to-the-blog',
-// 		'body' => 'This is the first article body.',
-// 		'author' => 'admin',
-// 		'photo_cover' => '',
-// 	]];
-
-// 	public function count(): int {
-// 		return count($this->articles);
-// 	}
-
-// 	public function paginator(int $limit, int $offset): array {
-// 		return array_slice($this->articles, $offset, $limit);
-// 	}
-
-// 	public function findArticle(string $slug): ?array {
-// 		foreach ($this->articles as $article) {
-// 			if ($article['slug'] === $slug) {
-// 				return $article;
-// 			}
-// 		}
-
-// 		return null;
-// 	}
-// }
 
 class HomePageControllerStub extends HomeController {
 	public function __construct(private ?PDO $db = null)
@@ -66,24 +37,6 @@ class HomePageControllerStub extends HomeController {
 class HomeTest extends TestCase {
 	private $db;
 
-	private array $new_user = [
-		'email' => 'tanika76@example.com',
-		'username' => 'tanika76',
-		'photo_path' => '',
-		'password' => 'qweasd1234',
-		'password_confirm' => 'qweasd1234'
-	];
-
-	private array $new_user_img = [
-		'photo_profile' => [
-			'name' => '',
-			'type' => '',
-			'tmp_name' => '',
-			'error' => UPLOAD_ERR_NO_FILE,
-			'size' => 0,
-		]
-	];
-
 	use DatabaseUp;
 
 	#[Override]
@@ -94,7 +47,7 @@ class HomeTest extends TestCase {
 		echo "starting sessions.\n";
 		$sessionHandler = new TestSessions($this->db);
 		session_set_save_handler($sessionHandler, true);
-		if (!session_id()) session_start();
+		if (session_status() === PHP_SESSION_NONE) session_start();
 		echo "session started.\n";
 
 		$user = $this->generateDataUsers();
@@ -181,5 +134,16 @@ class HomeTest extends TestCase {
 		$article = $controller->model('Article')->findArticle($target);
 
 		$this->assertFalse($article);
+	}
+
+	protected function tearDown(): void
+	{
+		$this->db = null;
+		$_SERVER = [];
+		$_POST = [];
+		$_FILES = [];
+		session_unset();
+		session_destroy();
+		parent::tearDown();
 	}
 }

@@ -8,7 +8,7 @@ $sessionHandler = new Sessions();
 session_set_save_handler($sessionHandler, true);
 
 // Start session
-if (!session_id()) session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 
 // Jalankan aplikasi
 $app = new App;

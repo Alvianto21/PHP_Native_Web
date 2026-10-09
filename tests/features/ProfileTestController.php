@@ -9,8 +9,8 @@ require_once __DIR__ . '/../helpers/Sessions.php';
 require_once __DIR__ . '/../helpers/UserLogin.php';
 require_once __DIR__ . '/../helpers/TestUsersModel.php';
 require_once __DIR__ . '/../helpers/TestArticleModel.php';
+require_once __DIR__ . '/../helpers/filesGenerator.php';
 
-use PhpParser\Node\Expr\Cast\Void_;
 use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\Attributes\Test;
@@ -262,6 +262,8 @@ class ProfileTestController extends TestCase
 {
 	private $db;
 
+	private ?FilesGenerator $fileGenerator = null;
+
 	private array $new_user = [
 		'email' => 'tanika76@example.com',
 		'username' => 'tanika76',
@@ -273,8 +275,8 @@ class ProfileTestController extends TestCase
 	private array $new_user_img = [
 		'photo_profile' => [
 			'name' => 'user2.png',
-			'type' => 'image/png',
-			'tmp_name' => __DIR__ . '/../../storage/tests/user2.png',
+			'type' => '',
+			'tmp_name' => '',
 			'error' => UPLOAD_ERR_OK,
 			'size' => 0,
 		]
@@ -307,7 +309,7 @@ class ProfileTestController extends TestCase
 		echo "starting sessions.\n";
 		$sessionHandler = new TestSessions($this->db);
 		session_set_save_handler($sessionHandler, true);
-		if (!session_id()) session_start();
+		if (session_status() === PHP_SESSION_NONE) session_start();
 		echo "session started.\n";
 	}
 
@@ -353,6 +355,14 @@ class ProfileTestController extends TestCase
 	public function profile_index_page_is_accessible(): void
 	{
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
@@ -384,15 +394,23 @@ class ProfileTestController extends TestCase
 	public function edit_profile_page_is_accessible(): void
 	{
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
 		$user = $_SESSION['user_info'];
 
 		$controller = new ProfileControllerStub($this->db);
-		$generator = new TestUsersModel($this->db);
+		$generatorUsers = new TestUsersModel($this->db);
 
-		$target = $generator->findId($user['user_id']);
+		$target = $generatorUsers->findId($user['user_id']);
 
 		$controller->editProfile($target['username']);
 
@@ -409,6 +427,14 @@ class ProfileTestController extends TestCase
 	public function edit_page_is_unaccessible_because_user_not_found(): void
 	{
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
@@ -424,21 +450,29 @@ class ProfileTestController extends TestCase
 	#[Test] #[TestDox("Success update user email")]
 	public function success_update_user_email(): void {
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
 		$user = $_SESSION['user_info'];
 
 		$controller = new ProfileControllerStub($this->db);
-		$generator = new TestUsersModel($this->db);
+		$generatorUsers = new TestUsersModel($this->db);
 
-		$target = $generator->findId($user['user_id']);
+		$target = $generatorUsers->findId($user['user_id']);
 
 		$new_data_user = [
 			'email' => 'tester@gmail.com',
 			'username' => $this->new_user['username'],
 			'photo_path' => '',
-			'old_photo_profile' => $generator->findUsername($target['username'], ['photo_profile']),
+			'old_photo_profile' => $generatorUsers->findUsername($target['username'], ['photo_profile']),
 			'password' => '',
 			'password_confirm' => ''
 		];
@@ -461,7 +495,7 @@ class ProfileTestController extends TestCase
 
 		$this->assertTrue($action === 'user updated');
 
-		$new_data = $generator->findEmail($new_data_user['email']);
+		$new_data = $generatorUsers->findEmail($new_data_user['email']);
 
 		$this->assertNotSame($this->new_user['email'], $new_data['email']);
 	}
@@ -469,6 +503,14 @@ class ProfileTestController extends TestCase
 	#[Test]#[TestDox("Success update user username")]
 	public function success_update_user_username(): void {
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
@@ -515,16 +557,26 @@ class ProfileTestController extends TestCase
 	#[Test] #[TestDox("Success update user photo profile")]
 	public function success_update_photo_profile(): void {
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
 		$user = $_SESSION['user_info'];
 
 		$controller = new ProfileControllerStub($this->db);
-		$generator = new TestUsersModel($this->db);
+		$generatorUsers = new TestUsersModel($this->db);
 
-		$target = $generator->findId($user['user_id']);
-		$oldTargetImg = $generator->findUsername($target['username'], ['photo_profile']);
+		$target = $generatorUsers->findId($user['user_id']);
+		$oldTargetImg = $generatorUsers->findUsername($target['username'], ['photo_profile']);
+		$binaryData2 = $this->fileGenerator->dataRandom();
+		$tmpFile2 = $this->fileGenerator->createTempFile($binaryData2['type'], $binaryData2['data']);
 
 		$new_data_user = [
 			'email' => $this->new_user['email'],
@@ -538,10 +590,10 @@ class ProfileTestController extends TestCase
 		$new_data_user_img = [
 			'photo_profile' => [
 				'name' => 'user.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/user.jpg',
+				'type' => $binaryData2['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile2,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 5000
+				'size' => filesize($tmpFile2)
 			]
 		];
 
@@ -553,7 +605,7 @@ class ProfileTestController extends TestCase
 
 		$this->assertTrue($action === 'user updated');
 
-		$new_data = $generator->findUsername($new_data_user['username'], ['photo_profile']);
+		$new_data = $generatorUsers->findUsername($new_data_user['username'], ['photo_profile']);
 
 		$this->assertNotSame($oldTargetImg['photo_profile'], $new_data['photo_profile']);
 
@@ -563,21 +615,29 @@ class ProfileTestController extends TestCase
 	#[Test] #[TestDox("Success update user password")]
 	public function success_update_user_password(): void {
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
 		$user = $_SESSION['user_info'];
 
 		$controller = new ProfileControllerStub($this->db);
-		$generator = new TestUsersModel($this->db);
+		$generatorUsers = new TestUsersModel($this->db);
 		
-		$target = $generator->findId($user['user_id']);
+		$target = $generatorUsers->findId($user['user_id']);
 
 		$new_data_user = [
 			'email' => $this->new_user['email'],
 			'username' => $this->new_user['username'],
 			'photo_path' => '',
-			'old_photo_profile' => $generator->findUsername($target['username'], ['photo_profile']),
+			'old_photo_profile' => $generatorUsers->findUsername($target['username'], ['photo_profile']),
 			'password' => 'password121',
 			'password_confirm' => 'password121'
 		];
@@ -604,17 +664,25 @@ class ProfileTestController extends TestCase
 	#[Test] #[TestDox("Success update user profile but nothing change")]
 	public function success_update_user_profile_but_noting_change(): void {
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
 		$user = $_SESSION['user_info'];
 
 		$controller = new ProfileControllerStub($this->db);
-		$generator = new TestUsersModel($this->db);
+		$generatorUsers = new TestUsersModel($this->db);
 		
-		$target = $generator->findId($user['user_id']);
+		$target = $generatorUsers->findId($user['user_id']);
 
-		$this->new_user['old_photo_profile'] = $generator->findUsername($target['username'], ['photo_profile']);
+		$this->new_user['old_photo_profile'] = $generatorUsers->findUsername($target['username'], ['photo_profile']);
 
 		$new_data_user_img = [
 			'photo_profile' => [
@@ -634,7 +702,7 @@ class ProfileTestController extends TestCase
 
 		$this->assertTrue($action === 'user updated');
 
-		$new_data = $generator->findUsername($target['username'], ['email', 'username', 'photo_profile']);
+		$new_data = $generatorUsers->findUsername($target['username'], ['email', 'username', 'photo_profile']);
 
 		$this->assertSame($this->new_user['email'], $new_data['email']);
 		$this->assertSame($this->new_user['username'], $new_data['username']);
@@ -644,21 +712,29 @@ class ProfileTestController extends TestCase
 	#[Test] #[TestDox("Failed update user because invalid email")]
 	public function failed_update_user_because_invalid_email(): void {
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
 		$user = $_SESSION['user_info'];
 
 		$controller = new ProfileControllerStub($this->db);
-		$generator = new TestUsersModel($this->db);
+		$generatorUsers = new TestUsersModel($this->db);
 		
-		$target = $generator->findId($user['user_id']);
+		$target = $generatorUsers->findId($user['user_id']);
 
 		$new_data_user = [
 			'email' => 'tanikagmail.com',
 			'username' => $this->new_user['username'],
 			'photo_path' => '',
-			'old_photo_profile' => $generator->findUsername($target['username'], ['photo_profile']),
+			'old_photo_profile' => $generatorUsers->findUsername($target['username'], ['photo_profile']),
 			'password' => '',
 			'password_confirm' => ''
 		];
@@ -681,7 +757,7 @@ class ProfileTestController extends TestCase
 
 		$this->assertTrue($action === 'validation failed');
 
-		$actual = $generator->findUsername($target['username'], ['email']);
+		$actual = $generatorUsers->findUsername($target['username'], ['email']);
 
 		$this->assertFalse($actual['email'] === $new_data_user['email']);
 		$this->assertNotNull($_SESSION['errors']);
@@ -695,11 +771,21 @@ class ProfileTestController extends TestCase
 	#[Test] #[TestDox("Failed update user because email already use")]
 	public function failed_update_user_because_email_already_use(): void {
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
 		$controller = new ProfileControllerStub($this->db);
-		$generator = new TestUsersModel($this->db);
+		$generatorUsers = new TestUsersModel($this->db);
+		$binaryData2 = $this->fileGenerator->dataRandom();
+		$tmpFile2 = $this->fileGenerator->createTempFile($binaryData2['type'], $binaryData2['data']);
 
 		$this->logout();
 
@@ -714,22 +800,22 @@ class ProfileTestController extends TestCase
 		$user2Img = [
 			'photo_profile' => [
 				'name' => 'user.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/user.jpg',
+				'type' => $binaryData2['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile2,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 4000
+				'size' => filesize($tmpFile2)
 			]
 		];
 
 		$this->login($user2, $user2Img);
 		$userId = $_SESSION['user_info'];
-		$target = $generator->findId($userId['user_id']);
+		$target = $generatorUsers->findId($userId['user_id']);
 
 		$new_user_2 = [
 			'email' => $this->new_user['email'],
 			'username' => $user2['username'],
 			'photo_path' => '',
-			'old_photo_profile' => $generator->findUsername($user2['username'], ['photo_profile']),
+			'old_photo_profile' => $generatorUsers->findUsername($user2['username'], ['photo_profile']),
 			'password' => '',
 			'password_confirm' => ''
 		];
@@ -752,7 +838,7 @@ class ProfileTestController extends TestCase
 
 		$this->assertTrue($action === 'validation failed');
 
-		$actual = $generator->findUsername($target['username'], ['email']);
+		$actual = $generatorUsers->findUsername($target['username'], ['email']);
 
 		$this->assertFalse($actual['email'] === $new_user_2['email']);
 		$this->assertNotNull($_SESSION['errors']);
@@ -766,21 +852,29 @@ class ProfileTestController extends TestCase
 	#[Test] #[TestDox("Failed update user because invalid username")]
 	public function failed_update_user_because_invalid_username(): void {
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
 		$user = $_SESSION['user_info'];
 
 		$controller = new ProfileControllerStub($this->db);
-		$generator = new TestUsersModel($this->db);
+		$generatorUsers = new TestUsersModel($this->db);
 		
-		$target = $generator->findId($user['user_id']);
+		$target = $generatorUsers->findId($user['user_id']);
 
 		$new_data_user = [
 			'email' => $this->new_user['email'],
 			'username' => 'virnada@45',
 			'photo_path' => '',
-			'old_photo_profile' => $generator->findUsername($this->new_user['username'], ['photo_profile']),
+			'old_photo_profile' => $generatorUsers->findUsername($this->new_user['username'], ['photo_profile']),
 			'password' => '',
 			'password_confirm' => ''
 		];
@@ -803,7 +897,7 @@ class ProfileTestController extends TestCase
 
 		$this->assertTrue($action === 'validation failed');
 
-		$actual = $generator->findUsername($target['username'], ['username']);
+		$actual = $generatorUsers->findUsername($target['username'], ['username']);
 
 		$this->assertFalse($actual['username'] === $new_data_user['username']);
 		$this->assertNotNull($_SESSION['errors']);
@@ -817,11 +911,21 @@ class ProfileTestController extends TestCase
 	#[Test] #[TestDox("Failed update user because username already use")]
 	public function failed_update_user_because_username_already_use(): void {
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
 		$controller = new ProfileControllerStub($this->db);
-		$generator = new TestUsersModel($this->db);
+		$generatorUsers = new TestUsersModel($this->db);
+		$binaryData2 = $this->fileGenerator->dataRandom();
+		$tmpFile2 = $this->fileGenerator->createTempFile($binaryData2['type'], $binaryData2['data']);
 
 		$this->logout();
 
@@ -836,22 +940,22 @@ class ProfileTestController extends TestCase
 		$user2Img = [
 			'photo_profile' => [
 				'name' => 'user.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/user.jpg',
+				'type' => $binaryData2['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile2,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 4000
+				'size' => filesize($tmpFile2)
 			]
 		];
 
 		$this->login($user2, $user2Img);
 		$userId = $_SESSION['user_info'];
-		$target = $generator->findId($userId['user_id']);
+		$target = $generatorUsers->findId($userId['user_id']);
 
 		$new_user_2 = [
 			'email' => $user2['email'],
 			'username' => $this->new_user['username'],
 			'photo_path' => '',
-			'old_photo_profile' => $generator->findUsername($user2['username'], ['photo_profile']),
+			'old_photo_profile' => $generatorUsers->findUsername($user2['username'], ['photo_profile']),
 			'password' => '',
 			'password_confirm' => ''
 		];
@@ -874,7 +978,7 @@ class ProfileTestController extends TestCase
 
 		$this->assertTrue($action === 'validation failed');
 
-		$actual = $generator->findUsername($target['username'], ['username']);
+		$actual = $generatorUsers->findUsername($target['username'], ['username']);
 
 		$this->assertFalse($actual['username'] === $new_user_2['username']);
 		$this->assertNotNull($_SESSION['errors']);
@@ -888,21 +992,31 @@ class ProfileTestController extends TestCase
 	#[Test] #[TestDox("Failed to update user because photo path empty but photo profile exist")]
 	public function failed_update_user_because_photo_path_empty_but_photo_profile_exist(): void {
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
 		$user = $_SESSION['user_info'];
 
 		$controller = new ProfileControllerStub($this->db);
-		$generator = new TestUsersModel($this->db);
+		$generatorUsers = new TestUsersModel($this->db);
+		$binaryData2 = $this->fileGenerator->dataRandom();
+		$tmpFile2 = $this->fileGenerator->createTempFile($binaryData2['type'], $binaryData2['data']);
 		
-		$target = $generator->findId($user['user_id']);
+		$target = $generatorUsers->findId($user['user_id']);
 
 		$new_data_user = [
 			'email' => $this->new_user['email'],
 			'username' => $this->new_user['username'],
 			'photo_path' => '',
-			'old_photo_profile' => $generator->findUsername($target['username'], ['photo_profile']),
+			'old_photo_profile' => $generatorUsers->findUsername($target['username'], ['photo_profile']),
 			'password' => '',
 			'password_confirm' => ''
 		];
@@ -910,10 +1024,10 @@ class ProfileTestController extends TestCase
 		$new_data_user_img = [
 			'photo_profile' => [
 				'name' => 'user.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/user.jpg',
+				'type' => $binaryData2['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile2,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 6000
+				'size' => filesize($tmpFile2)
 			]
 		];
 
@@ -933,21 +1047,31 @@ class ProfileTestController extends TestCase
 	#[Test] #[TestDox("Failed update user because photo profile too large")]
 	public function failed_update_user_because_photo_profile_too_large(): void {
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
 		$user = $_SESSION['user_info'];
 
 		$controller = new ProfileControllerStub($this->db);
-		$generator = new TestUsersModel($this->db);
+		$generatorUsers = new TestUsersModel($this->db);
+		$binaryData2 = $this->fileGenerator->dataRandom();
+		$tmpFile2 = $this->fileGenerator->createTempFile($binaryData2['type'], $binaryData2['data']);
 		
-		$target = $generator->findId($user['user_id']);
+		$target = $generatorUsers->findId($user['user_id']);
 
 		$new_data_user = [
 			'email' => $this->new_user['email'],
 			'username' => $this->new_user['username'],
 			'photo_path' => $this->UrlGenerator(),
-			'old_photo_profile' => $generator->findUsername($target['username'], ['photo_profile']),
+			'old_photo_profile' => $generatorUsers->findUsername($target['username'], ['photo_profile']),
 			'password' => '',
 			'password_confirm' => ''
 		];
@@ -955,8 +1079,8 @@ class ProfileTestController extends TestCase
 		$new_data_user_img = [
 			'photo_profile' => [
 				'name' => 'user.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/user.jpg',
+				'type' => $binaryData2['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile2,
 				'error' => UPLOAD_ERR_OK,
 				'size' => 600000
 			]
@@ -978,21 +1102,31 @@ class ProfileTestController extends TestCase
 	#[Test] #[TestDox("Failed update user because photo profile not image")]
 	public function failed_update_user_because_photo_profile_not_image(): void {
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
 		$user = $_SESSION['user_info'];
 
 		$controller = new ProfileControllerStub($this->db);
-		$generator = new TestUsersModel($this->db);
+		$generatorUsers = new TestUsersModel($this->db);
+
+		$tmpFile2 = $this->fileGenerator->createTempFile('txt', 'invalid file content.');
 		
-		$target = $generator->findId($user['user_id']);
+		$target = $generatorUsers->findId($user['user_id']);
 
 		$new_data_user = [
 			'email' => $this->new_user['email'],
 			'username' => $this->new_user['username'],
 			'photo_path' => $this->UrlGenerator(),
-			'old_photo_profile' => $generator->findUsername($target['username'], ['photo_profile']),
+			'old_photo_profile' => $generatorUsers->findUsername($target['username'], ['photo_profile']),
 			'password' => '',
 			'password_confirm' => ''
 		];
@@ -1001,9 +1135,9 @@ class ProfileTestController extends TestCase
 			'photo_profile' => [
 				'name' => 'user.jpg',
 				'type' => 'text/plain',
-				'tmp_name' => __DIR__ . '/../../storage/tests/ini.txt',
+				'tmp_name' => $tmpFile2,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 6000
+				'size' => filesize($tmpFile2)
 			]
 		];
 
@@ -1023,21 +1157,31 @@ class ProfileTestController extends TestCase
 	#[Test] #[TestDox("Failed update user because photo path invalid")]
 	public function failed_update_user_because_photo_path_invalid(): void {
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
 		$user = $_SESSION['user_info'];
 
 		$controller = new ProfileControllerStub($this->db);
-		$generator = new TestUsersModel($this->db);
+		$generatorUsers = new TestUsersModel($this->db);
+		$binaryData2 = $this->fileGenerator->dataRandom();
+		$tmpFile2 = $this->fileGenerator->createTempFile($binaryData2['type'], $binaryData2['data']);
 		
-		$target = $generator->findId($user['user_id']);
+		$target = $generatorUsers->findId($user['user_id']);
 
 		$new_data_user = [
 			'email' => $this->new_user['email'],
 			'username' => $this->new_user['username'],
 			'photo_path' => 'files/store?expires=1789534487&signature=1ee61dbbfc6df11552321a4ddf8c05aa5151d54814d34cf21bc90a3dfcfb4391',
-			'old_photo_profile' => $generator->findUsername($target['username'], ['photo_profile']),
+			'old_photo_profile' => $generatorUsers->findUsername($target['username'], ['photo_profile']),
 			'password' => '',
 			'password_confirm' => ''
 		];
@@ -1045,10 +1189,10 @@ class ProfileTestController extends TestCase
 		$new_data_user_img = [
 			'photo_profile' => [
 				'name' => 'user.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/user.jpg',
+				'type' => $binaryData2['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile2,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 6000
+				'size' => filesize($tmpFile2)
 			]
 		];
 
@@ -1068,21 +1212,29 @@ class ProfileTestController extends TestCase
 	#[Test] #[TestDox("Failed update user because password too short")]
 	public function failed_update_user_because_password_too_short(): void {
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
 		$user = $_SESSION['user_info'];
 
 		$controller = new ProfileControllerStub($this->db);
-		$generator = new TestUsersModel($this->db);
+		$generatorUsers = new TestUsersModel($this->db);
 		
-		$target = $generator->findId($user['user_id']);
+		$target = $generatorUsers->findId($user['user_id']);
 
 		$new_data_user = [
 			'email' => $this->new_user['email'],
 			'username' => $this->new_user['username'],
 			'photo_path' => '',
-			'old_photo_profile' => $generator->findUsername($target['username'], ['photo_profile']),
+			'old_photo_profile' => $generatorUsers->findUsername($target['username'], ['photo_profile']),
 			'password' => 'password',
 			'password_confirm' => 'password'
 		];
@@ -1115,21 +1267,29 @@ class ProfileTestController extends TestCase
 	#[Test] #[TestDox("Failed update user because password not match")]
 	public function failed_update_user_because_password_not_match(): void {
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
 		$user = $_SESSION['user_info'];
 
 		$controller = new ProfileControllerStub($this->db);
-		$generator = new TestUsersModel($this->db);
+		$generatorUsers = new TestUsersModel($this->db);
 		
-		$target = $generator->findId($user['user_id']);
+		$target = $generatorUsers->findId($user['user_id']);
 
 		$new_data_user = [
 			'email' => $this->new_user['email'],
 			'username' => $this->new_user['username'],
 			'photo_path' => '',
-			'old_photo_profile' => $generator->findUsername($target['username'], ['photo_profile']),
+			'old_photo_profile' => $generatorUsers->findUsername($target['username'], ['photo_profile']),
 			'password' => 'password222',
 			'password_confirm' => 'password212'
 		];
@@ -1160,6 +1320,14 @@ class ProfileTestController extends TestCase
 	#[Test] #[TestDox("Success delete user with articles")]
 	public function success_delete_user_with_articles(): void {
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
@@ -1187,20 +1355,28 @@ class ProfileTestController extends TestCase
 	#[Test] #[TestDox("Success delete user without articles")]
 	public function success_delete_user_without_articles(): void {
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
 		$user = $_SESSION['user_info'];
 
 		$controller = new ProfileControllerStub($this->db);
-		$generator = new TestUsersModel($this->db);
+		$generatorUsers = new TestUsersModel($this->db);
 
 		$action = $controller->deleteUser();
 
 		$this->assertTrue($action === 'user deleted');
 		$this->assertNull($_SESSION['user_info']);
 
-		$user_status = $generator->isDeleted($user['user_id']);
+		$user_status = $generatorUsers->isDeleted($user['user_id']);
 
 		$this->assertTrue($user_status);
 	}
@@ -1208,6 +1384,14 @@ class ProfileTestController extends TestCase
 	#[Test] #[TestDox("Failed delete user because user not found")]
 	public function failed_delete_user_because_user_not_found(): void {
 		$this->new_user['photo_path'] = $this->UrlGenerator();
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->new_user_img['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->new_user_img['photo_profile']['tmp_name'] = $tmpFile;
+		$this->new_user_img['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->login($this->new_user, $this->new_user_img);
 
@@ -1215,7 +1399,6 @@ class ProfileTestController extends TestCase
 		$_SESSION['user_info']['user_id'] = 2;
 
 		$controller = new ProfileControllerStub($this->db);
-		$generator = new TestUsersModel($this->db);
 
 		$action = $controller->deleteUser();
 
@@ -1231,6 +1414,7 @@ class ProfileTestController extends TestCase
 		$_SERVER = [];
 		$_POST = [];
 		$_FILES = [];
+		$this->fileGenerator?->cleaningFiles();
 		session_unset();
 		session_destroy();
 		parent::tearDown();

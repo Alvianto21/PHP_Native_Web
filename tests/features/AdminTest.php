@@ -2,12 +2,10 @@
 
 declare(strict_types=1);
 
-use PhpParser\Node\Expr\Cast\Void_;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\TestCase;
-use function PHPUnit\Framework\assertArrayIsEqualToArrayOnlyConsideringListOfKeys;
 
 require_once __DIR__ . '/../../app/init.php';
 require_once __DIR__ . '/../../app/controllers/AdminController.php';
@@ -16,6 +14,7 @@ require_once __DIR__ . '/../helpers/Sessions.php';
 require_once __DIR__ . '/../helpers/UserLogin.php';
 require_once __DIR__ . '/../helpers/TestArticleModel.php';
 require_once __DIR__ . '/../helpers/TestUsersModel.php';
+require_once __DIR__ . '/../helpers/filesGenerator.php';
 
 class AdminControllerStub extends AdminController
 {
@@ -399,6 +398,8 @@ class AdminTest extends TestCase
 {
 	private $db;
 
+	private ?FilesGenerator $fileGenerator = null;
+
 	private array $userAdmin = [
 		'email' => 'akagi@gmail.com',
 		'username' => 'javelin1',
@@ -410,10 +411,10 @@ class AdminTest extends TestCase
 	private array $userAdminImg = [
 		'photo_profile' => [
 			'name' => 'users.jpg',
-			'type' => 'image/jpg',
-			'tmp_name' => __DIR__ . '/../../storage/tests/user3.jpg',
+			'type' => '',
+			'tmp_name' => '',
 			'error' => UPLOAD_ERR_OK,
-			'size' => 10000
+			'size' => 0
 		]
 	];
 
@@ -451,7 +452,7 @@ class AdminTest extends TestCase
 		echo "starting sessions.\n";
 		$sessionHandler = new TestSessions($this->db);
 		session_set_save_handler($sessionHandler, true);
-		if (!session_id()) session_start();
+		if (session_status() === PHP_SESSION_NONE) session_start();
 		echo "session started.\n";
 	}
 
@@ -468,6 +469,14 @@ class AdminTest extends TestCase
 	{
 		echo "creating admin user...\n";
 		$generator = new TestUsersModel($this->db);
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$this->userAdminImg['photo_profile']['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+		$this->userAdminImg['photo_profile']['tmp_name'] = $tmpFile;
+		$this->userAdminImg['photo_profile']['size'] = filesize($tmpFile);
 
 		$this->fillFormWithFile($this->userAdmin, $this->userAdminImg);
 		$statusCreate = $generator->createAdminUser($_POST, $_FILES);
@@ -1293,6 +1302,7 @@ class AdminTest extends TestCase
 		$_SERVER = [];
 		$_POST = [];
 		$_FILES = [];
+		$this->fileGenerator?->cleaningFiles();
 		session_unset();
 		session_destroy();
 		parent::tearDown();

@@ -68,10 +68,10 @@ class TestUsersModel
 		'data_2' => [
 			'photo_profile' => [
 				'name' => 'users.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/user3.jpg',
+				'type' => '',
+				'tmp_name' => '',
 				'error' => UPLOAD_ERR_OK,
-				'size' => 10000
+				'size' => 0
 			]
 		],
 		'data_3' => [
@@ -86,10 +86,10 @@ class TestUsersModel
 		'data_4' => [
 			'photo_profile' => [
 				'name' => 'users.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/user.jpg',
+				'type' => '',
+				'tmp_name' => '',
 				'error' => UPLOAD_ERR_OK,
-				'size' => 5000
+				'size' => 0
 			]
 		],
 		'data_5' => [
@@ -102,6 +102,8 @@ class TestUsersModel
 			]
 		]
 	];
+
+	private ?FilesGenerator $fileGenerator = null;
 
 	/** @var \PDOStatement Current prepared statement */
 	private $stmt;
@@ -168,7 +170,7 @@ class TestUsersModel
 	{
 		$query = "INSERT INTO " . $this->table . " (email, username, photo_profile, role,  password) VALUES (:email, :username, :photo_profile, :role, :password)";
 
-		echo "creating...\n";
+		echo "creating user...\n";
 
 		$this->query($query);
 
@@ -194,7 +196,7 @@ class TestUsersModel
 	{
 		$query = "INSERT INTO " . $this->table . " (email, username, photo_profile, role,  password) VALUES (:email, :username, :photo_profile, :role, :password)";
 
-		echo "creating...\n";
+		echo "creating user admin...\n";
 
 		$this->query($query);
 
@@ -216,23 +218,36 @@ class TestUsersModel
 		return $this->stmt->rowCount();
 	}
 
-	public function usersGenerator(): string {
+	public function usersGenerator(): string
+	{
 		require_once __DIR__ . '/../../app/request/UploadImage.php';
+		require_once __DIR__ . '/../helpers/filesGenerator.php';
 
 		$_POST = $this->usersSeeder;
 		$_FILES = $this->usersImgSeeder;
 		$uploader = new UploadImage();
+		$this->fileGenerator = new FilesGenerator();
 
 		(int) $success = 0;
 		(int) $failed = 0;
 
 		foreach ($_POST as $index => $data) {
 			$formFile = $_FILES[$index]['photo_cover'] ?? null;
+			$binaryData = $this->fileGenerator->dataRandom();
 
-			if ($formFile['error'] === UPLOAD_ERR_OK) {
-				$data['photo_profile'] = $uploader->store($formFile, 'profiles');
-			} elseif ($formFile['error'] === UPLOAD_ERR_NO_FILE) {
-				$data['photo_profile'] = null;
+			$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+			try {
+				if ($formFile['error'] === UPLOAD_ERR_OK) {
+					$formFile['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+					$formFile['tmp_name'] = $tmpFile;
+					$formFile['size'] = filesize($tmpFile);
+					$data['photo_profile'] = $uploader->store($formFile, 'profiles');
+				} elseif ($formFile['error'] === UPLOAD_ERR_NO_FILE) {
+					$data['photo_profile'] = null;
+				}
+			} finally {
+				$this->fileGenerator->cleaningFiles();
 			}
 
 			$data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
@@ -257,7 +272,8 @@ class TestUsersModel
 		}
 	}
 
-	public function createAdminUser(array $formData, array $fileData): string {
+	public function createAdminUser(array $formData, array $fileData): string
+	{
 		require_once __DIR__ . '/../../app/request/UploadImage.php';
 
 		$_POST = $formData;
@@ -283,16 +299,18 @@ class TestUsersModel
 		}
 	}
 
-	public function userRandomizer() {
+	public function userRandomizer()
+	{
 		$target = array_rand($this->usersSeeder, 1);
 		$user =  $this->usersSeeder[$target];
 		return $user;
 	}
 
-	public function showAll(int $limit, int $offset) {
+	public function showAll(int $limit, int $offset)
+	{
 		$query = "SELECT email, username, role, COUNT(*) OVER() AS total FROM {$this->table} ORDER BY id DESC LIMIT :limit OFFSET :offset";
 
-		echo "retrieving data from database...\n";
+		echo "show all data from database...\n";
 		$this->query($query);
 
 		$this->multiBind([
@@ -309,7 +327,7 @@ class TestUsersModel
 	{
 		$query = 'SELECT id, email, username, password, role FROM ' . $this->table . ' WHERE email = :email AND is_deleted = 0';
 
-		echo "retrieving data from database...\n";
+		echo "finding user data from database...\n";
 
 		$this->query($query);
 
@@ -324,7 +342,7 @@ class TestUsersModel
 	{
 		$query = "SELECT username FROM {$this->table} WHERE id = :id AND is_deleted = 0";
 
-		echo "retrieving data from database...\n";
+		echo "finding user data from database...\n";
 		$this->query($query);
 
 		$this->bind('id', $id, PDO::PARAM_INT);
@@ -339,7 +357,7 @@ class TestUsersModel
 		$fields = implode(', ', $columns);
 		$query = "SELECT {$fields} FROM {$this->table} WHERE username = :username AND is_deleted = 0";
 
-		echo "retrieving data from database...\n";
+		echo "retrieving data {$username} from database...\n";
 		$this->query($query);
 
 		$this->bind('username', $username);
@@ -349,11 +367,12 @@ class TestUsersModel
 		return $this->stmt->fetch(PDO::FETCH_ASSOC);
 	}
 
-	public function findUsernameAdmin(string $username, array $columns = ['*']) {
+	public function findUsernameAdmin(string $username, array $columns = ['*'])
+	{
 		$fields = implode(', ', $columns);
 		$query = "SELECT {$fields} FROM {$this->table} WHERE username = :username";
 
-		echo "retrieving data from database...\n";
+		echo "retrieving data {$username} from database...\n";
 		$this->query($query);
 
 		$this->bind('username', $username);
@@ -367,7 +386,7 @@ class TestUsersModel
 	{
 		$query = "SELECT id, photo_profile FROM {$this->table} WHERE id = :user_id AND is_deleted = 0";
 
-		echo "retrieving data from database...\n";
+		echo "finding user data from database...\n";
 		$this->query($query);
 
 		$this->bind('user_id', $user_id, PDO::PARAM_INT);
@@ -377,10 +396,11 @@ class TestUsersModel
 		return $this->stmt->fetch(PDO::FETCH_ASSOC);
 	}
 
-	public function findUserAdmin(string $username) {
+	public function findUserAdmin(string $username)
+	{
 		$query = "SELECT email, username, photo_profile, role, is_deleted FROM {$this->table} WHERE username = :username";
 
-		echo "retrieving data from database...\n";
+		echo "retrieving data {$username} from database...\n";
 		$this->query($query);
 
 		$this->bind('username', $username);
@@ -394,7 +414,7 @@ class TestUsersModel
 	{
 		$query = "SELECT 1 FROM {$this->table} WHERE email = :email LIMIT 1";
 
-		echo "searching data...\n";
+		echo "searching email data...\n";
 		$this->query($query);
 
 		// Bind data
@@ -410,6 +430,7 @@ class TestUsersModel
 		$query = "SELECT 1 FROM {$this->table} WHERE email = :email AND id != :id LIMIT 1";
 
 		// Prep query
+		echo "searching email data but ignore id...\n";
 		$this->query($query);
 
 		// Bind data
@@ -426,6 +447,7 @@ class TestUsersModel
 		$query = "SELECT 1 FROM {$this->table} WHERE username = :username LIMIT 1";
 
 		// Prep query
+		echo "search username data...\n";
 		$this->query($query);
 
 		// Bind data
@@ -440,6 +462,7 @@ class TestUsersModel
 		$query = "SELECT 1 FROM {$this->table} WHERE username = :username AND id != :id LIMIT 1";
 
 		// Prep query
+		echo "search username data but ignore id...\n";
 		$this->query($query);
 
 		// Bind data
@@ -453,21 +476,24 @@ class TestUsersModel
 
 	public function isDeleted(int $user_id)
 	{
-		$query = "SELECT id, is_deleted FROM {$this->table} WHERE id = :user_id AND is_deleted = 1";
+		$query = "SELECT is_deleted FROM {$this->table} WHERE id = :user_id";
 
-		echo "retrieving data from database...\n";
+		echo "checking status data from database...\n";
 		$this->query($query);
 
 		$this->bind('user_id', $user_id, PDO::PARAM_INT);
 
-		return $this->stmt->execute() ? true : false;
+		$this->stmt->execute();
+		$is_deleted = $this->stmt->fetchColumn();
+
+		return $is_deleted !== false && (int) $is_deleted === 1;
 	}
 
 	public function show(int $user_id)
 	{
 		$query = "SELECT email, username, photo_profile FROM {$this->table} WHERE id = :user_id AND is_deleted = 0";
 
-		echo "retrieving data from database...\n";
+		echo "retrieving data user from database...\n";
 		$this->query($query);
 
 		$this->bind('user_id', $user_id, PDO::PARAM_INT);
@@ -482,7 +508,7 @@ class TestUsersModel
 		$fields = implode(', ', $columns);
 		$query = "UPDATE {$this->table} SET {$fields} WHERE username = :current_username";
 
-		echo "updating data..\n";
+		echo "updating data user..\n";
 		$this->query($query);
 
 		foreach ($data as $key => $value) {
@@ -497,7 +523,7 @@ class TestUsersModel
 	{
 		$query = "UPDATE {$this->table} SET is_deleted = 1, photo_profile = NULL WHERE id = :user_id";
 
-		echo "setting data as deleted...\n";
+		echo "setting data user as deleted...\n";
 		$this->query($query);
 
 		$this->bind('user_id', $user_id, PDO::PARAM_INT);

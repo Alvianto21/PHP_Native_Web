@@ -8,6 +8,7 @@ require_once __DIR__ . '/../helpers/Database.php';
 require_once __DIR__ . '/../helpers/Sessions.php';
 require_once __DIR__ . '/../helpers/UserLogin.php';
 require_once __DIR__ . '/../helpers/TestArticleModel.php';
+require_once __DIR__ . '/../helpers/filesGenerator.php';
 
 use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\TestDox;
@@ -153,7 +154,7 @@ class DashboardControllerStub extends DashboardController
 
 			$data['article'] = $article;
 		} else {
-			echo " article with {$slug} not found.\n";
+			echo "article with {$slug} not found.\n";
 			return "article not found";
 		}
 
@@ -341,6 +342,8 @@ class DashboardTest extends TestCase
 {
 	private $db;
 
+	private ?FilesGenerator $fileGenerator = null;
+
 	private array $new_user = [
 		'email' => 'tanika76@example.com',
 		'username' => 'tanika76',
@@ -386,7 +389,7 @@ class DashboardTest extends TestCase
 		echo "starting sessions.\n";
 		$sessionHandler = new TestSessions($this->db);
 		session_set_save_handler($sessionHandler, true);
-		if (!session_id()) session_start();
+		if (session_status() === PHP_SESSION_NONE) session_start();
 		echo "session started.\n";
 	}
 
@@ -506,6 +509,10 @@ class DashboardTest extends TestCase
 		$user = $_SESSION['user_info'];
 
 		$controller = new DashboardControllerStub($this->db);
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
 
 		$new_article = [
 			'title' => 'Anim commodo proident ratione nemo deleniti ipsum vero quia do nesciunt odit quasi at ea. Vitae magna provident quisquam numquam aute tempora id quis deserunt magna tempor qui amet.',
@@ -520,10 +527,10 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$new_article_img = [
 			'photo_cover' => [
 				'name' => 'cover.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/cover_1.jpg',
+				'type' => $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 40000
+				'size' => filesize($tmpFile)
 			]
 		];
 
@@ -710,6 +717,10 @@ Praesentium voluptatum sequi ex sunt dolorem consectetur accusamus velit commodo
 		$user = $_SESSION['user_info'];
 
 		$controller = new DashboardControllerStub($this->db);
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
 
 		$new_article = [
 			'title' => 'Anim commodo proident ratione nemo deleniti ipsum vero quia do nesciunt odit quasi at ea. Vitae magna provident quisquam numquam aute tempora id quis deserunt magna tempor qui amet.',
@@ -724,8 +735,8 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$new_article_img = [
 			'photo_cover' => [
 				'name' => 'cover.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/cover_1.jpg',
+				'type' => $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile,
 				'error' => UPLOAD_ERR_OK,
 				'size' => 600000
 			]
@@ -753,6 +764,9 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$user = $_SESSION['user_info'];
 
 		$controller = new DashboardControllerStub($this->db);
+		$this->fileGenerator = new FilesGenerator();
+
+		$tmpFile = $this->fileGenerator->createTempFile('txt', 'invalid file content.');
 
 		$new_article = [
 			'title' => 'Anim commodo proident ratione nemo deleniti ipsum vero quia do nesciunt odit quasi at ea. Vitae magna provident quisquam numquam aute tempora id quis deserunt magna tempor qui amet.',
@@ -768,9 +782,9 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 			'photo_cover' => [
 				'name' => 'cover.jpg',
 				'type' => 'text/plain',
-				'tmp_name' => __DIR__ . '/../../storage/tests/ini.txt',
+				'tmp_name' => $tmpFile,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 40000
+				'size' => filesize($tmpFile)
 			]
 		];
 
@@ -796,6 +810,10 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$user = $_SESSION['user_info'];
 
 		$controller = new DashboardControllerStub($this->db);
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
 
 		$new_article = [
 			'title' => 'Anim commodo proident ratione nemo deleniti ipsum vero quia do nesciunt odit quasi at ea.',
@@ -810,10 +828,10 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$new_article_img = [
 			'photo_cover' => [
 				'name' => 'cover.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/cover_1.jpg',
+				'type' => $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 600000
+				'size' => filesize($tmpFile)
 			]
 		];
 
@@ -839,6 +857,10 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$user = $_SESSION['user_info'];
 
 		$controller = new DashboardControllerStub($this->db);
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
 
 		$new_article = [
 			'title' => 'Anim commodo proident ratione nemo deleniti ipsum vero quia do nesciunt odit quasi at ea.',
@@ -853,10 +875,10 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$new_article_img = [
 			'photo_cover' => [
 				'name' => 'cover.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/cover_1.jpg',
+				'type' => $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 600000
+				'size' => filesize($tmpFile)
 			]
 		];
 
@@ -1012,17 +1034,21 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$this->articlesDummy($user['user_id']);
 
 		$controller = new DashboardControllerStub($this->db);
-		$generator = new TestArticleModel($this->db);
+		$generatorArticle = new TestArticleModel($this->db);
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
 
-		$target = $generator->articlesRadomizer();
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$target = $generatorArticle->articlesRadomizer();
 
 		$new_article_img = [
 			'photo_cover' => [
 				'name' => 'cover_3.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/cover_3.jpg',
+				'type' => $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 4000
+				'size' => filesize($tmpFile)
 			]
 		];
 
@@ -1037,7 +1063,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 
 		$this->assertTrue($action === 'update success');
 
-		$updated_article = $generator->findArticleUser($target['slug'], $user['user_id']);
+		$updated_article = $generatorArticle->findArticleUser($target['slug'], $user['user_id']);
 
 		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['old_photo_cover', 'photo_cover', 'photo_path']);
 		$this->assertTrue($target['old_photo_cover'] != $updated_article['photo_cover']);
@@ -1284,9 +1310,13 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$this->articlesDummy($user['user_id']);
 
 		$controller = new DashboardControllerStub($this->db);
-		$generator = new TestArticleModel($this->db);
+		$generatorArticle = new TestArticleModel($this->db);
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
 
-		$target = $generator->articlesRadomizer();
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$target = $generatorArticle->articlesRadomizer();
 
 		$new_article = [
 			'title' => $target['title'],
@@ -1298,8 +1328,8 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$new_article_img = [
 			'photo_cover' => [
 				'name' => 'cover_3.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/cover_3.jpg',
+				'type' => $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile,
 				'error' => UPLOAD_ERR_OK,
 				'size' => 550000
 			]
@@ -1329,9 +1359,12 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$this->articlesDummy($user['user_id']);
 
 		$controller = new DashboardControllerStub($this->db);
-		$generator = new TestArticleModel($this->db);
+		$generatorArticle = new TestArticleModel($this->db);
+		$this->fileGenerator = new FilesGenerator();
 
-		$target = $generator->articlesRadomizer();
+		$tmpFile = $this->fileGenerator->createTempFile('txt', 'invalid file content.');
+
+		$target = $generatorArticle->articlesRadomizer();
 
 		$new_article = [
 			'title' => $target['title'],
@@ -1343,10 +1376,10 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$new_article_img = [
 			'photo_cover' => [
 				'name' => 'cover_3.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/ini.txt',
+				'type' => 'text/plain',
+				'tmp_name' => $tmpFile,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 5000
+				'size' => filesize($tmpFile)
 			]
 		];
 
@@ -1374,9 +1407,13 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$this->articlesDummy($user['user_id']);
 
 		$controller = new DashboardControllerStub($this->db);
-		$generator = new TestArticleModel($this->db);
+		$generatorArticle = new TestArticleModel($this->db);
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
 
-		$target = $generator->articlesRadomizer();
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+		$target = $generatorArticle->articlesRadomizer();
 
 		$new_article = [
 			'title' => 'helo world',
@@ -1388,10 +1425,10 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$new_article_img = [
 			'photo_cover' => [
 				'name' => 'cover_2.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/cover_2.jpg',
+				'type' => $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 4000
+				'size' => filesize($tmpFile)
 			]
 		];
 
@@ -1403,7 +1440,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 
 		$this->assertTrue($action === 'validation failed');
 
-		$updated_article = $generator->findByTitle($target['title']);
+		$updated_article = $generatorArticle->findByTitle($target['title']);
 
 		$this->assertNotNull($_SESSION['errors']);
 		$this->assertNotNull($_SESSION['old_input']);
@@ -1520,6 +1557,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$_SERVER = [];
 		$_POST = [];
 		$_FILES = [];
+		$this->fileGenerator?->cleaningFiles();
 		session_unset();
 		session_destroy();
 		parent::tearDown();

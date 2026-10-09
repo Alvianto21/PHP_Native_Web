@@ -7,6 +7,7 @@ require_once __DIR__ . '/../../app/controllers/LoginController.php';
 require_once __DIR__ . '/../helpers/Sessions.php';
 require_once __DIR__ . '/../helpers/Database.php';
 require_once __DIR__ . '/../helpers/TestUsersModel.php';
+require_once __DIR__ . '/../helpers/filesGenerator.php';
 
 use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\Attributes\TestDox;
@@ -203,6 +204,7 @@ class LoginTest extends TestCase
 {
 
 	private $db;
+	private ?FilesGenerator $fileGenerator = null;
 
 	use DatabaseUp;
 
@@ -214,7 +216,7 @@ class LoginTest extends TestCase
 		echo "starting sessions.\n";
 		$sessionHandler = new TestSessions($this->db);
 		session_set_save_handler($sessionHandler, true);
-		if (!session_id()) session_start();
+		if (session_status() === PHP_SESSION_NONE) session_start();
 		echo "session started.\n";
 	}
 
@@ -272,6 +274,10 @@ class LoginTest extends TestCase
 	public function success_register_new_user_with_photo_profile(): void
 	{
 		$controller = new LoginControllerStub($this->db);
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
 
 		$new_user = [
 			'email' => 'tanika76@example.com',
@@ -283,10 +289,10 @@ class LoginTest extends TestCase
 		$new_user_img = [
 			'photo_profile' => [
 				'name' => 'user.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/user.jpg',
+				'type' => $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 4000,
+				'size' => filesize($tmpFile),
 			]
 		];
 
@@ -386,6 +392,10 @@ class LoginTest extends TestCase
 	public function failed_register_new_user_because_photo_profile_file_too_large(): void
 	{
 		$controller = new LoginControllerStub($this->db);
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
 
 		$new_user = [
 			'email' => 'tanika76@example.com',
@@ -397,8 +407,8 @@ class LoginTest extends TestCase
 		$new_user_img = [
 			'photo_profile' => [
 				'name' => 'user.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/user.jpg',
+				'type' => $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile,
 				'error' => UPLOAD_ERR_OK,
 				'size' => 4000000,
 			]
@@ -422,6 +432,9 @@ class LoginTest extends TestCase
 	public function failed_register_new_user_because_photo_profile_file_is_not_image(): void
 	{
 		$controller = new LoginControllerStub($this->db);
+		$this->fileGenerator = new FilesGenerator();
+
+		$tmpFile = $this->fileGenerator->createTempFile('txt', 'invalid file content.');
 
 		$new_user = [
 			'email' => 'tanika76@example.com',
@@ -434,9 +447,9 @@ class LoginTest extends TestCase
 			'photo_profile' => [
 				'name' => 'user.jpg',
 				'type' => 'text/plain',
-				'tmp_name' => __DIR__ . '/../../storage/tests/ini.txt',
+				'tmp_name' => $tmpFile,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 4000,
+				'size' => filesize($tmpFile),
 			]
 		];
 
@@ -458,6 +471,10 @@ class LoginTest extends TestCase
 	public function failed_register_new_user_because_invalid_email_address(): void
 	{
 		$controller = new LoginControllerStub($this->db);
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
 
 		$new_user = [
 			'email' => 'tanika@76@example.com',
@@ -469,10 +486,10 @@ class LoginTest extends TestCase
 		$new_user_img = [
 			'photo_profile' => [
 				'name' => 'user.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/user.jpg',
+				'type' => $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 4000,
+				'size' => filesize($tmpFile),
 			]
 		];
 
@@ -495,6 +512,10 @@ class LoginTest extends TestCase
 	#[Test] #[TestDox("Failed register user because email already exist")]
 	public function failed_register_user_because_email_already_exist(): void {
 		$controller = new LoginControllerStub($this->db);
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
 
 		$new_user = [
 			'email' => 'tanika76@example.com',
@@ -532,10 +553,10 @@ class LoginTest extends TestCase
 		$new_user_2_img = [
 			'photo_profile' => [
 				'name' => 'user.jpg',
-				'type' => 'image.jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/user.jpg',
+				'type' => $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 6000
+				'size' => filesize($tmpFile)
 			]
 		];
 
@@ -596,6 +617,10 @@ class LoginTest extends TestCase
 	#[Test] #[TestDox("Failed register user because username already exist")]
 	public function failed_register_new_user_because_username_already_exist(): void {
 		$controller = new LoginControllerStub($this->db);
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
 
 		$new_user = [
 			'email' => 'tanika76@example.com',
@@ -633,10 +658,10 @@ class LoginTest extends TestCase
 		$new_user_2_img = [
 			'photo_profile' => [
 				'name' => 'user.jpg',
-				'type' => 'image.jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/user.jpg',
+				'type' => $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 6000
+				'size' => filesize($tmpFile)
 			]
 		];
 
@@ -734,6 +759,10 @@ class LoginTest extends TestCase
 	public function failed_register_new_user_because_image_path_URL_invalid(): void
 	{
 		$controller = new LoginControllerStub($this->db);
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
 
 		$new_user = [
 			'email' => 'tanika76@example.com',
@@ -745,10 +774,10 @@ class LoginTest extends TestCase
 		$new_user_img = [
 			'photo_profile' => [
 				'name' => 'user.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/user.jpg',
+				'type' => $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 40000,
+				'size' => filesize($tmpFile),
 			]
 		];
 
@@ -770,6 +799,10 @@ class LoginTest extends TestCase
 	public function failed_register_new_user_because_img_path_empty_but_photo_profile_exist(): void
 	{
 		$controller = new LoginControllerStub($this->db);
+		$this->fileGenerator = new FilesGenerator();
+		$binaryData = $this->fileGenerator->dataRandom();
+
+		$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
 
 		$new_user = [
 			'email' => 'tanika76@example.com',
@@ -781,10 +814,10 @@ class LoginTest extends TestCase
 		$new_user_img = [
 			'photo_profile' => [
 				'name' => 'user.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/user.jpg',
+				'type' => $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png',
+				'tmp_name' => $tmpFile,
 				'error' => UPLOAD_ERR_OK,
-				'size' => 40000,
+				'size' => filesize($tmpFile),
 			]
 		];
 
@@ -985,6 +1018,7 @@ class LoginTest extends TestCase
 		$_FILES = [];
 		session_unset();
 		session_destroy();
+		$this->fileGenerator?->cleaningFiles();
 		parent::tearDown();
 	}
 }

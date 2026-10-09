@@ -65,10 +65,10 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 		'data_1' => [
 			'photo_cover' => [
 				'name' => 'cover.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/cover_1.jpg',
+				'type' => '',
+				'tmp_name' => '',
 				'error' => UPLOAD_ERR_OK,
-				'size' => 10000
+				'size' => 0
 			]
 		],
 		'data_2' => [
@@ -92,19 +92,19 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 		'data_4' => [
 			'photo_cover' => [
 				'name' => 'cover.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/cover_2.jpg',
+				'type' => '',
+				'tmp_name' => '',
 				'error' => UPLOAD_ERR_OK,
-				'size' => 10000
+				'size' => 0
 			]
 		],
 		'data_5' => [
 			'photo_cover' => [
 				'name' => 'cover.jpg',
-				'type' => 'image/jpg',
-				'tmp_name' => __DIR__ . '/../../storage/tests/cover_1.jpg',
+				'type' => '',
+				'tmp_name' => '',
 				'error' => UPLOAD_ERR_OK,
-				'size' => 10000
+				'size' => 0
 			]
 		],
 		'data_6' => [
@@ -123,6 +123,8 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 
 	/** @var \PDOStatement Current prepared statement */
 	private $stmt;
+
+	private ?FilesGenerator $fileGenerator = null;
 
 	private function pathGenerator()
 	{
@@ -220,7 +222,7 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 	{
 		$query = "SELECT 1 FROM {$this->table} WHERE slug = ? LIMIT 1";
 
-		echo "searching...\n";
+		echo "searching available slug...\n";
 
 		$this->query($query);
 
@@ -241,7 +243,7 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 	{
 		$query = "INSERT INTO {$this->table} (title, slug, photo_cover, user_id, body) VALUES (:title, :slug, :photo_cover, :user_id, :body)";
 
-		echo "creating...\n";
+		echo "creating article...\n";
 
 		$this->query($query);
 
@@ -261,21 +263,33 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 	public function articleGenerator(int $user_id): string
 	{
 		require_once __DIR__ . '/../../app/request/UploadImage.php';
+		require_once __DIR__ . '/../helpers/filesGenerator.php';
 
 		$_POST = $this->articleSeederPost;
 		$_FILES = $this->articleSeederFiles;
 		$uploader = new UploadImage();
+		$this->fileGenerator = new FilesGenerator();
 
 		(int) $success = 0;
 		(int) $failed = 0;
 
 		foreach ($_POST as $index => $data) {
 			$formFile = $_FILES[$index]['photo_cover'] ?? null;
+			$binaryData = $this->fileGenerator->dataRandom();
 
-			if ($formFile['error'] === UPLOAD_ERR_OK) {
-				$data['photo_profile'] = $uploader->store($formFile, 'covers');
-			} elseif ($formFile['error'] === UPLOAD_ERR_NO_FILE) {
-				$data['photo_profile'] = null;
+			$tmpFile = $this->fileGenerator->createTempFile($binaryData['type'], $binaryData['data']);
+
+			try {
+				if ($formFile['error'] === UPLOAD_ERR_OK) {
+					$formFile['type'] = $binaryData['type'] === 'jpg' ? 'image/jpg' : 'image/png';
+					$formFile['tmp_name'] = $tmpFile;
+					$formFile['size'] = filesize($tmpFile);
+					$data['photo_profile'] = $uploader->store($formFile, 'covers');
+				} elseif ($formFile['error'] === UPLOAD_ERR_NO_FILE) {
+					$data['photo_profile'] = null;
+				}
+			} finally {
+				$this->fileGenerator->cleaningFiles();
 			}
 
 			$slug = strtolower(preg_replace("~[‘’`']+~", '', $data['title']));
@@ -323,7 +337,7 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 	{
 		$query = "SELECT articles.title, articles.slug, articles.photo_cover, articles.body, users.username AS author FROM {$this->table} JOIN {$this->tableRelations} ON articles.user_id = users.id WHERE articles.is_deleted = 0 ORDER BY articles.id DESC LIMIT :limit OFFSET :offset";
 
-		echo "retrieving data from database...\n";
+		echo "retrieving data articles from database...\n";
 		$this->query($query);
 
 		$this->multiBind([
@@ -340,7 +354,7 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 	{
 		$query = "SELECT articles.title, articles.slug, articles.is_deleted, users.username AS author FROM {$this->table} JOIN {$this->tableRelations} ON articles.user_id = users.id ORDER BY articles.id DESC LIMIT :limit OFFSET :offset";
 
-		echo "retrieving data from database...\n";
+		echo "retrieving data articles from database...\n";
 		$this->query($query);
 
 		$this->multiBind([
@@ -357,7 +371,7 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 	{
 		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body FROM `{$this->table}` JOIN `{$this->tableRelations}` ON articles.user_id = users.id WHERE articles.is_deleted = 0 AND users.id = :user_id LIMIT :limit OFFSET :offset";
 
-		echo "retrieving data from database...\n";
+		echo "retrieving data articles by user_id from database...\n";
 		$this->query($query);
 
 		$this->multiBind([
@@ -375,7 +389,7 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 	{
 		$query = "SELECT photo_cover FROM {$this->table} WHERE user_id = :user_id AND photo_cover IS NOT NULL";
 
-		echo "retrieving data from database...\n";
+		echo "retrieving data article photo_cover from database...\n";
 		$this->query($query);
 
 		$this->bind('user_id', $user_id);
@@ -389,7 +403,7 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 	{
 		$query = "SELECT COUNT (*) AS total FROM {$this->table} WHERE is_deleted = 0";
 
-		echo "counting data in database...\n";
+		echo "counting data articles in database...\n";
 		$this->query($query);
 
 		$this->stmt->execute();
@@ -401,7 +415,7 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 	{
 		$query = "SELECT title, slug, photo_cover, body FROM {$this->table} WHERE title = :title AND is_deleted = 0";
 
-		echo "retrieving data from database...\n";
+		echo "retrieving data article by title from database...\n";
 		$this->query($query);
 
 		$this->bind('title', $title);
@@ -415,6 +429,7 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 	{
 		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, users.username AS author FROM {$this->table} JOIN {$this->tableRelations} ON articles.user_id = users.id WHERE slug = :slug AND articles.is_deleted = 0";
 
+		echo "retrieving data article by slug from database...\n";
 		$this->query($query);
 
 		$this->bind('slug', $slug);
@@ -428,7 +443,7 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 	{
 		$query = "SELECT title, slug, photo_cover, body FROM {$this->table} WHERE slug = :slug AND user_id = :user_id AND is_deleted = 0";
 
-		echo "retrieving data from database...\n";
+		echo "retrieving data article by slug and user_id from database...\n";
 		$this->query($query);
 
 		$this->multiBind([
@@ -445,7 +460,7 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 	{
 		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, articles.is_deleted, users.username AS author FROM {$this->table} JOIN {$this->tableRelations} ON articles.user_id = users.id WHERE articles.slug = :slug";
 
-		echo "retrieving data from database...\n";
+		echo "retrieving data article by slug from database...\n";
 		$this->query($query);
 
 		$this->bind('slug', $slug);
@@ -459,7 +474,7 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 	{
 		$query = "SELECT articles.title, articles.photo_cover, articles.slug, articles.body, users.username AS author FROM {$this->table} JOIN {$this->tableRelations} ON articles.user_id = users.id WHERE slug = :slug";
 
-		echo "retrieving data from database...\n";
+		echo "retrieving data article by slug from database...\n";
 		$this->query($query);
 
 		$this->bind('slug', $slug);
@@ -471,9 +486,9 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 
 	public function isArticleDeleted(string $slug, int $user_id): bool
 	{
-		$query = "SELECT 1 FROM {$this->table} WHERE is_deleted = 1 AND slug = :slug AND user_id = :user_id";
+		$query = "SELECT is_deleted FROM {$this->table} WHERE slug = :slug AND user_id = :user_id";
 
-		echo "checking data status...\n";
+		echo "checking data article status...\n";
 		$this->query($query);
 
 		$this->multiBind([
@@ -481,7 +496,11 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 			['user_id', $user_id, PDO::PARAM_INT]
 		]);
 
-		return $this->execute() ? true : false;
+		$this->execute();
+
+		$is_deleted = $this->stmt->fetchColumn();
+
+		return $is_deleted !== false && (int) $is_deleted === 1;
 	}
 
 	public function findArticleByUser(int $user_id, array $columns = ['*'])
@@ -489,7 +508,7 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 		$fields = implode(', ', $columns);
 		$query = "SELECT {$fields} FROM {$this->table} WHERE user_id = :user_id AND is_deleted = 0";
 
-		echo "retrieving data from database...\n";
+		echo "retrieving data article from database...\n";
 		$this->query($query);
 
 		$this->bind('user_id', $user_id, PDO::PARAM_INT);
@@ -508,7 +527,7 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 		$field = implode(', ', $columns);
 		$query = "UPDATE {$this->table} SET {$field} WHERE user_id = :user_id AND slug = :current_slug";
 
-		echo "updateting data...\n";
+		echo "updateting article data...\n";
 		$this->query($query);
 
 		foreach ($data as $key => $value) {
@@ -543,7 +562,7 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
         AND {$this->tableRelations}.is_deleted = 0
     )";
 
-		echo "updateting data...\n";
+		echo "updateting data article...\n";
 		$this->query($query);
 
 		foreach ($data as $key => $value) {
@@ -558,7 +577,7 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 	{
 		$query = "UPDATE {$this->table} SET is_deleted = 1, photo_cover = NULL WHERE user_id = :user_id AND slug = :slug";
 
-		echo "setting data as deleted...\n";
+		echo "setting data article as deleted...\n";
 		$this->query($query);
 
 		$this->multiBind([
@@ -575,7 +594,7 @@ Nesciunt in similique ad dolore dolores quis nulla sit veritatis. Irure blanditi
 	{
 		$query = "UPDATE {$this->table} SET is_deleted = 1, photo_cover = NULL WHERE user_id = :user_id";
 
-		echo "setting data as deleted...\n";
+		echo "setting data articles as deleted...\n";
 		$this->query($query);
 
 		$this->bind('user_id', $user_id, PDO::PARAM_INT);
