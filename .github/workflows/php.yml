@@ -1,0 +1,103 @@
+name: deploy PHP MCV
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - app/controller/**
+      - app/models/**
+      - app/core/**
+      - app/request/**
+      - app/init.php
+    paths-ignore:
+      - app/views/**
+  pull_request:
+    branches:
+      - main
+
+jobs: 
+  base:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: prepare dependencies
+        run: composer install --no-dev --no-script --no-autoloader --prefer-dist --no-interaction
+  tests:
+    runs-on: ubuntu-latest
+    needs: base
+    steps:
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Prepare dependencies
+        run: composer install --prefer-dist --no-interaction
+      - name: Set env
+        run: php -r "file_exist('.env')||copy('.env.example','.env')"
+      - name: Create env tests
+        env:
+          APP_KEY: ${{ secrets.APP_KEY }}
+          APP_URL: ${{ vars.APP_URL }}
+          APP_RESOURCE: ${{ vars.APP_RESOURCE }}
+        run: |
+          cat > .env<<EOF
+          APP_KEY=$APP_KEY
+          APP_URL=$APP_URL
+          APP_RESOURCE=$APP_RESOURCE
+          EOF
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit tests
+  ftb-deploy:
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Prepare dependencies
+        run: composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+      - name: Set env
+        run: php -r "file_exist('.env')||copy('.env.example','.env')"
+      - name: Create env tests
+        env:
+          APP_KEY: ${{ secrets.APP_KEY }}
+          APP_URL: ${{ vars.APP_URL }}
+          APP_RESOURCE: ${{ vars.APP_RESOURCE }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+        run: |
+          cat > .env<<EOF
+          APP_KEY=$APP_KEY
+          APP_URL=$APP_URL
+          APP_RESOURCE=$APP_RESOURCE
+          DB_HOST=$DB_HOST
+          DB_USER=$DB_USER
+          DB_PASSWORD=$DB_PASSWORD
+          DB_DATABASE=$DB_DATABASE
+          EOF
+      - name: Upload code
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./public
+          server-dir: ./htdocs
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/vendor/**
+            **/storage/**

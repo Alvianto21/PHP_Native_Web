@@ -4,5 +4,6 @@ User-agent: *
 Disallow: /admin/
 Disallow: /private/
 Disallow: /protected-files/
+Crawl-delay: 300
 
 Sitemap: http://php_native_web.test:8080/
