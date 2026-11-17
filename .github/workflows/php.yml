@@ -62,7 +62,7 @@ jobs:
         with:
           php-version: '8.4'
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
       - name: Prepare dependencies
         run: composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
       - name: Set env
