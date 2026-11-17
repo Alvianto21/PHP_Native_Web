@@ -81,8 +81,9 @@ class DashboardControllerStub extends DashboardController
 				"img" => true
 			],
 			'photo_path' => [
-				'required_if' => 'photo_cover',
-				'signature' => true,
+				"url" => true,
+				"signature" => true,
+				"required_if" => "photo_cover"
 			],
 			'body' => [
 				'required' => true,
@@ -91,16 +92,6 @@ class DashboardControllerStub extends DashboardController
 		];
 
 		if ($validator->validate($data, $rules)) {
-			if (!empty($data['photo_path'])) {
-				$checkUrl = $validator->validateSignUrl($data['photo_path']);
-
-				if ($checkUrl !== true) {
-					http_response_code(403);
-					echo $checkUrl;
-					return "photo URL validation failed";
-				}
-			}
-
 			if ($data['photo_cover']['error'] !== UPLOAD_ERR_NO_FILE) {
 				$data['photo_cover'] = $uploader->store($data['photo_cover'], 'covers');
 			} else {
@@ -230,8 +221,9 @@ class DashboardControllerStub extends DashboardController
 				"img" => true
 			],
 			'photo_path' => [
-				'required_if' => 'photo_cover',
-				'signature' => true,
+				"url" => true,
+				"signature" => true,
+				"required_if" => "photo_cover"
 			],
 			'body' => [
 				'required' => true,
@@ -257,16 +249,6 @@ class DashboardControllerStub extends DashboardController
 			} else {
 				$data['slug'] = $article['slug'];
 				echo "using old title & slug\n";
-			}
-
-			if (!empty($data['photo_path'])) {
-				$checkUrl = $validator->validateSignUrl($data['photo_path']);
-
-				if ($checkUrl !== true) {
-					http_response_code(403);
-					echo $checkUrl;
-					return "photo URL validation failed";
-				}
 			}
 
 			if ($data['photo_cover']['error'] === UPLOAD_ERR_OK) {
@@ -669,7 +651,7 @@ Praesentium voluptatum sequi ex sunt dolorem consectetur accusamus velit commodo
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('title', $_SESSION['errors']);
 		$this->assertArrayHasKey('title', $_SESSION['old_input']);
-		$this->assertSame("The 'title' must at least 10 characters.", $_SESSION['errors']['title']);
+		$this->assertSame("The 'title' must at least 10 characters.", $_SESSION['errors']['title']['min']);
 		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_article, $_SESSION['old_input'], ['slug', 'photo_path', 'photo_cover']);
 	}
 
@@ -705,7 +687,7 @@ Praesentium voluptatum sequi ex sunt dolorem consectetur accusamus velit commodo
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('title', $_SESSION['errors']);
 		$this->assertArrayHasKey('title', $_SESSION['old_input']);
-		$this->assertSame("The 'title' may not exceed 200 characters.", $_SESSION['errors']['title']);
+		$this->assertSame("The 'title' may not exceed 200 characters.", $_SESSION['errors']['title']['max']);
 		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_article, $_SESSION['old_input'], ['slug', 'photo_path', 'photo_cover']);
 	}
 
@@ -753,7 +735,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('photo_cover', $_SESSION['errors']);
 		$this->assertArrayHasKey('photo_cover', $_SESSION['old_input']);
-		$this->assertSame("The 'photo_cover' file is too large.", $_SESSION['errors']['photo_cover']);
+		$this->assertSame("The 'photo_cover' file is too large.", $_SESSION['errors']['photo_cover']['size']);
 	}
 
 	#[Test] #[TestDox("Failed create new article because photo cover not image")]
@@ -799,7 +781,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('photo_cover', $_SESSION['errors']);
 		$this->assertArrayHasKey('photo_cover', $_SESSION['old_input']);
-		$this->assertSame("The 'photo_cover' only JPG, PNG, or JPEG.", $_SESSION['errors']['photo_cover']);
+		$this->assertSame("The 'photo_cover' only JPG, PNG, or JPEG.", $_SESSION['errors']['photo_cover']['img']);
 	}
 
 	#[Test] #[TestDox("failed create new article because photo path empty but photo cover exist")]
@@ -846,7 +828,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('photo_path', $_SESSION['errors']);
 		$this->assertArrayHasKey('photo_path', $_SESSION['old_input']);
-		$this->assertSame("The 'photo_path' is required when photo_cover is present.", $_SESSION['errors']['photo_path']);
+		$this->assertSame("The 'photo_path' is required when photo_cover is present.", $_SESSION['errors']['photo_path']['required_if']);
 	}
 
 	#[Test] #[TestDox("Failed create new article because photo path invalid")]
@@ -893,7 +875,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('photo_path', $_SESSION['errors']);
 		$this->assertArrayHasKey('photo_path', $_SESSION['old_input']);
-		$this->assertSame("The 'photo_path' must be a valid URL.", $_SESSION['errors']['photo_path']);
+		$this->assertSame("The 'photo_path' must be a valid URL.", $_SESSION['errors']['photo_path']['url']);
 	}
 
 
@@ -933,7 +915,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('body', $_SESSION['errors']);
 		$this->assertArrayHasKey('body', $_SESSION['old_input']);
-		$this->assertSame("The 'body' must at least 200 characters.", $_SESSION['errors']['body']);
+		$this->assertSame("The 'body' must at least 200 characters.", $_SESSION['errors']['body']['min']);
 		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_article, $_SESSION['old_input'], ['slug', 'photo_path', 'photo_cover']);
 	}
 
@@ -1245,7 +1227,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('title', $_SESSION['errors']);
 		$this->assertArrayHasKey('title', $_SESSION['old_input']);
-		$this->assertSame("The 'title' must at least 10 characters.", $_SESSION['errors']['title']);
+		$this->assertSame("The 'title' must at least 10 characters.", $_SESSION['errors']['title']['min']);
 		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover', 'photo_cover']);
 		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_article, $_SESSION['old_input'], ['slug', 'photo_path', 'photo_cover', 'old_photo_cover']);
 	}
@@ -1295,7 +1277,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('title', $_SESSION['errors']);
 		$this->assertArrayHasKey('title', $_SESSION['old_input']);
-		$this->assertSame("The 'title' may not exceed 200 characters.", $_SESSION['errors']['title']);
+		$this->assertSame("The 'title' may not exceed 200 characters.", $_SESSION['errors']['title']['max']);
 		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover', 'photo_cover']);
 		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_article, $_SESSION['old_input'], ['slug', 'photo_path', 'photo_cover', 'old_photo_cover']);
 	}
@@ -1346,7 +1328,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('photo_cover', $_SESSION['errors']);
 		$this->assertArrayHasKey('photo_cover', $_SESSION['old_input']);
-		$this->assertSame("The 'photo_cover' file is too large.", $_SESSION['errors']['photo_cover']);
+		$this->assertSame("The 'photo_cover' file is too large.", $_SESSION['errors']['photo_cover']['size']);
 	}
 
 	#[Test] #[TestDox("Failed update article because new photo cover not image")]
@@ -1394,7 +1376,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('photo_cover', $_SESSION['errors']);
 		$this->assertArrayHasKey('photo_cover', $_SESSION['old_input']);
-		$this->assertSame("The 'photo_cover' only JPG, PNG, or JPEG.", $_SESSION['errors']['photo_cover']);
+		$this->assertSame("The 'photo_cover' only JPG, PNG, or JPEG.", $_SESSION['errors']['photo_cover']['img']);
 	}
 
 	#[Test] #[TestDox("Failed update article because photo path invalid")]
@@ -1445,7 +1427,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$this->assertNotNull($_SESSION['errors']);
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('photo_path', $_SESSION['errors']);
-		$this->assertSame("The 'photo_path' must be a valid URL.", $_SESSION['errors']['photo_path']);
+		$this->assertSame("The 'photo_path' must be a valid URL.", $_SESSION['errors']['photo_path']['url']);
 		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover', 'photo_cover']);
 		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_article, $_SESSION['old_input'], ['slug', 'photo_path', 'photo_cover', 'old_photo_cover']);
 	}
@@ -1495,7 +1477,7 @@ Non illo laborum tempora irure dicta sed magni sit ullamco quasi sed voluptate a
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('body', $_SESSION['errors']);
 		$this->assertArrayHasKey('body', $_SESSION['old_input']);
-		$this->assertSame("The 'body' must at least 200 characters.", $_SESSION['errors']['body']);
+		$this->assertSame("The 'body' must at least 200 characters.", $_SESSION['errors']['body']['min']);
 		$this->assertArrayIsIdenticalToArrayIgnoringListOfKeys($target, $updated_article, ['photo_path', 'old_photo_cover', 'photo_cover']);
 		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_article, $_SESSION['old_input'], ['slug', 'photo_path', 'photo_cover', 'old_photo_cover']);
 	}

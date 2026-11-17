@@ -1,0 +1,15 @@
+# BEGIN InfinityFree Managed Code
+# DO NOT EDIT - MANAGED BY THE MEMBERS AREA
+php_value display_errors Off
+php_value date.timezone Asia/Jakarta
+# END InfinityFree Managed Code
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Jangan rewrite ulang request yang sudah berada di /public/
+    RewriteCond %{REQUEST_URI} !^/public(/|$)
+
+    # Arahkan semua request ke folder public secara internal
+    RewriteRule ^(.*)$ /public/$1 [L]
+</IfModule>

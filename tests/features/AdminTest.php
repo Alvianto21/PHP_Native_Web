@@ -130,6 +130,7 @@ class AdminControllerStub extends AdminController
 				"img" => true
 			],
 			'photo_path' => [
+				"url" => true,
 				"signature" => true,
 				"required_if" => "photo_profile"
 			],
@@ -285,8 +286,8 @@ class AdminControllerStub extends AdminController
 				"img" => true
 			],
 			'photo_path' => [
-				'required_if' => 'photo_cover',
-				'signature' => true,
+				"url" => true,
+				"signature" => true,				"required_if" => "photo_cover",
 			],
 			'is_deleted' => [
 				'required' => true,
@@ -879,7 +880,7 @@ class AdminTest extends TestCase
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('is_deleted', $_SESSION['errors']);
 		$this->assertArrayHasKey('is_deleted', $_SESSION['old_input']);
-		$this->assertSame("The 'is_deleted' input is invalid.", $_SESSION['errors']['is_deleted']);
+		$this->assertSame("The 'is_deleted' input is invalid.", $_SESSION['errors']['is_deleted']['boolean']);
 		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_user_data, $_SESSION['old_input'], ['photo_path', 'photo_profile', 'old_photo_profile', 'password', 'password_confirm']);
 	}
 
@@ -985,7 +986,7 @@ class AdminTest extends TestCase
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('role', $_SESSION['errors']);
 		$this->assertArrayHasKey('role', $_SESSION['old_input']);
-		$this->assertSame("The 'role' input is invalid.", $_SESSION['errors']['role']);
+		$this->assertSame("The 'role' input is invalid.", $_SESSION['errors']['role']['role_user']);
 		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_user_data, $_SESSION['old_input'], ['photo_path', 'photo_profile', 'old_photo_profile', 'password', 'password_confirm']);
 	}
 	
@@ -1290,7 +1291,7 @@ class AdminTest extends TestCase
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('is_deleted', $_SESSION['errors']);
 		$this->assertArrayHasKey('is_deleted', $_SESSION['old_input']);
-		$this->assertSame("The 'is_deleted' input is invalid.", $_SESSION['errors']['is_deleted']);
+		$this->assertSame("The 'is_deleted' input is invalid.", $_SESSION['errors']['is_deleted']['boolean']);
 		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_article_data, $_SESSION['old_input'], ['photo_path', 'photo_cover', 'old_photo_cover']);
 	}
 	

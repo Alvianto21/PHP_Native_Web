@@ -10,7 +10,7 @@ class Controller {
 	 * @param string $model Model class name (file located in app/models)
 	 * @return object An instance of the requested model
 	 */
-	public function model($model) {
+	public function model(string $model) {
 		require_once __DIR__ . '/../models/' . $model . '.php';
 		return new $model;
 	}
@@ -22,7 +22,7 @@ class Controller {
 	 * @param array $data Optional associative array of data to expose to the view
 	 * @return void
 	 */
-	public function view($view, $data = []) {
+	public function view(string $view, array $data = []) {
 		require_once __DIR__ . '/../views/' . $view . '.php';
 	}
 }

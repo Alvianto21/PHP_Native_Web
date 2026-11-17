@@ -3,8 +3,8 @@
 class Article
 {
 
-	private $table = 'articles';
-	private $tableRelations = 'users';
+	private string $table = 'articles';
+	private string $tableRelations = 'users';
 	private $db;
 
 	// koneksi ke database

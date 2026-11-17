@@ -69,8 +69,8 @@ class App {
 	 * @return string[] Array of URL segments
 	 */
 	public function paseURL() {
-		$request = $_SERVER['REQUEST_URI'] ?? '';
-		$path = parse_url($request, PHP_URL_PATH ?? '/');
+		$request = $_SERVER['REQUEST_URI'] ?? '/';
+		$path = parse_url($request, PHP_URL_PATH);
 		
 		$path = preg_replace('#^/public/?#', '/', $path);
 		$path = trim($path, '/');

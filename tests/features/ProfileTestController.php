@@ -27,8 +27,9 @@ class ProfileControllerStub extends ProfileController
 			throw new RuntimeException('User is not logged in');
 		}
 
-		$clientIP = !empty($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
-		$this->userIdentifier = $clientIP;
+		$clientIP = !empty($_SERVER['HTTP_X_FORWARDED_FOR']) ? "IP_user: {$_SERVER['HTTP_X_FORWARDED_FOR']}" : "IP_user: {$_SERVER['REMOTE_ADDR']}";
+		$clientID = isset($_SESSION['user_info']) ? "ID_user: {$_SESSION['user_info']['user_id']}" : null;
+		$this->userIdentifier = $clientID ?? $clientIP;
 	}
 
 	public array $views = [];
@@ -126,6 +127,7 @@ class ProfileControllerStub extends ProfileController
 				"img" => true
 			],
 			"photo_path" => [
+				"url" => true,
 				"signature" => true,
 				"required_if" => "photo_profile"
 			]
@@ -147,16 +149,6 @@ class ProfileControllerStub extends ProfileController
 		}
 
 		if ($validator->validate($data, $rules)) {
-			if (!empty($data['photo_path'])) {
-				$checkUrl = $validator->validateSignUrl($data['photo_path']);
-
-				if ($checkUrl !== true) {
-					http_response_code(403);
-					echo $checkUrl;
-					return "photo URL validation failed";
-				}
-			}
-
 			if ($data['photo_profile']['error'] === UPLOAD_ERR_OK) {
 				$data['photo_profile'] = $uploader->update($data['photo_profile'], (string) $postData['old_photo_profile'], 'profiles');
 			} elseif ($data['photo_profile']['error'] === UPLOAD_ERR_NO_FILE) {
@@ -764,7 +756,7 @@ class ProfileTestController extends TestCase
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('email', $_SESSION['errors']);
 		$this->assertArrayHasKey('email', $_SESSION['old_input']);
-		$this->assertSame("The 'email' format is invalid.", $_SESSION['errors']['email']);
+		$this->assertSame("The 'email' format is invalid.", $_SESSION['errors']['email']['regex']);
 		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_data_user, $_SESSION['old_input'], ['photo_path', 'photo_profile', 'old_photo_profile', 'password', 'password_confirm']);
 	}
 	
@@ -845,7 +837,7 @@ class ProfileTestController extends TestCase
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('email', $_SESSION['errors']);
 		$this->assertArrayHasKey('email', $_SESSION['old_input']);
-		$this->assertSame("The 'email' has already been taken.", $_SESSION['errors']['email']);
+		$this->assertSame("The 'email' has already been taken.", $_SESSION['errors']['email']['unique']);
 		$this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($new_user_2, $_SESSION['old_input'], ['email']);
 	}
 	
@@ -904,7 +896,7 @@ class ProfileTestController extends TestCase
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('username', $_SESSION['errors']);
 		$this->assertArrayHasKey('username', $_SESSION['old_input']);
-		$this->assertSame("The 'username' format is invalid.", $_SESSION['errors']['username']);
+		$this->assertSame("The 'username' format is invalid.", $_SESSION['errors']['username']['regex']);
 		$this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($new_data_user, $_SESSION['old_input'], ['username']);
 	}
 	
@@ -985,7 +977,7 @@ class ProfileTestController extends TestCase
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('username', $_SESSION['errors']);
 		$this->assertArrayHasKey('username', $_SESSION['old_input']);
-		$this->assertSame("The 'username' has already been taken.", $_SESSION['errors']['username']);
+		$this->assertSame("The 'username' has already been taken.", $_SESSION['errors']['username']['unique']);
 		$this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($new_user_2, $_SESSION['old_input'], ['username']);
 	}
 	
@@ -1041,7 +1033,7 @@ class ProfileTestController extends TestCase
 		$this->assertNotNull($_SESSION['errors']);
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('photo_path', $_SESSION['errors']);
-		$this->assertSame("The 'photo_path' is required when photo_profile is present.", $_SESSION['errors']['photo_path']);
+		$this->assertSame("The 'photo_path' is required when photo_profile is present.", $_SESSION['errors']['photo_path']['required_if']);
 	}
 	
 	#[Test] #[TestDox("Failed update user because photo profile too large")]
@@ -1096,7 +1088,7 @@ class ProfileTestController extends TestCase
 		$this->assertNotNull($_SESSION['errors']);
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('photo_profile', $_SESSION['errors']);
-		$this->assertSame("The 'photo_profile' file is too large.", $_SESSION['errors']['photo_profile']);
+		$this->assertSame("The 'photo_profile' file is too large.", $_SESSION['errors']['photo_profile']['size']);
 	}
 	
 	#[Test] #[TestDox("Failed update user because photo profile not image")]
@@ -1151,7 +1143,7 @@ class ProfileTestController extends TestCase
 		$this->assertNotNull($_SESSION['errors']);
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('photo_profile', $_SESSION['errors']);
-		$this->assertSame("The 'photo_profile' only JPG, PNG, or JPEG.", $_SESSION['errors']['photo_profile']);
+		$this->assertSame("The 'photo_profile' only JPG, PNG, or JPEG.", $_SESSION['errors']['photo_profile']['img']);
 	}
 	
 	#[Test] #[TestDox("Failed update user because photo path invalid")]
@@ -1206,7 +1198,7 @@ class ProfileTestController extends TestCase
 		$this->assertNotNull($_SESSION['errors']);
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('photo_path', $_SESSION['errors']);
-		$this->assertSame("The 'photo_path' must be a valid URL.", $_SESSION['errors']['photo_path']);
+		$this->assertSame("The 'photo_path' must be a valid URL.", $_SESSION['errors']['photo_path']['url']);
 	}
 	
 	#[Test] #[TestDox("Failed update user because password too short")]
@@ -1260,8 +1252,8 @@ class ProfileTestController extends TestCase
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('password', $_SESSION['errors']);
 		$this->assertArrayHasKey('password_confirm', $_SESSION['errors']);
-		$this->assertSame("The 'password' must at least 10 characters.", $_SESSION['errors']['password']);
-		$this->assertSame("The 'password_confirm' must at least 10 characters.", $_SESSION['errors']['password_confirm']);
+		$this->assertSame("The 'password' must at least 10 characters.", $_SESSION['errors']['password']['min']);
+		$this->assertSame("The 'password_confirm' must at least 10 characters.", $_SESSION['errors']['password_confirm']['min']);
 	}
 	
 	#[Test] #[TestDox("Failed update user because password not match")]
@@ -1314,7 +1306,7 @@ class ProfileTestController extends TestCase
 		$this->assertNotNull($_SESSION['errors']);
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('password_confirm', $_SESSION['errors']);
-		$this->assertSame("The 'password_confirm' must match password.", $_SESSION['errors']['password_confirm']);
+		$this->assertSame("The 'password_confirm' must match password.", $_SESSION['errors']['password_confirm']['match']);
 	}
 	
 	#[Test] #[TestDox("Success delete user with articles")]

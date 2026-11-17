@@ -5,3 +5,4 @@ storage/
 vendor/
 .phpunit.result.cache
 .user.ini
+public/index2.html

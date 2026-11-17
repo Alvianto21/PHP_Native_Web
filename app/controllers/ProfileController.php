@@ -17,8 +17,9 @@ class ProfileController extends Controller
 			exit;
 		}
 
-		$clientIP = !empty($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
-		$this->userIdentifier = $clientIP;
+		$clientIP = !empty($_SERVER['HTTP_X_FORWARDED_FOR']) ? "IP_user: {$_SERVER['HTTP_X_FORWARDED_FOR']}" : "IP_user: {$_SERVER['REMOTE_ADDR']}";
+		$clientID = isset($_SESSION['user_info']) ? "ID_user: {$_SESSION['user_info']['user_id']}" : null;
+		$this->userIdentifier = $clientID ?? $clientIP;
 	}
 
 	// View profile
@@ -81,8 +82,13 @@ class ProfileController extends Controller
 			exit;
 		}
 
-		if (!filter_var($this->userIdentifier, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6)) {
-			exit("Error: Invalid IP address.");
+		if (str_starts_with($this->userIdentifier, "IP_user") === true) {
+			$ipUser = substr($this->userIdentifier, strlen("IP_user: "));
+
+			if (filter_var($ipUser, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6) === false) {
+				error_log("IP data: {$ipUser}. Actual data: {$this->userIdentifier}");
+				exit("Error: Invalid IP address.");
+			}
 		}
 
 		if (!$limiter->limiter($this->userIdentifier)) {
@@ -147,6 +153,7 @@ class ProfileController extends Controller
 				"img" => true
 			],
 			"photo_path" => [
+				"url" => true,
 				"signature" => true,
 				"required_if" => "photo_profile"
 			]
@@ -173,17 +180,6 @@ class ProfileController extends Controller
 
 		// Validate form
 		if ($validator->validate($data, $rules)) {
-			// Verify img sign URL if exist
-			if (!empty($data['photo_path'])) {
-				$checkUrl = $validator->validateSignUrl($data['photo_path']);
-
-				if ($checkUrl !== true) {
-					http_response_code(403);
-					echo $checkUrl;
-					exit($checkUrl);
-				}
-			}
-
 			// If photo_profile updated, upload new photo profile and destroy old photo
 			if ($data['photo_profile']['error'] === UPLOAD_ERR_OK) {
 				$data['photo_profile'] = $uploader->update($data['photo_profile'], (string) $postData['old_photo_profile'], 'profiles');

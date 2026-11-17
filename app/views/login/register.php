@@ -10,18 +10,22 @@
 				<input type="email" class="form-control <?php echo !empty($errors['email']) ? 'is-invalid' : ''; ?>" name="email" id="email" value="<?php echo htmlspecialchars($old['email'] ?? '', ENT_QUOTES); ?>" placeholder="name@example.com" required autofocus autocomplete="email">
 				<label for="email" class="form-label">Email address</label>
 				<?php if (!empty($errors["email"])): ?>
-					<div class="invalid-feedback">
-						<?php echo htmlspecialchars($errors['email']); ?>
-					  </div>
+					<?php foreach ($errors['email'] as $errorsEmail): ?>
+						<div class="invalid-feedback">
+							<?php echo htmlspecialchars($errorsEmail); ?>
+						</div>
+					<?php endforeach; ?>
 				<?php endif; ?>
 			</div>
 			<div class="form-floating form-group mb-3">
 				<input type="text" name="username" id="username" class="form-control <?php echo !empty($errors['username']) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($old['username'] ?? '', ENT_QUOTES); ?>" placeholder="name6767" required  autocomplete="username">
 				<label for="username" class="form-label">Username</label>
 				<?php if (!empty($errors["username"])): ?>
-					<div class="invalid-feedback">
-						<?php echo htmlspecialchars($errors['username']); ?>
-					  </div>
+					<?php foreach ($errors['username'] as $errorUsername): ?>
+						<div class="invalid-feedback">
+							<?php echo htmlspecialchars($errorUsername); ?>
+						</div>
+					<?php endforeach; ?>
 				<?php endif; ?>
 			</div>
 			<div class="form-floating form-group mb-3">
@@ -30,29 +34,41 @@
 				<?php if (!empty($errors["photo_profile"]) || !empty($errors['photo_path'])): ?>
 					<div class="invalid-feedback">
 						<?php 
-							echo htmlspecialchars($errors['photo_profile'] ?? '', ENT_QUOTES);
+							if (!empty($errors["photo_profile"])) {
+								foreach ($errors['photo_profile'] as $errorPhotoProfile) {
+									echo htmlspecialchars($errorPhotoProfile ?? '', ENT_QUOTES);
+								}
+							}
 							echo !empty($errors['photo_profile']) && !empty($errors['photo_path']) ? '<br>' : '';
-							echo htmlspecialchars($errors['photo_path'] ?? '', ENT_QUOTES); 
+							if (!empty($errors['photo_path'])) {
+								foreach ($errors['photo_path'] as $errorPhotoPath) {
+									echo htmlspecialchars($errorPhotoPath ?? '', ENT_QUOTES);
+								}
+							}
 						?>
-					  </div>
+					</div>
 				<?php endif; ?>
 			</div>
 			<div class="form-floating form-group mb-3">
 				<input type="password" class="form-control <?php echo !empty($errors['password']) ? 'is-invalid' : ''; ?>" name="password" id="password" required autocomplete="new-password">
 				<label for="password" class="form-label">Password</label>
 				<?php if (!empty($errors["password"])): ?>
-					<div class="invalid-feedback">
-						<?php echo htmlspecialchars($errors['password']); ?>
-					  </div>
+					<?php foreach ($errors['password'] as $errorPassword): ?>
+						<div class="invalid-feedback">
+							<?php echo htmlspecialchars($errorPassword); ?>
+						</div>
+					<?php endforeach; ?>
 				<?php endif; ?>
 			</div>
 			<div class="form-floating form-group mb-3">
 				<input type="password" class="form-control <?php echo !empty($errors['password_confirm']) ? 'is-invalid' : ''; ?>" name="password_confirm" id="password_confirm" required autocomplete="new-password">
 				<label for="password_confirm" class="form-label">Confirm password</label>
 				<?php if (!empty($errors["password_confirm"])): ?>
-					<div class="invalid-feedback">
-						<?php echo htmlspecialchars($errors['password_confirm']); ?>
-					  </div>
+					<?php foreach ($errors['password_confirm'] as $errorPasswordConfirm): ?>
+						<div class="invalid-feedback">
+							<?php echo htmlspecialchars($errorPasswordConfirm); ?>
+						</div>
+					<?php endforeach; ?>
 				<?php endif; ?>
 			</div>
 			<input type="hidden" name="photo_path" id="photo_path">

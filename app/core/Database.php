@@ -8,22 +8,22 @@
  */
 class Database {
 	/** @var string */
-	private $host;
+	private string $host;
 
 	/** @var string */
-	private $user;
+	private string $user;
 
 	/** @var string */
-	private $pass;
+	private string $pass;
 
 	/** @var string */
-	private $db_name;
+	private string $db_name;
 
 	/** @var \PDO Database handle instance */
-	private $dbh; // database handles
+	private PDO $dbh; // database handles
 
 	/** @var \PDOStatement Current prepared statement */
-	private $stmt; // statement
+	private PDOStatement $stmt; // statement
 
 	/**
 	 * Create a new PDO connection using constants defined in config.

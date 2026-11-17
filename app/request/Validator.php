@@ -88,32 +88,38 @@ class Validator
 				switch ($rule) {
 					case 'required':
 						if ($this->isEmptyValue($value)) {
-							$this->addError($field, "The '{$field}' is required.");
+							$this->addError($field, $rule, "The '{$field}' is required.");
 						}
 						break;
 					case 'min':
 						if (strlen((string) $value) < $ruleValue) {
-							$this->addError($field, "The '{$field}' must at least $ruleValue characters.");
+							$this->addError($field, $rule, "The '{$field}' must at least $ruleValue characters.");
 						}
 						break;
 					case 'max':
 						if (strlen((string) $value) > $ruleValue) {
-							$this->addError($field, "The '{$field}' may not exceed $ruleValue characters.");
+							$this->addError($field, $rule, "The '{$field}' may not exceed $ruleValue characters.");
 						}
 						break;
 					case 'email':
 						if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
-							$this->addError($field, "The '{$field}' must be a valid email.");
+							$this->addError($field, $rule, "The '{$field}' must be a valid email.");
 						}
 						break;
 					case 'regex':
-						if (!preg_match($ruleValue, (string) $value)) {
-							$this->addError($field, "The '{$field}' format is invalid.");
+						$resultCheck = preg_match($ruleValue, (string) $value);
+						if ($resultCheck === 0) {
+							$this->addError($field, $rule, "The '{$field}' format is invalid.");
+						} elseif ($resultCheck === false) {
+							$message = "Failed to check regex in field {$field} with rule {$ruleValue}.";
+							error_log($message);
+							throw new Exception($message);
+							break;
 						}
 						break;
 					case 'match':
 						if ((string) $value !== (string) ($data[$ruleValue] ?? '')) {
-							$this->addError($field, "The '{$field}' must match $ruleValue.");
+							$this->addError($field, $rule, "The '{$field}' must match $ruleValue.");
 							break;
 						}
 					case "required_if":
@@ -121,36 +127,55 @@ class Validator
 						$otherValue = $data[$other] ?? null;
 
 						if ($this->hasRealValue($otherValue) && $this->isEmptyValue($value)) {
-							$this->addError($field, "The '{$field}' is required when $other is present.");
+							$this->addError($field, $rule, "The '{$field}' is required when $other is present.");
 						}
 						break;
 					case 'boolean':
 						if (!in_array($value, ['0', '1'], true)) {
-							$this->addError($field, "The '{$field}' input is invalid.");
+							$this->addError($field, $rule, "The '{$field}' input is invalid.");
 						}
 						break;
 					case 'role_user':
 						if (!in_array($value, $ruleValue, true)) {
-							$this->addError($field, "The '{$field}' input is invalid.");
+							$this->addError($field, $rule, "The '{$field}' input is invalid.");
+						}
+						break;
+					case "url":
+						// recommended to update to PHP 8.5 and use Uri\Rfc3986\Uri class instead.
+						if ($this->hasRealValue($value)) {
+							$isValidUrl = filter_var($value, FILTER_VALIDATE_URL) !== false;
+
+							if (!$isValidUrl) {
+								$parsedUrl = parse_url($value);
+								$isValidUrl = $parsedUrl !== false
+									&& !empty($parsedUrl['scheme'])
+									&& !empty($parsedUrl['host'])
+									&& in_array(
+										strtolower($parsedUrl['scheme']),
+										['http', 'https'],
+										true
+									);
+							}
+							echo "{$rule}: {$isValidUrl}.\n";
+							if (!$isValidUrl) {
+								echo "error added.\n";
+								$this->addError($field, $rule, "The '{$field}' must be a valid URL.");
+							}
 						}
 						break;
 					case "signature":
 						if ($this->hasRealValue($value)) {
-							$isValidUrl = filter_var($value, FILTER_VALIDATE_URL);
+							$urlStatus = $this->validateSignUrl($value);
 
-							if (!$isValidUrl) {
-								$parsedUrl = parse_url($value);
-								$isValidUrl = $parsedUrl !== false && !empty($parsedUrl['scheme']) && !empty($parsedUrl['host']);
-							}
-							if (!$isValidUrl) {
-								$this->addError($field, "The '{$field}' must be a valid URL.");
+							if ($urlStatus !== true) {
+								$this->addError($field, $rule, "The '{$field}' {$urlStatus}");
 							}
 						}
 						break;
 					case "size":
 						$file = $_FILES[$field] ?? null;
 						if ($this->hasRealValue($file) && ($file["size"] ?? 0) > $ruleValue) {
-							$this->addError($field, "The '{$field}' file is too large.");
+							$this->addError($field, $rule, "The '{$field}' file is too large.");
 						}
 						break;
 					case "img":
@@ -178,7 +203,7 @@ class Validator
 						$allowExt = ["jpg", "jpeg", "png"];
 
 						if (!in_array($imgTypeFile, $allowExt, true) || !in_array($imgMime, $allowMime, true)) {
-							$this->addError($field, "The '{$field}' only JPG, PNG, or JPEG.");
+							$this->addError($field, $rule, "The '{$field}' only JPG, PNG, or JPEG.");
 						}
 						break;
 					case 'unique':
@@ -194,7 +219,7 @@ class Validator
 						}
 
 						if ($exist) {
-							$this->addError($field, "The '{$field}' has already been taken.");
+							$this->addError($field, $rule, "The '{$field}' has already been taken.");
 						}
 						break;
 					default:
@@ -218,7 +243,7 @@ class Validator
 	 */
 	public function validateSignUrl(string $url)
 	{
-		$secret = getenv("APP_KEY") ?: 'no-value';
+		$secret = $_ENV["APP_KEY"] ?: 'no-value';
 		$query = parse_url($url, PHP_URL_QUERY) ?? '';
 		parse_str($query, $signUrlData);
 
@@ -236,7 +261,7 @@ class Validator
 			return true;
 		} else {
 			error_log("Signature: " . $expectedForm ?? $expectedShow . " Input: " . $signature);
-			return "Invalid signature.";
+			return "Signature Invalid.";
 		}
 	}
 
@@ -276,13 +301,14 @@ class Validator
 	}
 
 	/**
-	 * Add input errors massage
-	 * @param string $field - input field
-	 * @param string $massage - error massage
+	 * Add input errors massage.
+	 * @param string $field Input field.
+	 * @param string $rule Validation rule.
+	 * @param string $massage Error massage.
 	 * @return void
 	 */
-	private function addError(string $field, string $massage)
+	private function addError(string $field, string $rule, string $massage)
 	{
-		$this->errors[$field] = $massage;
+		$this->errors[$field][$rule] = $massage;
 	}
 }

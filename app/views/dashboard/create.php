@@ -10,9 +10,11 @@
 				<input class="form-control <?php echo !empty($errors['title']) ? 'is-invalid' : ''; ?>" type="text" name="title" id="title" placeholder="Need Cars Insurance" value="<?php echo htmlspecialchars($old['title'] ?? '', ENT_QUOTES); ?>" required>
 				<label for="title" class="form-label">Title</label>
 				<?php if (!empty($errors['title'])): ?>
-					<div class="invalid-feedback">
-						<?php echo htmlspecialchars($errors['title']); ?>
-					</div>
+					<?php foreach ($errors['title'] as $errorTitle): ?>
+						<div class="invalid-feedback">
+							<?php echo htmlspecialchars($errorTitle); ?>
+						</div>
+					<?php endforeach; ?>
 				<?php endif; ?>
 			</div>
 			<div class="form-group mb-3 form-floating">
@@ -21,20 +23,30 @@
 				<?php if (!empty($errors["photo_cover"]) || !empty($errors['photo_path'])): ?>
 					<div class="invalid-feedback">
 						<?php 
-							echo htmlspecialchars($errors['photo_cover'] ?? '', ENT_QUOTES);
+							if (!empty($errors["photo_cover"])) {
+								foreach ($errors['photo_cover'] as $errorPhotoCover) {
+									echo htmlspecialchars($errorPhotoCover ?? '', ENT_QUOTES);
+								}
+							}
 							echo !empty($errors['photo_cover']) && !empty($errors['photo_path']) ? '<br>' : '';
-							echo htmlspecialchars($errors['photo_path'] ?? '', ENT_QUOTES); 
+							if (!empty($errors['photo_path'])) {
+								foreach ($errors['photo_path'] as $errorPhotoPath) {
+									echo htmlspecialchars($errorPhotoPath ?? '', ENT_QUOTES);
+								}
+							}
 						?>
-					  </div>
+					</div>
 				<?php endif; ?>
 			</div>
 			<div class="form-group mb-3">
 				<label for="body" class="form-label">Body article</label>
 				<textarea class="form-control <?php echo !empty($errors['body']) ? 'is-invalid' : ''; ?>" name="body" id="body" cols="30" rows="10" placeholder="If you need car insurance, choosing the right policy is one of the most important financial decisions you can make. Car insurance helps protect you from unexpected expenses caused by accidents, theft, natural disasters, or damage to your vehicle. Whether you're a first-time car owner or looking to switch providers, understanding your options can help you find the best coverage at an affordable price." required><?php echo htmlspecialchars($old['body'] ?? '', ENT_QUOTES); ?></textarea>
 				<?php if (!empty($errors['body'])): ?>
-					<div class="invalid-feedback">
-						<?php echo htmlspecialchars($errors['body']); ?>
-					</div>
+					<?php foreach ($errors['body'] as $errorBody): ?>
+						<div class="invalid-feedback">
+							<?php echo htmlspecialchars($errorBody); ?>
+						</div>
+					<?php endforeach; ?>
 				<?php endif; ?>
 			</div>
 			<input type="hidden" name="photo_path" id="photo_path">

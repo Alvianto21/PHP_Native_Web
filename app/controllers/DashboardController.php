@@ -18,8 +18,9 @@ class DashboardController extends Controller
 			exit;
 		}
 
-		$clientIP = !empty($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
-		$this->userIdentifier = $clientIP;
+		$clientIP = !empty($_SERVER['HTTP_X_FORWARDED_FOR']) ? "IP_user: {$_SERVER['HTTP_X_FORWARDED_FOR']}" : "IP_user: {$_SERVER['REMOTE_ADDR']}";
+		$clientID = isset($_SESSION['user_info']) ? "ID_user: {$_SESSION['user_info']['user_id']}" : null;
+		$this->userIdentifier = $clientID ?? $clientIP;
 	}
 
 	// articles table
@@ -82,8 +83,13 @@ class DashboardController extends Controller
 			exit;
 		}
 
-		if (!filter_var($this->userIdentifier, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6)) {
-			exit("Error: Invalid IP address.");
+		if (str_starts_with($this->userIdentifier, "IP_user") === true) {
+			$ipUser = substr($this->userIdentifier, strlen("IP_user: "));
+
+			if (filter_var($ipUser, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6) === false) {
+				error_log("IP data: {$ipUser}. Actual data: {$this->userIdentifier}");
+				exit("Error: Invalid IP address.");
+			}
 		}
 
 		if (!$limiter->limiter($this->userIdentifier)) {
@@ -130,8 +136,9 @@ class DashboardController extends Controller
 				"img" => true
 			],
 			'photo_path' => [
-				'required_if' => 'photo_cover',
-				'signature' => true,
+				"url" => true,
+				"signature" => true,
+				"required_if" => "photo_cover",
 			],
 			'body' => [
 				'required' => true,
@@ -141,17 +148,6 @@ class DashboardController extends Controller
 
 		// Validate data
 		if ($validator->validate($data, $rules)) {
-			// Verify img sign url if exist
-			if (!empty($data['photo_path'])) {
-				$checkUrl = $validator->validateSignUrl($data['photo_path']);
-
-				if ($checkUrl !== true) {
-					http_response_code(403);
-					echo $checkUrl;
-					exit($checkUrl);
-				}
-			}
-
 			// Lowercase and remove apostrophes 
 			$slug = strtolower(preg_replace("~[‘’`']+~", '', $data['title']));
 
@@ -258,8 +254,13 @@ class DashboardController extends Controller
 			exit;
 		}
 
-		if (!filter_var($this->userIdentifier, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6)) {
-			exit("Error: Invalid IP address.");
+		if (str_starts_with($this->userIdentifier, "IP_user") === true) {
+			$ipUser = substr($this->userIdentifier, strlen("IP_user: "));
+
+			if (filter_var($ipUser, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6) === false) {
+				error_log("IP data: {$ipUser}. Actual data: {$this->userIdentifier}");
+				exit("Error: Invalid IP address.");
+			}
 		}
 
 		if (!$limiter->limiter($this->userIdentifier)) {
@@ -316,8 +317,9 @@ class DashboardController extends Controller
 				"img" => true
 			],
 			'photo_path' => [
-				'required_if' => 'photo_cover',
-				'signature' => true,
+				"url" => true,
+				"signature" => true,
+				"required_if" => "photo_cover",
 			],
 			'body' => [
 				'required' => true,
@@ -354,17 +356,6 @@ class DashboardController extends Controller
 			}
 
 			// error_log("old: {$article['slug']} new: {$newSlug} query: {$slug}");
-
-			// Verify img sign url if exist
-			if (!empty($data['photo_path'])) {
-				$checkUrl = $validator->validateSignUrl($data['photo_path']);
-
-				if ($checkUrl !== true) {
-					http_response_code(403);
-					echo $checkUrl;
-					exit($checkUrl);
-				}
-			}
 
 			// If photo_cover updated, upload new photo cover and destroy old photo
 			if ($data['photo_cover']['error'] === UPLOAD_ERR_OK) {

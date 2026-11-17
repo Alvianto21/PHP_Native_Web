@@ -86,6 +86,7 @@ class LoginControllerStub extends LoginController
 				"img" => true
 			],
 			"photo_path" => [
+				"url" => true,
 				"signature" => true,
 				"required_if" => "photo_profile"
 			],
@@ -103,15 +104,6 @@ class LoginControllerStub extends LoginController
 		];
 
 		if ($validator->validate($data, $rules)) {
-			if (!empty($data['photo_path'])) {
-				$checkUrl = $validator->validateSignUrl($data['photo_path']);
-
-				if ($checkUrl !== true) {
-					echo $checkUrl;
-					return "photo URL validation failed";
-				}
-			}
-
 			if ($data['photo_profile']['error'] !== UPLOAD_ERR_NO_FILE) {
 				$data['photo_profile'] = $uploader->store($data['photo_profile'], "profiles");
 			} else {
@@ -425,7 +417,7 @@ class LoginTest extends TestCase
 		$this->assertNotNull($_SESSION['errors']);
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('photo_profile', $_SESSION['errors']);
-		$this->assertSame("The 'photo_profile' file is too large.", $_SESSION['errors']['photo_profile']);
+		$this->assertSame("The 'photo_profile' file is too large.", $_SESSION['errors']['photo_profile']['size']);
 	}
 
 	#[Test] #[TestDox("Failed register new user because photo profile file is not image")]
@@ -464,7 +456,7 @@ class LoginTest extends TestCase
 		$this->assertNotNull($_SESSION['errors']);
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('photo_profile', $_SESSION['errors']);
-		$this->assertSame("The 'photo_profile' only JPG, PNG, or JPEG.", $_SESSION['errors']['photo_profile']);
+		$this->assertSame("The 'photo_profile' only JPG, PNG, or JPEG.", $_SESSION['errors']['photo_profile']['img']);
 	}
 
 	#[Test] #[TestDox("Failed register new user because invalid email address")]
@@ -505,7 +497,7 @@ class LoginTest extends TestCase
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('email', $_SESSION['errors']);
 		$this->assertArrayHasKey('email', $_SESSION['old_input']);
-		$this->assertSame("The 'email' format is invalid.", $_SESSION['errors']['email']);
+		$this->assertSame("The 'email' format is invalid.", $_SESSION['errors']['email']['regex']);
 		$this->assertArrayIsEqualToArrayIgnoringListOfKeys($new_user, $_SESSION['old_input'], ['photo_path', 'photo_profile', 'password', 'password_confirm']);
 	}
 
@@ -572,7 +564,7 @@ class LoginTest extends TestCase
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('email', $_SESSION['errors']);
 		$this->assertArrayHasKey('email', $_SESSION['old_input']);
-		$this->assertSame("The 'email' has already been taken.", $_SESSION['errors']['email']);
+		$this->assertSame("The 'email' has already been taken.", $_SESSION['errors']['email']['unique']);
 		$this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($new_user_2, $_SESSION['old_input'], ['email']);
 	}
 
@@ -610,7 +602,7 @@ class LoginTest extends TestCase
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('username', $_SESSION['errors']);
 		$this->assertArrayHasKey('username', $_SESSION['old_input']);
-		$this->assertSame("The 'username' format is invalid.", $_SESSION['errors']['username']);
+		$this->assertSame("The 'username' format is invalid.", $_SESSION['errors']['username']['regex']);
 		$this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($new_user, $_SESSION['old_input'], ['username']);
 	}
 
@@ -677,7 +669,7 @@ class LoginTest extends TestCase
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('username', $_SESSION['errors']);
 		$this->assertArrayHasKey('username', $_SESSION['old_input']);
-		$this->assertSame("The 'username' has already been taken.", $_SESSION['errors']['username']);
+		$this->assertSame("The 'username' has already been taken.", $_SESSION['errors']['username']['unique']);
 		$this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys($new_user_2, $_SESSION['old_input'], ['username']);
 	}
 
@@ -714,7 +706,7 @@ class LoginTest extends TestCase
 		$this->assertNotNull($_SESSION['errors']);
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('password_confirm', $_SESSION['errors']);
-		$this->assertSame("The 'password_confirm' must match password.", $_SESSION['errors']['password_confirm']);
+		$this->assertSame("The 'password_confirm' must match password.", $_SESSION['errors']['password_confirm']['match']);
 	}
 
 	#[Test] #[TestDox("Failed register new user because password too short")]
@@ -751,8 +743,8 @@ class LoginTest extends TestCase
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('password', $_SESSION['errors']);
 		$this->assertArrayHasKey('password_confirm', $_SESSION['errors']);
-		$this->assertSame("The 'password' must at least 10 characters.", $_SESSION['errors']['password']);
-		$this->assertSame("The 'password_confirm' must at least 10 characters.", $_SESSION['errors']['password_confirm']);
+		$this->assertSame("The 'password' must at least 10 characters.", $_SESSION['errors']['password']['min']);
+		$this->assertSame("The 'password_confirm' must at least 10 characters.", $_SESSION['errors']['password_confirm']['min']);
 	}
 
 	#[Test] #[TestDox("Failed register new user because img path URL invalid")]
@@ -792,7 +784,7 @@ class LoginTest extends TestCase
 		$this->assertNotNull($_SESSION['errors']);
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('photo_path', $_SESSION['errors']);
-		$this->assertSame("The 'photo_path' must be a valid URL.", $_SESSION['errors']['photo_path']);
+		$this->assertSame("The 'photo_path' must be a valid URL.", $_SESSION['errors']['photo_path']['url']);
 	}
 
 	#[Test] #[TestDox("Failed register new user because img path empty but photo profile exist")]
@@ -832,7 +824,7 @@ class LoginTest extends TestCase
 		$this->assertNotNull($_SESSION['errors']);
 		$this->assertNotNull($_SESSION['old_input']);
 		$this->assertArrayHasKey('photo_path', $_SESSION['errors']);
-		$this->assertSame("The 'photo_path' is required when photo_profile is present.", $_SESSION['errors']['photo_path']);
+		$this->assertSame("The 'photo_path' is required when photo_profile is present.", $_SESSION['errors']['photo_path']['required_if']);
 	}
 
 	#[Test] #[TestDox("Success login user")]

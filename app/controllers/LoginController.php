@@ -7,12 +7,13 @@ class LoginController extends Controller
 	 * User identifier.
 	 * @var string User IP address.
 	 */
-	protected $userIdentifier;
+	protected string $userIdentifier;
 
 	public function __construct()
 	{
-		$clientIP = !empty($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
-		$this->userIdentifier = $clientIP;
+		$clientIP = !empty($_SERVER['HTTP_X_FORWARDED_FOR']) ? "IP_user: {$_SERVER['HTTP_X_FORWARDED_FOR']}" : "IP_user: {$_SERVER['REMOTE_ADDR']}";
+		$clientID = isset($_SESSION['user_info']) ? "ID_user: {$_SESSION['user_info']['user_id']}" : null;
+		$this->userIdentifier = $clientID ?? $clientIP;
 	}
 	
 	// halaman login
@@ -44,8 +45,13 @@ class LoginController extends Controller
 			exit;
 		}
 
-		if (!filter_var($this->userIdentifier, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6)) {
-			exit("Error: Invalid IP address.");
+		if (str_starts_with($this->userIdentifier, "IP_user") === true) {
+			$ipUser = substr($this->userIdentifier, strlen("IP_user: "));
+
+			if (filter_var($ipUser, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6) === false) {
+				error_log("IP data: {$ipUser}. Actual data: {$this->userIdentifier}");
+				exit("Error: Invalid IP address.");
+			}
 		}
 
 		if (!$limiter->limiter($this->userIdentifier)) {
@@ -120,6 +126,11 @@ class LoginController extends Controller
 	// halaman register
 	public function register()
 	{
+		if (isset($_SESSION['user_info'])) {
+			header('LOCATION: ' . ABSOLUTURL . 'dashboard');
+			exit;
+		}
+		
 		$data['judul'] = 'Halaman Register';
 		$data['style'] = "sign-up.css";
 
@@ -142,8 +153,13 @@ class LoginController extends Controller
 			exit;
 		}
 
-		if (!filter_var($this->userIdentifier, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6)) {
-			exit("Error: Invalid IP address.");
+		if (str_starts_with($this->userIdentifier, "IP_user") === true) {
+			$ipUser = substr($this->userIdentifier, strlen("IP_user: "));
+
+			if (filter_var($ipUser, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6) === false) {
+				error_log("IP data: {$ipUser}. Actual data: {$this->userIdentifier}");
+				exit("Error: Invalid IP address.");
+			}
 		}
 
 		if (!$limiter->limiter($this->userIdentifier)) {
@@ -205,6 +221,7 @@ class LoginController extends Controller
 				"img" => true
 			],
 			"photo_path" => [
+				"url" => true,
 				"signature" => true,
 				"required_if" => "photo_profile"
 			],
@@ -223,17 +240,6 @@ class LoginController extends Controller
 
 		// Validate input
 		if ($validator->validate($data, $rules)) {
-			// Verify img sign url if exist
-			if (!empty($data['photo_path'])) {
-				$checkUrl = $validator->validateSignUrl($data['photo_path']);
-
-				if ($checkUrl !== true) {
-					http_response_code(403);
-					echo $checkUrl;
-					exit($checkUrl);
-				}
-			}
-
 			// File handling
 			if ($data['photo_profile']['error'] !== UPLOAD_ERR_NO_FILE) {
 				$data['photo_profile'] = $uploader->store($data['photo_profile'], "profiles");

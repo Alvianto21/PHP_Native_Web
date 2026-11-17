@@ -94,10 +94,12 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./public
           server-dir: ./htdocs
           exclude: |
             **/.git*
             **/.git*/**
             **/vendor/**
             **/storage/**
+            **/tests/**
+            .env
+            public/index2.html

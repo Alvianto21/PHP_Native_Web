@@ -47,9 +47,11 @@ class UploadImage
 	 */
 	public function show(string $path, int $expire = 600): string
 	{
+		$secret = $_ENV["APP_KEY"] ?: 'no-value';
+
 		$expires = time() + $expire;
 
-		$signature = hash_hmac('sha256', $path . (string) $expires, getenv('APP_KEY'));
+		$signature = hash_hmac('sha256', $path . (string) $expires, $secret);
 
 		return ABSOLUTURL .  "files/show?path=" . urldecode($path) . "&expires=$expires" . "&signature=$signature";
 	}

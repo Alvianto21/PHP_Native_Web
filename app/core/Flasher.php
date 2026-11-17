@@ -12,7 +12,7 @@ class Flasher {
 	 * @param string $tipe Bootstrap alert type (e.g. 'success','danger')
 	 * @return void
 	 */
-	public static function setFlash($pesan, $aksi, $tipe) {
+	public static function setFlash(string $pesan, string $aksi, string $tipe) {
 		$_SESSION['flash'] = [
 			'pesan' => $pesan,
 			'aksi' => $aksi,

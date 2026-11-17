@@ -1,7 +1,7 @@
 <?php
 
 class Users {
-	private $table = "users";
+	private string $table = "users";
 	private $db;
 
 	// koneksi ke database
