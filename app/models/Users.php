@@ -168,7 +168,7 @@ class Users {
 	}
 
 	/**
-	 * Validate is email exist.
+	 * Check if an email exist.
 	 * @param string $email The email being searched for.
 	 * @return bool Return true if exist otherwise return false.
 	 */
@@ -185,7 +185,7 @@ class Users {
 	}
 
 	/**
-	 * Validate email exist except in id.
+	 * Check if an email exist except in id.
 	 * @param string $email The email being searched for.
 	 * @param int $user_id User id from sessions.
 	 * @return bool Return true if exist otherwise return false.
@@ -204,7 +204,7 @@ class Users {
 	}
 
 	/**
-	 * Is username exist.
+	 * Check if an username exist.
 	 * @param string $username The username being search for.
 	 * @return bool Return true if exist otherwise return false.
 	 */
@@ -221,7 +221,7 @@ class Users {
 	}
 
 	/**
-	 * Is username exist except in id.
+	 * Check if an username exist except in id.
 	 * @param string $username The username being search for.
 	 * @param int $user_id User id from sessions.
 	 * @return bool Return true if exist otherwise return false.

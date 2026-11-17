@@ -95,7 +95,6 @@ class Article
 
 	/**
 	 * Check whether an article slug already exists.
-	 *
 	 * @param string $slug Slug to search for.
 	 * @return bool True when the slug exists, otherwise false.
 	 */
