@@ -88,7 +88,11 @@ class UploadImage
 		}
 	}
 
-	
+	/**
+	 * Delete file.
+	 * @param string $path File path.
+	 * @return void
+	 */
 	public function delete(string $path):void {
 		$file = $this->storage . $path;
 
