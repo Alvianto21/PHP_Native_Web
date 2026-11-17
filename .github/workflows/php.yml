@@ -101,3 +101,7 @@ jobs:
             **/tests/**
             .env
             public/index2.html
+            LICENSE.md
+            phpunit.xml
+            README.md
+            .phpunit.result.cache
