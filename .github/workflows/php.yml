@@ -10,8 +10,6 @@ on:
       - app/core/**
       - app/request/**
       - app/init.php
-    paths-ignore:
-      - app/views/**
   pull_request:
     branches:
       - main
