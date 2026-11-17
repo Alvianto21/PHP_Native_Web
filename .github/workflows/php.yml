@@ -39,7 +39,7 @@ jobs:
       - name: Prepare dependencies
         run: composer install --prefer-dist --no-interaction
       - name: Set env
-        run: php -r "file_exists('.env')||copy('.env.example','.env')"
+        run: php -r "file_exists('.env')||copy('.env.example','.env');"
       - name: Create env tests
         env:
           APP_KEY: ${{ secrets.APP_KEY }}
@@ -66,7 +66,7 @@ jobs:
       - name: Prepare dependencies
         run: composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
       - name: Set env
-        run: php -r "file_exists('.env')||copy('.env.example','.env')"
+        run: php -r "file_exists('.env')||copy('.env.example','.env');"
       - name: Create env
         env:
           APP_KEY: ${{ secrets.APP_KEY }}

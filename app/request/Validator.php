@@ -281,7 +281,7 @@ class Validator
 	/**
 	 * Check if input form has data. 
 	 * Only use if all input is required.
-	 * @param array $data - Form data
+	 * @param array $data - Form data.
 	 * @return bool
 	 */
 	public function checkData(array $data): bool
@@ -295,6 +295,10 @@ class Validator
 		return true;
 	}
 
+	/**
+	 * View errors.
+	 * @return array Return all errors massage.
+	 */
 	public function errors()
 	{
 		return $this->errors;
