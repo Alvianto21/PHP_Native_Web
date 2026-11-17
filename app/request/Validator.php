@@ -266,9 +266,9 @@ class Validator
 	}
 
 	/**
-	 * Sanitize input form
-	 * @param string $data - Form data
-	 * @return string
+	 * Sanitize input form.
+	 * @param string $data Form data.
+	 * @return string Return sanitize data.
 	 */
 	public function clearData(string $data)
 	{
