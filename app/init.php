@@ -1,8 +1,8 @@
 <?php
 
 /**
- * Core bootstrap file
- * Loads all environment variables and core components
+ * Core bootstrap file.
+ * Loads all environment variables and core components.
  */
 
 function loadData(string $path) {
